@@ -25,10 +25,12 @@ func InitServer() Server {
      return s
 }
 
+// RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error){
      return &pb.RegistryEntry{}, nil
 }
 
+// Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error){
      return &pb.RegistryEntry{}, nil
 }
