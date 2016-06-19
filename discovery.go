@@ -3,7 +3,6 @@ package main
 import(
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"log"
 	"net"	
 
 	pb "github.com/brotherlogic/discovery/proto"
@@ -35,14 +34,17 @@ func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.Regist
      return &pb.RegistryEntry{}, nil
 }
 
-func main() {
-     lis, err := net.Listen("tcp", port)
-     if err != nil {
-       log.Fatalf("Failed to listen on %v", err)
-     }
+// Serve main server function
+func Serve() {
+     go func() {    
+     	lis, _ := net.Listen("tcp", port)
+     	s := grpc.NewServer()
+     	server := InitServer()
+     	pb.RegisterDiscoveryServiceServer(s, &server)
+     	s.Serve(lis)
+     }()
+}
 
-     s := grpc.NewServer()
-     server := InitServer()
-     pb.RegisterDiscoveryServiceServer(s, &server)
-     s.Serve(lis)
+func main() {
+ Serve()
 }
