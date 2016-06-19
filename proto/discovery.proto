@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+message RegistryEntry {
+	// The ip address associated with this entry
+	string ip = 1;
+
+	// The port number assigned / requested for this entry
+	int32 port = 2;
+
+	// The name of this service
+	string name = 3;
+}
+
+service DiscoveryService {
+	rpc RegisterService (RegistryEntry) returns (RegistryEntry) {}
+
+	rpc Discover (RegistryEntry) returns (RegistryEntry) {}
+}
