@@ -7,27 +7,34 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
-	pb "github.com/brotherlogic/discovery/proto"	
+	pb "github.com/brotherlogic/discovery/proto"
 )
 
 func TestRegisterService(t *testing.T) {
-     s := InitServer()
-     entry := &pb.RegistryEntry{}
-     s.RegisterService(context.Background(), entry)
+	s := InitServer()
+	entry := &pb.RegistryEntry{Ip: "10.0.4.5", Port: 50051, Name: "Testing"}
+	r, err := s.RegisterService(context.Background(), entry)
+	if err != nil {
+		t.Errorf("Error registering service: %v", err)
+	}
+
+	if r.Name != entry.Name {
+		t.Errorf("Problem with name resolution %v vs %v", r.Name, entry.Name)
+	}
 }
 
 func TestDiscover(t *testing.T) {
-     s := InitServer()
-     entry := &pb.RegistryEntry{}
-     s.Discover(context.Background(), entry)
+	s := InitServer()
+	entry := &pb.RegistryEntry{}
+	s.Discover(context.Background(), entry)
 }
 
 func TestRunServer(t *testing.T) {
-        Serve()
+	Serve()
 
 	go func() {
 		conn, err := grpc.Dial("localhost:50055", grpc.WithInsecure())
-				if err != nil {
+		if err != nil {
 			t.Errorf("Error connecting to port")
 		}
 
@@ -52,5 +59,5 @@ func TestRunServer(t *testing.T) {
 }
 
 func TestMainForCoverage(t *testing.T) {
-     main()
+	main()
 }
