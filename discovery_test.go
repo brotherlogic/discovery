@@ -23,10 +23,29 @@ func TestRegisterService(t *testing.T) {
 	}
 }
 
+func TestFailedDiscover(t *testing.T) {
+	s := InitServer()
+
+	entry := &pb.RegistryEntry{Name: "Testing"}
+	_, err := s.Discover(context.Background(), entry)
+	if err == nil {
+		t.Errorf("Disoovering non existing service did not fail: %v", err)
+	}
+}
+
 func TestDiscover(t *testing.T) {
 	s := InitServer()
-	entry := &pb.RegistryEntry{}
-	s.Discover(context.Background(), entry)
+	entryAdd := &pb.RegistryEntry{Ip: "10.0.4.5", Port: 50051, Name: "Testing"}
+	s.RegisterService(context.Background(), entryAdd)
+	entry := &pb.RegistryEntry{Name: "Testing"}
+	r, err := s.Discover(context.Background(), entry)
+	if err != nil {
+		t.Errorf("Error registering service: %v", err)
+	}
+
+	if r.Ip != entryAdd.Ip {
+		t.Errorf("Discovery process failed %v vs %v", r.Ip, entryAdd.Ip)
+	}
 }
 
 func TestRunServer(t *testing.T) {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"net"
@@ -9,7 +10,7 @@ import (
 )
 
 const (
-	port = ":50052"
+	port = ":50055"
 )
 
 // Server the central server object
@@ -32,7 +33,13 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 
 // Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
-	return &pb.RegistryEntry{}, nil
+	for _, entry := range s.entries {
+		if entry.Name == in.Name {
+			return &entry, nil
+		}
+	}
+
+	return &pb.RegistryEntry{}, errors.New("Cannot find service")
 }
 
 // Serve main server function
