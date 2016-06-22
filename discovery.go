@@ -44,15 +44,9 @@ func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.Regist
 
 // Serve main server function
 func Serve() {
-	go func() {
-		lis, _ := net.Listen("tcp", port)
-		s := grpc.NewServer()
-		server := InitServer()
-		pb.RegisterDiscoveryServiceServer(s, &server)
-		s.Serve(lis)
-	}()
-}
-
-func main() {
-	Serve()
+	lis, _ := net.Listen("tcp", port)
+	s := grpc.NewServer()
+	server := InitServer()
+	pb.RegisterDiscoveryServiceServer(s, &server)
+	s.Serve(lis)
 }
