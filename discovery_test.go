@@ -49,7 +49,9 @@ func TestDiscover(t *testing.T) {
 }
 
 func TestRunServer(t *testing.T) {
-	Serve()
+	go func() {
+		Serve()
+	}()
 
 	go func() {
 		conn, err := grpc.Dial("localhost:50055", grpc.WithInsecure())
@@ -75,8 +77,4 @@ func TestRunServer(t *testing.T) {
 	}()
 
 	time.Sleep(10 * time.Second)
-}
-
-func TestMainForCoverage(t *testing.T) {
-	main()
 }
