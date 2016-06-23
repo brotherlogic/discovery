@@ -4,6 +4,7 @@ import (
 	"errors"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"log"
 	"net"
 
 	pb "github.com/brotherlogic/discovery/proto"
@@ -29,16 +30,21 @@ func InitServer() Server {
 
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
-
 	// Server is requesting an external port
 	if in.ExternalPort {
 		availablePorts := externalPorts[in.Ip]
-		taken := false
 		for _, port := range availablePorts {
+			taken := false
 			for _, service := range s.entries {
 				if service.Ip == in.Ip && service.Port == port {
+					log.Printf("TAKEN")
 					taken = true
 				}
+				// If we've already registered this service, return immediately
+				if service.Identifier == in.Identifier && service.Name == in.Name {
+					return &service, nil
+				}
+
 			}
 
 			if !taken {
@@ -50,6 +56,25 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 		//Throw an error if we can't find a port number
 		if in.Port <= 0 {
 			return in, errors.New("Unable to allocate external port")
+		}
+	} else {
+		var portNumber int32
+		for portNumber = 50055 + 1; portNumber < 60000; portNumber++ {
+			taken := false
+			for _, service := range s.entries {
+				if service.Port == portNumber {
+					taken = true
+				}
+
+				// If we've already registered this service, return immediately
+				if service.Identifier == in.Identifier && service.Name == in.Name {
+					return &service, nil
+				}
+			}
+			if !taken {
+				in.Port = portNumber
+				break
+			}
 		}
 	}
 

@@ -23,6 +23,67 @@ func TestRegisterForExternalPort(t *testing.T) {
 	}
 }
 
+func TestRegisterMACAddressRefresh(t *testing.T) {
+	s := InitServer()
+	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "Magic"}
+
+	r, err := s.RegisterService(context.Background(), entry)
+	if err != nil {
+		t.Errorf("Error registering service: %v", err)
+	}
+
+	entry2 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "Magic"}
+	r2, err := s.RegisterService(context.Background(), entry2)
+	if err != nil {
+		t.Errorf("Error registering service: %v", err)
+	}
+
+	if r2.Port != r.Port {
+		t.Errorf("Same identifier has led to different ports: %v vs %v", r, r2)
+	}
+
+	entry3 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "MagicJohnson"}
+	r3, err := s.RegisterService(context.Background(), entry3)
+	if err != nil {
+		t.Errorf("Error registering service: %v", err)
+	}
+
+	if r3.Port == r2.Port {
+		t.Errorf("Different identified but same port: %v vs %v", r3, r2)
+	}
+
+}
+
+func TestRegisterMACAddressRefreshWithExternalPort(t *testing.T) {
+	s := InitServer()
+	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "Magic", ExternalPort: true}
+
+	r, err := s.RegisterService(context.Background(), entry)
+	if err != nil {
+		t.Errorf("Error registering service: %v", err)
+	}
+
+	entry2 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "Magic", ExternalPort: true}
+	r2, err := s.RegisterService(context.Background(), entry2)
+	if err != nil {
+		t.Errorf("Error registering service: %v", err)
+	}
+
+	if r2.Port != r.Port {
+		t.Errorf("Same identifier has led to different ports: %v vs %v", r, r2)
+	}
+
+	entry3 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "MagicJohnson", ExternalPort: true}
+	r3, err := s.RegisterService(context.Background(), entry3)
+	if err != nil {
+		t.Errorf("Error registering service: %v", err)
+	}
+
+	if r3.Port == r2.Port {
+		t.Errorf("Different identified but same port: %v vs %v", r3, r2)
+	}
+}
+
 func TestRegisterForExternalPortTooManyTimes(t *testing.T) {
 	s := InitServer()
 	var entries = [...]*pb.RegistryEntry{
