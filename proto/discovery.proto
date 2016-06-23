@@ -9,6 +9,9 @@ message RegistryEntry {
 
 	// The name of this service
 	string name = 3;
+
+        // Is this an external facing port
+        bool external_port = 4;
 }
 
 service DiscoveryService {

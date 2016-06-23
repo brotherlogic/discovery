@@ -10,6 +10,37 @@ import (
 	pb "github.com/brotherlogic/discovery/proto"
 )
 
+func TestRegisterForExternalPort(t *testing.T) {
+	s := InitServer()
+	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", ExternalPort: true}
+	r, err := s.RegisterService(context.Background(), entry)
+	if err != nil {
+		t.Errorf("Error registering service: %v", err)
+	}
+
+	if r.Port <= 0 {
+		t.Errorf("Request for external port failed: %v", r)
+	}
+}
+
+func TestRegisterForExternalPortTooManyTimes(t *testing.T) {
+	s := InitServer()
+	var entries = [...]*pb.RegistryEntry{
+		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing1", ExternalPort: true},
+		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing2", ExternalPort: true},
+		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing3", ExternalPort: true},
+	}
+
+	var err error
+	for _, entry := range entries {
+		_, err = s.RegisterService(context.Background(), entry)
+	}
+
+	if err == nil {
+		t.Errorf("Over registering does not lead to failure")
+	}
+}
+
 func TestRegisterService(t *testing.T) {
 	s := InitServer()
 	entry := &pb.RegistryEntry{Ip: "10.0.4.5", Port: 50051, Name: "Testing"}
