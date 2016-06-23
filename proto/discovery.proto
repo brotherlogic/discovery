@@ -12,6 +12,9 @@ message RegistryEntry {
 
         // Is this an external facing port
         bool external_port = 4;
+
+        // This is the machine identifier
+        string identifier = 5;
 }
 
 service DiscoveryService {
