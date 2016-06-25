@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package discovery;
+
 message RegistryEntry {
 	// The ip address associated with this entry
 	string ip = 1;
