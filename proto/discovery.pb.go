@@ -10,6 +10,8 @@ It is generated from these files:
 
 It has these top-level messages:
 	RegistryEntry
+	ServiceList
+	Empty
 */
 package discovery
 
@@ -51,8 +53,34 @@ func (m *RegistryEntry) String() string            { return proto.CompactTextStr
 func (*RegistryEntry) ProtoMessage()               {}
 func (*RegistryEntry) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
+type ServiceList struct {
+	Services []*RegistryEntry `protobuf:"bytes,1,rep,name=services" json:"services,omitempty"`
+}
+
+func (m *ServiceList) Reset()                    { *m = ServiceList{} }
+func (m *ServiceList) String() string            { return proto.CompactTextString(m) }
+func (*ServiceList) ProtoMessage()               {}
+func (*ServiceList) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+func (m *ServiceList) GetServices() []*RegistryEntry {
+	if m != nil {
+		return m.Services
+	}
+	return nil
+}
+
+type Empty struct {
+}
+
+func (m *Empty) Reset()                    { *m = Empty{} }
+func (m *Empty) String() string            { return proto.CompactTextString(m) }
+func (*Empty) ProtoMessage()               {}
+func (*Empty) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+
 func init() {
 	proto.RegisterType((*RegistryEntry)(nil), "discovery.RegistryEntry")
+	proto.RegisterType((*ServiceList)(nil), "discovery.ServiceList")
+	proto.RegisterType((*Empty)(nil), "discovery.Empty")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -68,6 +96,7 @@ const _ = grpc.SupportPackageIsVersion3
 type DiscoveryServiceClient interface {
 	RegisterService(ctx context.Context, in *RegistryEntry, opts ...grpc.CallOption) (*RegistryEntry, error)
 	Discover(ctx context.Context, in *RegistryEntry, opts ...grpc.CallOption) (*RegistryEntry, error)
+	ListAllServices(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ServiceList, error)
 }
 
 type discoveryServiceClient struct {
@@ -96,11 +125,21 @@ func (c *discoveryServiceClient) Discover(ctx context.Context, in *RegistryEntry
 	return out, nil
 }
 
+func (c *discoveryServiceClient) ListAllServices(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ServiceList, error) {
+	out := new(ServiceList)
+	err := grpc.Invoke(ctx, "/discovery.DiscoveryService/ListAllServices", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for DiscoveryService service
 
 type DiscoveryServiceServer interface {
 	RegisterService(context.Context, *RegistryEntry) (*RegistryEntry, error)
 	Discover(context.Context, *RegistryEntry) (*RegistryEntry, error)
+	ListAllServices(context.Context, *Empty) (*ServiceList, error)
 }
 
 func RegisterDiscoveryServiceServer(s *grpc.Server, srv DiscoveryServiceServer) {
@@ -143,6 +182,24 @@ func _DiscoveryService_Discover_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DiscoveryService_ListAllServices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiscoveryServiceServer).ListAllServices(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/discovery.DiscoveryService/ListAllServices",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiscoveryServiceServer).ListAllServices(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _DiscoveryService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "discovery.DiscoveryService",
 	HandlerType: (*DiscoveryServiceServer)(nil),
@@ -155,6 +212,10 @@ var _DiscoveryService_serviceDesc = grpc.ServiceDesc{
 			MethodName: "Discover",
 			Handler:    _DiscoveryService_Discover_Handler,
 		},
+		{
+			MethodName: "ListAllServices",
+			Handler:    _DiscoveryService_ListAllServices_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: fileDescriptor0,
@@ -163,7 +224,7 @@ var _DiscoveryService_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("discovery.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 200 bytes of a gzipped FileDescriptorProto
+	// 263 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0xe2, 0x4f, 0xc9, 0x2c, 0x4e,
 	0xce, 0x2f, 0x4b, 0x2d, 0xaa, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x84, 0x0b, 0x28,
 	0xf5, 0x30, 0x72, 0xf1, 0x06, 0xa5, 0xa6, 0x67, 0x16, 0x97, 0x14, 0x55, 0xba, 0xe6, 0x01, 0x09,
@@ -172,9 +233,13 @@ var fileDescriptor0 = []byte{
 	0xf2, 0x12, 0x73, 0x53, 0x25, 0x98, 0xc1, 0xaa, 0xc0, 0x6c, 0x21, 0x65, 0x2e, 0xde, 0xd4, 0x8a,
 	0x92, 0xd4, 0xa2, 0xbc, 0xc4, 0x9c, 0x78, 0xb0, 0x06, 0x16, 0xa0, 0x24, 0x47, 0x10, 0x0f, 0x4c,
 	0x30, 0x00, 0xa4, 0x51, 0x8e, 0x8b, 0x2b, 0x33, 0x25, 0x35, 0xaf, 0x24, 0x33, 0x2d, 0x33, 0xb5,
-	0x48, 0x82, 0x15, 0xac, 0x1d, 0x49, 0xc4, 0x68, 0x2e, 0x23, 0x97, 0x80, 0x0b, 0xcc, 0x71, 0xc1,
-	0xa9, 0x45, 0x65, 0x99, 0xc9, 0xa9, 0x42, 0xee, 0x5c, 0xfc, 0x10, 0x27, 0xa6, 0x16, 0xc1, 0x84,
-	0x24, 0xf4, 0x10, 0x7e, 0x42, 0x71, 0xbe, 0x14, 0x4e, 0x19, 0x25, 0x06, 0x21, 0x07, 0x2e, 0x0e,
-	0x98, 0xe1, 0xe4, 0x99, 0x90, 0xc4, 0x06, 0x0e, 0x40, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff,
-	0x03, 0x16, 0x8a, 0xa9, 0x53, 0x01, 0x00, 0x00,
+	0x48, 0x82, 0x15, 0xac, 0x1d, 0x49, 0x44, 0xc9, 0x99, 0x8b, 0x3b, 0x38, 0xb5, 0xa8, 0x2c, 0x33,
+	0x39, 0xd5, 0x07, 0xe8, 0x24, 0x21, 0x13, 0x2e, 0x8e, 0x62, 0x08, 0xb7, 0x18, 0xe8, 0x22, 0x66,
+	0x0d, 0x6e, 0x23, 0x09, 0x3d, 0x84, 0x67, 0x50, 0xdc, 0x1d, 0x04, 0x57, 0xa9, 0xc4, 0xce, 0xc5,
+	0xea, 0x9a, 0x5b, 0x50, 0x52, 0x69, 0x74, 0x87, 0x91, 0x4b, 0xc0, 0x05, 0xa6, 0x1c, 0x6a, 0xae,
+	0x90, 0x3b, 0x17, 0x3f, 0x44, 0x63, 0x6a, 0x11, 0x4c, 0x08, 0xa7, 0xa1, 0x52, 0x38, 0x65, 0x94,
+	0x18, 0x84, 0x1c, 0xb8, 0x38, 0x60, 0x86, 0x93, 0x69, 0x82, 0x2d, 0x17, 0x3f, 0xc8, 0x9b, 0x8e,
+	0x39, 0x39, 0x50, 0x97, 0x14, 0x0b, 0x09, 0x20, 0x29, 0x07, 0x7b, 0x42, 0x4a, 0x0c, 0x49, 0x04,
+	0x29, 0x6c, 0x94, 0x18, 0x92, 0xd8, 0xc0, 0xb1, 0x69, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0xf1,
+	0x34, 0x3b, 0x42, 0xe0, 0x01, 0x00, 0x00,
 }
