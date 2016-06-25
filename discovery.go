@@ -18,14 +18,19 @@ var externalPorts = map[string][]int32{"10.0.1.17": []int32{50052, 50053}}
 
 // Server the central server object
 type Server struct {
-	entries []pb.RegistryEntry
+	entries []*pb.RegistryEntry
 }
 
-// InitServer builds a server item ready for use
+// InitServer builds a server item ready for useo
 func InitServer() Server {
 	s := Server{}
-	s.entries = make([]pb.RegistryEntry, 0)
+	s.entries = make([]*pb.RegistryEntry, 0)
 	return s
+}
+
+// ListAllServices returns a list of all the services
+func (s *Server) ListAllServices(ctx context.Context, in *pb.Empty) (*pb.ServiceList, error) {
+	return &pb.ServiceList{Services: s.entries}, nil
 }
 
 // RegisterService supports the RegisterService rpc end point
@@ -42,7 +47,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 				}
 				// If we've already registered this service, return immediately
 				if service.Identifier == in.Identifier && service.Name == in.Name {
-					return &service, nil
+					return service, nil
 				}
 
 			}
@@ -68,7 +73,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 
 				// If we've already registered this service, return immediately
 				if service.Identifier == in.Identifier && service.Name == in.Name {
-					return &service, nil
+					return service, nil
 				}
 			}
 			if !taken {
@@ -78,7 +83,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 		}
 	}
 
-	s.entries = append(s.entries, *in)
+	s.entries = append(s.entries, in)
 	return in, nil
 }
 
@@ -86,7 +91,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
 	for _, entry := range s.entries {
 		if entry.Name == in.Name {
-			return &entry, nil
+			return entry, nil
 		}
 	}
 

@@ -19,8 +19,16 @@ message RegistryEntry {
         string identifier = 5;
 }
 
+message ServiceList {
+        repeated RegistryEntry services = 1;
+}
+
+message Empty {}
+
 service DiscoveryService {
 	rpc RegisterService (RegistryEntry) returns (RegistryEntry) {}
 
 	rpc Discover (RegistryEntry) returns (RegistryEntry) {}
+
+        rpc ListAllServices (Empty) returns (ServiceList) {}
 }

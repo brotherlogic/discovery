@@ -10,6 +10,24 @@ import (
 	pb "github.com/brotherlogic/discovery/proto"
 )
 
+func TestGetAll(t *testing.T) {
+	s := InitServer()
+	entry1 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Blah1"}
+	entry2 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Blah2"}
+
+	s.RegisterService(context.Background(), entry1)
+	s.RegisterService(context.Background(), entry2)
+
+	r, err := s.ListAllServices(context.Background(), &pb.Empty{})
+	if err != nil {
+		t.Errorf("Error receiving service list: %v", err)
+	}
+
+	if len(r.Services) != 2 {
+		t.Errorf("Wrong number of services received: %v", len(r.Services))
+	}
+}
+
 func TestRegisterForExternalPort(t *testing.T) {
 	s := InitServer()
 	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", ExternalPort: true}
