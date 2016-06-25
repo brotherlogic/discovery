@@ -90,7 +90,7 @@ func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.Regist
 		}
 	}
 
-	return &pb.RegistryEntry{}, errors.New("Cannot find service")
+	return &pb.RegistryEntry{}, errors.New("Cannot find service called " + in.Name)
 }
 
 // Serve main server function
