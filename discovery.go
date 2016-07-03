@@ -2,8 +2,10 @@ package main
 
 import (
 	"errors"
+	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"io/ioutil"
 	"log"
 	"net"
 
@@ -18,7 +20,22 @@ var externalPorts = map[string][]int32{"10.0.1.17": []int32{50052, 50053}}
 
 // Server the central server object
 type Server struct {
-	entries []*pb.RegistryEntry
+	entries   []*pb.RegistryEntry
+	checkFile string
+}
+
+func (s *Server) saveCheckFile() {
+	serviceList := &pb.ServiceList{Services: s.entries}
+	data, _ := proto.Marshal(serviceList)
+	ioutil.WriteFile(s.checkFile, data, 0644)
+}
+
+func (s *Server) loadCheckFile(fileName string) {
+	data, _ := ioutil.ReadFile(fileName)
+	serviceList := &pb.ServiceList{}
+	proto.Unmarshal(data, serviceList)
+	s.entries = serviceList.Services
+	s.checkFile = fileName
 }
 
 // InitServer builds a server item ready for useo
@@ -84,6 +101,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 	}
 
 	s.entries = append(s.entries, in)
+	s.saveCheckFile()
 	return in, nil
 }
 
@@ -103,6 +121,7 @@ func Serve() {
 	lis, _ := net.Listen("tcp", port)
 	s := grpc.NewServer()
 	server := InitServer()
+	server.loadCheckFile("checkfile")
 	pb.RegisterDiscoveryServiceServer(s, &server)
 	s.Serve(lis)
 }
