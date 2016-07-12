@@ -123,5 +123,6 @@ func Serve() {
 	server := InitServer()
 	server.loadCheckFile("checkfile")
 	pb.RegisterDiscoveryServiceServer(s, &server)
-	s.Serve(lis)
+	err := s.Serve(lis)
+	log.Printf("Failed to serve: %v", err)
 }
