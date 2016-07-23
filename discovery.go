@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"net/http"
 
 	pb "github.com/brotherlogic/discovery/proto"
 )
@@ -24,14 +25,14 @@ type Server struct {
 	checkFile string
 }
 
-func (s *Server) getExternalIP string {
+func (s *Server) getExternalIP() string {
      resp, err := http.Get("http://myexternalip.com/raw")
      if err != nil {
      	return ""
      }
      defer resp.Body.Close()
      body, _ := ioutil.ReadAll(resp.Body)
-     return body
+     return string(body)
 }
 
 func (s *Server) saveCheckFile() {
