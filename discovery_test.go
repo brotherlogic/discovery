@@ -83,6 +83,10 @@ func TestRegisterForExternalPort(t *testing.T) {
 	if r.Port <= 0 {
 		t.Errorf("Request for external port failed: %v", r)
 	}
+
+	if r.Ip == "10.0.1.17" || r.Ip == "" {
+	   t.Errorf("Request for external port has not returned an external IP: %v", r.Ip)
+	}
 }
 
 func TestRegisterMACAddressRefresh(t *testing.T) {
