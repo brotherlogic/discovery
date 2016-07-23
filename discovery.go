@@ -17,7 +17,7 @@ const (
 	port = ":50055"
 )
 
-var externalPorts = map[string][]int32{"67.174.252.40": []int32{50052, 50053}}
+var externalPorts = map[string][]int32{"main": []int32{50052, 50053}}
 
 // Server the central server object
 type Server struct {
@@ -74,7 +74,7 @@ func (s *Server) ListAllServices(ctx context.Context, in *pb.Empty) (*pb.Service
 func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
 	// Server is requesting an external port
 	if in.ExternalPort {
-		availablePorts := externalPorts[in.Ip]
+		availablePorts := externalPorts["main"]
 		// Reset the request IP to an external IP
 	   	in.Ip = s.getExternalIP(prodHTTPGetter{})
 

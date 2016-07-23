@@ -74,7 +74,7 @@ func TestGetAll(t *testing.T) {
 
 func TestRegisterForExternalPort(t *testing.T) {
 	s := InitServer()
-	entry := &pb.RegistryEntry{Ip: "67.174.252.40", Name: "Testing", ExternalPort: true}
+	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", ExternalPort: true}
 	r, err := s.RegisterService(context.Background(), entry)
 	if err != nil {
 		t.Errorf("Error registering service: %v", err)
