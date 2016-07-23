@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"net/http"
 
 	pb "github.com/brotherlogic/discovery/proto"
 )
@@ -16,12 +17,31 @@ const (
 	port = ":50055"
 )
 
-var externalPorts = map[string][]int32{"10.0.1.17": []int32{50052, 50053}}
+var externalPorts = map[string][]int32{"main": []int32{50052, 50053}}
 
 // Server the central server object
 type Server struct {
 	entries   []*pb.RegistryEntry
 	checkFile string
+}
+
+type httpGetter interface {
+     Get(url string) (*http.Response, error)
+}
+type prodHTTPGetter struct{}
+
+func (httpGetter prodHTTPGetter) Get(url string) (*http.Response, error) {
+     return http.Get(url)
+}
+
+func (s *Server) getExternalIP(getter httpGetter) string {
+     resp, err := getter.Get("http://myexternalip.com/raw")
+     if err != nil {
+     	return ""
+     }
+     defer resp.Body.Close()
+     body, _ := ioutil.ReadAll(resp.Body)
+     return string(body)
 }
 
 func (s *Server) saveCheckFile() {
@@ -54,7 +74,10 @@ func (s *Server) ListAllServices(ctx context.Context, in *pb.Empty) (*pb.Service
 func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
 	// Server is requesting an external port
 	if in.ExternalPort {
-		availablePorts := externalPorts[in.Ip]
+		availablePorts := externalPorts["main"]
+		// Reset the request IP to an external IP
+	   	in.Ip = s.getExternalIP(prodHTTPGetter{})
+
 		for _, port := range availablePorts {
 			taken := false
 			for _, service := range s.entries {
