@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 
 	pb "github.com/brotherlogic/discovery/proto"
 )
@@ -41,7 +42,7 @@ func (s *Server) getExternalIP(getter httpGetter) string {
      }
      defer resp.Body.Close()
      body, _ := ioutil.ReadAll(resp.Body)
-     return string(body)
+     return strings.TrimSpace(string(body))
 }
 
 func (s *Server) saveCheckFile() {
