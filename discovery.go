@@ -17,7 +17,7 @@ const (
 	port = ":50055"
 )
 
-var externalPorts = map[string][]int32{"10.0.1.17": []int32{50052, 50053}}
+var externalPorts = map[string][]int32{"67.174.252.40": []int32{50052, 50053}}
 
 // Server the central server object
 type Server struct {
