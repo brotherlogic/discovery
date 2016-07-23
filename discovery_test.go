@@ -1,6 +1,8 @@
 package main
 
 import (
+       "errors"
+       "net/http"
        "strings"
 	"testing"
 	"time"
@@ -13,11 +15,24 @@ import (
 
 func TestGetExternalIP(t *testing.T) {
      s := InitServer()
-     externalIP := s.getExternalIP()
+     externalIP := s.getExternalIP(prodHTTPGetter{})
      if strings.HasSuffix(externalIP, "10.0.1") {
      	t.Errorf("External IP is not external enough: %v", externalIP)
      }
 }
+
+type testFailGetter struct{}
+func (httpGetter testFailGetter) Get(url string) (*http.Response, error) {
+     return nil, errors.New("Built To Fail")
+}
+func TestGetExternalIPFail(t *testing.T) {
+     s := InitServer()
+     externalIP := s.getExternalIP(testFailGetter{})
+     if externalIP != "" {
+     	t.Errorf("External IP is not blank: %v", externalIP)
+     }
+}
+
 
 func TestSaveState(t *testing.T) {
 	s := InitServer()

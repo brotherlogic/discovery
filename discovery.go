@@ -25,8 +25,17 @@ type Server struct {
 	checkFile string
 }
 
-func (s *Server) getExternalIP() string {
-     resp, err := http.Get("http://myexternalip.com/raw")
+type httpGetter interface {
+     Get(url string) (*http.Response, error)
+}
+type prodHTTPGetter struct{}
+
+func (httpGetter prodHTTPGetter) Get(url string) (*http.Response, error) {
+     return http.Get(url)
+}
+
+func (s *Server) getExternalIP(getter httpGetter) string {
+     resp, err := getter.Get("http://myexternalip.com/raw")
      if err != nil {
      	return ""
      }
