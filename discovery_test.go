@@ -1,6 +1,7 @@
 package main
 
 import (
+       "strings"
 	"testing"
 	"time"
 
@@ -9,6 +10,14 @@ import (
 
 	pb "github.com/brotherlogic/discovery/proto"
 )
+
+func TestGetExternalIP(t *testing.T) {
+     s := InitServer()
+     externalIP := s.getExternalIP()
+     if strings.HasSuffix(externalIP, "10.0.1") {
+     	t.Errorf("External IP is not external enough: %v", externalIP)
+     }
+}
 
 func TestSaveState(t *testing.T) {
 	s := InitServer()

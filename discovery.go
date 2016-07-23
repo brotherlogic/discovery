@@ -24,6 +24,16 @@ type Server struct {
 	checkFile string
 }
 
+func (s *Server) getExternalIP string {
+     resp, err := http.Get("http://myexternalip.com/raw")
+     if err != nil {
+     	return ""
+     }
+     defer resp.Body.Close()
+     body, _ := ioutil.ReadAll(resp.Body)
+     return body
+}
+
 func (s *Server) saveCheckFile() {
 	serviceList := &pb.ServiceList{Services: s.entries}
 	data, _ := proto.Marshal(serviceList)
