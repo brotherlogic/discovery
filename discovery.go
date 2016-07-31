@@ -83,14 +83,15 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 			taken := false
 			for _, service := range s.entries {
 				if service.Ip == in.Ip && service.Port == port {
-					log.Printf("TAKEN")
 					taken = true
 				}
 				// If we've already registered this service, return immediately
 				if service.Identifier == in.Identifier && service.Name == in.Name {
+					//Refresh the IP and store the checkfile
+					service.Ip = in.Ip
+					s.saveCheckFile()
 					return service, nil
 				}
-
 			}
 
 			if !taken {
@@ -114,6 +115,9 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 
 				// If we've already registered this service, return immediately
 				if service.Identifier == in.Identifier && service.Name == in.Name {
+					//Refresh the IP and store the checkfile
+					service.Ip = in.Ip
+					s.saveCheckFile()
 					return service, nil
 				}
 			}
