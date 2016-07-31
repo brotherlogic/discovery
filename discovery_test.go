@@ -61,6 +61,26 @@ func TestRegisterForExternalPort(t *testing.T) {
 	}
 }
 
+func TestRefreshIP(t *testing.T) {
+	s := InitServer()
+	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "Magic"}
+
+	_, err := s.RegisterService(context.Background(), entry)
+	if err != nil {
+		t.Errorf("Error registering service: %v", err)
+	}
+
+	entry2 := &pb.RegistryEntry{Ip: "10.0.1.20", Name: "Testing", Identifier: "Magic"}
+	r2, err := s.RegisterService(context.Background(), entry2)
+	if err != nil {
+		t.Errorf("Error registering service: %v", err)
+	}
+
+	if r2.Ip != "10.0.1.20" {
+		t.Errorf("Request has not refreshed IP: %v", r2)
+	}
+}
+
 func TestRegisterMACAddressRefresh(t *testing.T) {
 	s := InitServer()
 	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "Magic"}
