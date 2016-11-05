@@ -17,4 +17,4 @@ before_install:
   
 script:
 - fgt golint $(find . | grep .go$ | grep -v discovery.pb.go)
-- $HOME/gopath/bin/goveralls -service=travis-ci -ignore discoveryapi.go github.com/brotherlogic/discovery
+- $HOME/gopath/bin/goveralls -service=travis-ci -ignore discoveryapi.go -package github.com/brotherlogic/discovery
