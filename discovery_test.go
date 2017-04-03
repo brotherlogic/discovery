@@ -1,9 +1,9 @@
 package main
 
 import (
-       "errors"
-       "net/http"
-       "strings"
+	"errors"
+	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -13,26 +13,39 @@ import (
 	pb "github.com/brotherlogic/discovery/proto"
 )
 
+func TestIgnoreIdentifierInDiscover(t *testing.T) {
+	s := InitServer()
+	s.RegisterService(context.Background(), &pb.RegistryEntry{Name: "test", Identifier: "Blah"})
+	f, err := s.Discover(context.Background(), &pb.RegistryEntry{Name: "test"})
+	if err != nil {
+		t.Errorf("Failure: %v", err)
+	} else {
+		if f == nil || f.Identifier != "Blah" {
+			t.Errorf("Failure to match: %v", f)
+		}
+	}
+}
+
 func TestGetExternalIP(t *testing.T) {
-     s := InitServer()
-     externalIP := s.getExternalIP(prodHTTPGetter{})
-     if strings.HasSuffix(externalIP, "10.0.1") {
-     	t.Errorf("External IP is not external enough: %v", externalIP)
-     }
+	s := InitServer()
+	externalIP := s.getExternalIP(prodHTTPGetter{})
+	if strings.HasSuffix(externalIP, "10.0.1") {
+		t.Errorf("External IP is not external enough: %v", externalIP)
+	}
 }
 
 type testFailGetter struct{}
+
 func (httpGetter testFailGetter) Get(url string) (*http.Response, error) {
-     return nil, errors.New("Built To Fail")
+	return nil, errors.New("Built To Fail")
 }
 func TestGetExternalIPFail(t *testing.T) {
-     s := InitServer()
-     externalIP := s.getExternalIP(testFailGetter{})
-     if externalIP != "" {
-     	t.Errorf("External IP is not blank: %v", externalIP)
-     }
+	s := InitServer()
+	externalIP := s.getExternalIP(testFailGetter{})
+	if externalIP != "" {
+		t.Errorf("External IP is not blank: %v", externalIP)
+	}
 }
-
 
 func TestSaveState(t *testing.T) {
 	s := InitServer()
@@ -85,7 +98,7 @@ func TestRegisterForExternalPort(t *testing.T) {
 	}
 
 	if r.Ip == "10.0.1.17" || r.Ip == "" {
-	   t.Errorf("Request for external port has not returned an external IP: %v", r.Ip)
+		t.Errorf("Request for external port has not returned an external IP: %v", r.Ip)
 	}
 }
 
