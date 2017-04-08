@@ -2,14 +2,15 @@ package main
 
 import (
 	"errors"
-	"github.com/golang/protobuf/proto"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"strings"
+
+	"github.com/golang/protobuf/proto"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 
 	pb "github.com/brotherlogic/discovery/proto"
 )
@@ -27,22 +28,22 @@ type Server struct {
 }
 
 type httpGetter interface {
-     Get(url string) (*http.Response, error)
+	Get(url string) (*http.Response, error)
 }
 type prodHTTPGetter struct{}
 
 func (httpGetter prodHTTPGetter) Get(url string) (*http.Response, error) {
-     return http.Get(url)
+	return http.Get(url)
 }
 
 func (s *Server) getExternalIP(getter httpGetter) string {
-     resp, err := getter.Get("http://myexternalip.com/raw")
-     if err != nil {
-     	return ""
-     }
-     defer resp.Body.Close()
-     body, _ := ioutil.ReadAll(resp.Body)
-     return strings.TrimSpace(string(body))
+	resp, err := getter.Get("http://myexternalip.com/raw")
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	return strings.TrimSpace(string(body))
 }
 
 func (s *Server) saveCheckFile() {
@@ -77,7 +78,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 	if in.ExternalPort {
 		availablePorts := externalPorts["main"]
 		// Reset the request IP to an external IP
-	   	in.Ip = s.getExternalIP(prodHTTPGetter{})
+		in.Ip = s.getExternalIP(prodHTTPGetter{})
 
 		for _, port := range availablePorts {
 			taken := false
@@ -136,12 +137,12 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 // Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
 	for _, entry := range s.entries {
-		if entry.Name == in.Name {
+		if entry.Name == in.Name && (in.Identifier == "" || in.Identifier == entry.Identifier) {
 			return entry, nil
 		}
 	}
 
-	return &pb.RegistryEntry{}, errors.New("Cannot find service called " + in.Name)
+	return &pb.RegistryEntry{}, errors.New("Cannot find service called " + in.Name + " on server (maybe): " + in.Identifier)
 }
 
 // Serve main server function
