@@ -1,9 +1,9 @@
 package main
 
 import (
-       "errors"
-       "net/http"
-       "strings"
+	"errors"
+	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,25 +14,25 @@ import (
 )
 
 func TestGetExternalIP(t *testing.T) {
-     s := InitServer()
-     externalIP := s.getExternalIP(prodHTTPGetter{})
-     if strings.HasSuffix(externalIP, "10.0.1") {
-     	t.Errorf("External IP is not external enough: %v", externalIP)
-     }
+	s := InitServer()
+	externalIP := s.getExternalIP(prodHTTPGetter{})
+	if strings.HasSuffix(externalIP, "10.0.1") {
+		t.Errorf("External IP is not external enough: %v", externalIP)
+	}
 }
 
 type testFailGetter struct{}
+
 func (httpGetter testFailGetter) Get(url string) (*http.Response, error) {
-     return nil, errors.New("Built To Fail")
+	return nil, errors.New("Built To Fail")
 }
 func TestGetExternalIPFail(t *testing.T) {
-     s := InitServer()
-     externalIP := s.getExternalIP(testFailGetter{})
-     if externalIP != "" {
-     	t.Errorf("External IP is not blank: %v", externalIP)
-     }
+	s := InitServer()
+	externalIP := s.getExternalIP(testFailGetter{})
+	if externalIP != "" {
+		t.Errorf("External IP is not blank: %v", externalIP)
+	}
 }
-
 
 func TestSaveState(t *testing.T) {
 	s := InitServer()
@@ -85,7 +85,7 @@ func TestRegisterForExternalPort(t *testing.T) {
 	}
 
 	if r.Ip == "10.0.1.17" || r.Ip == "" {
-	   t.Errorf("Request for external port has not returned an external IP: %v", r.Ip)
+		t.Errorf("Request for external port has not returned an external IP: %v", r.Ip)
 	}
 }
 
@@ -198,6 +198,31 @@ func TestRegisterService(t *testing.T) {
 
 	if r.Name != entry.Name {
 		t.Errorf("Problem with name resolution %v vs %v", r.Name, entry.Name)
+	}
+}
+
+func TestSearchWithIdentifier(t *testing.T) {
+	s := InitServer()
+	_, err := s.RegisterService(context.Background(), &pb.RegistryEntry{Ip: "10.0.4.5", Port: 50051, Name: "Testing", Identifier: "serverone"})
+	if err != nil {
+		t.Errorf("Error registering service: %v", err)
+	}
+	_, err = s.RegisterService(context.Background(), &pb.RegistryEntry{Ip: "10.0.4.6", Port: 50051, Name: "Testing", Identifier: "servertwo"})
+	if err != nil {
+		t.Errorf("Error registering service: %v", err)
+	}
+	_, err = s.RegisterService(context.Background(), &pb.RegistryEntry{Ip: "10.0.4.7", Port: 50051, Name: "Testing", Identifier: "serverthree"})
+	if err != nil {
+		t.Errorf("Error registering service: %v", err)
+	}
+
+	entry := &pb.RegistryEntry{Name: "Testing", Identifier: "servertwo"}
+	r, err := s.Discover(context.Background(), entry)
+	if err != nil {
+		t.Errorf("Cannot discover %v", err)
+	}
+	if r.Ip != "10.0.4.6" {
+		t.Errorf("Wrong server discovered: %v", r)
 	}
 }
 
