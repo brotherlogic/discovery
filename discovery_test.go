@@ -13,6 +13,19 @@ import (
 	pb "github.com/brotherlogic/discovery/proto"
 )
 
+func TestIgnoreIdentifierInDiscover(t *testing.T) {
+	s := InitServer()
+	s.RegisterService(context.Background(), &pb.RegistryEntry{Name: "test", Identifier: "Blah"})
+	f, err := s.Discover(context.Background(), &pb.RegistryEntry{Name: "test"})
+	if err != nil {
+		t.Errorf("Failure: %v", err)
+	} else {
+		if f == nil || f.Identifier != "Blah" {
+			t.Errorf("Failure to match: %v", f)
+		}
+	}
+}
+
 func TestGetExternalIP(t *testing.T) {
 	s := InitServer()
 	externalIP := s.getExternalIP(prodHTTPGetter{})
