@@ -25,8 +25,12 @@ var externalPorts = map[string][]int32{"main": []int32{50052, 50053}}
 type Server struct {
 	entries   []*pb.RegistryEntry
 	checkFile string
+	hc        healthChecker
 }
 
+type healthChecker interface {
+	Check(entry *pb.RegistryEntry) bool
+}
 type httpGetter interface {
 	Get(url string) (*http.Response, error)
 }
@@ -64,11 +68,21 @@ func (s *Server) loadCheckFile(fileName string) {
 func InitServer() Server {
 	s := Server{}
 	s.entries = make([]*pb.RegistryEntry, 0)
+	s.hc = prodHealthChecker{}
 	return s
+}
+
+func (s *Server) cleanEntries() {
+	for i, entry := range s.entries {
+		if !s.hc.Check(entry) {
+			s.entries = append(s.entries[:i], s.entries[i+1:]...)
+		}
+	}
 }
 
 // ListAllServices returns a list of all the services
 func (s *Server) ListAllServices(ctx context.Context, in *pb.Empty) (*pb.ServiceList, error) {
+	s.cleanEntries()
 	return &pb.ServiceList{Services: s.entries}, nil
 }
 
