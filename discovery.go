@@ -3,14 +3,11 @@ package main
 import (
 	"errors"
 	"io/ioutil"
-	"log"
-	"net"
 	"net/http"
 	"strings"
 
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 
 	pb "github.com/brotherlogic/discovery/proto"
 )
@@ -73,9 +70,11 @@ func InitServer() Server {
 }
 
 func (s *Server) cleanEntries() {
+	fails := 0
 	for i, entry := range s.entries {
 		if !s.hc.Check(entry) {
-			s.entries = append(s.entries[:i], s.entries[i+1:]...)
+			s.entries = append(s.entries[:(i-fails)], s.entries[(i-fails)+1:]...)
+			fails++
 		}
 	}
 }
@@ -157,15 +156,4 @@ func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.Regist
 	}
 
 	return &pb.RegistryEntry{}, errors.New("Cannot find service called " + in.Name + " on server (maybe): " + in.Identifier)
-}
-
-// Serve main server function
-func Serve() {
-	lis, _ := net.Listen("tcp", port)
-	s := grpc.NewServer()
-	server := InitServer()
-	server.loadCheckFile("checkfile")
-	pb.RegisterDiscoveryServiceServer(s, &server)
-	err := s.Serve(lis)
-	log.Printf("Failed to serve: %v", err)
 }

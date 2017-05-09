@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"strconv"
 
 	"google.golang.org/grpc"
@@ -24,6 +25,17 @@ func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
 		return false
 	}
 	return true
+}
+
+// Serve main server function
+func Serve() {
+	lis, _ := net.Listen("tcp", port)
+	s := grpc.NewServer()
+	server := InitServer()
+	server.loadCheckFile("checkfile")
+	pb.RegisterDiscoveryServiceServer(s, &server)
+	err := s.Serve(lis)
+	log.Printf("Failed to serve: %v", err)
 }
 
 func main() {
