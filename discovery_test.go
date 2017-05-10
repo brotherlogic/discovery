@@ -5,16 +5,14 @@ import (
 	"net/http"
 	"strings"
 	"testing"
-	"time"
 
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 
 	pb "github.com/brotherlogic/discovery/proto"
 )
 
 func TestGetExternalIP(t *testing.T) {
-	s := InitServer()
+	s := InitTestServer()
 	externalIP := s.getExternalIP(prodHTTPGetter{})
 	if strings.HasSuffix(externalIP, "10.0.1") {
 		t.Errorf("External IP is not external enough: %v", externalIP)
@@ -39,7 +37,7 @@ func (httpGetter testFailGetter) Get(url string) (*http.Response, error) {
 	return nil, errors.New("Built To Fail")
 }
 func TestGetExternalIPFail(t *testing.T) {
-	s := InitServer()
+	s := InitTestServer()
 	externalIP := s.getExternalIP(testFailGetter{})
 	if externalIP != "" {
 		t.Errorf("External IP is not blank: %v", externalIP)
@@ -283,35 +281,4 @@ func InitTestServer() Server {
 	s := InitServer()
 	s.hc = testPassChecker{}
 	return s
-}
-
-func TestRunServer(t *testing.T) {
-	go func() {
-		Serve()
-	}()
-
-	go func() {
-		conn, err := grpc.Dial("localhost:50055", grpc.WithInsecure())
-		if err != nil {
-			t.Errorf("Error connecting to port")
-		}
-
-		defer conn.Close()
-		client := pb.NewDiscoveryServiceClient(conn)
-
-		entry := pb.RegistryEntry{}
-
-		_, err = client.RegisterService(context.Background(), &entry)
-		if err != nil {
-			t.Errorf("Error registering service: %v", err)
-		}
-
-		_, err = client.Discover(context.Background(), &entry)
-		if err != nil {
-			t.Errorf("Error performing discovery: %v", err)
-		}
-
-	}()
-
-	time.Sleep(10 * time.Second)
 }
