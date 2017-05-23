@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 
@@ -87,6 +88,9 @@ func (s *Server) ListAllServices(ctx context.Context, in *pb.Empty) (*pb.Service
 
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
+
+	log.Printf("Registering %v", in)
+
 	// Server is requesting an external port
 	if in.ExternalPort {
 		availablePorts := externalPorts["main"]
