@@ -15,13 +15,16 @@ import (
 type prodHealthChecker struct{}
 
 func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
-	conn, _ := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
+	conn, err := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
+	if err != nil {
+		log.Printf("Can't event dial %v -> %v", entry, err)
+	}
 	defer conn.Close()
 
 	registry := pbg.NewGoserverServiceClient(conn)
-	_, err := registry.IsAlive(context.Background(), &pbg.Alive{})
+	_, err = registry.IsAlive(context.Background(), &pbg.Alive{})
 	if err != nil {
-		log.Printf("Error reading health of %v", entry)
+		log.Printf("Error reading health of %v -> %v", entry, err)
 		return false
 	}
 	return true
