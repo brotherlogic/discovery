@@ -125,6 +125,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 	} else {
 		var portNumber int32
 		for portNumber = 50055 + 1; portNumber < 60000; portNumber++ {
+			log.Printf("Assigning port number %v", portNumber)
 			taken := false
 			for _, service := range s.entries {
 				if service.Port == portNumber {
