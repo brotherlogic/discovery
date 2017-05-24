@@ -211,6 +211,40 @@ func TestRegisterService(t *testing.T) {
 	}
 }
 
+func TestRegisterWithReregisterService(t *testing.T) {
+	s := InitTestServer()
+	s.hc = testFailChecker{}
+	entry := &pb.RegistryEntry{Ip: "10.0.4.5", Name: "Testing"}
+	r, err := s.RegisterService(context.Background(), entry)
+	if err != nil {
+		t.Errorf("Error registering service: %v", err)
+	}
+
+	if r.Name != entry.Name {
+		t.Errorf("Problem with name resolution %v vs %v", r.Name, entry.Name)
+	}
+
+	if r.Port <= 0 {
+		t.Errorf("Register has not received a port number: %v", r)
+	}
+
+	s.cleanEntries()
+
+	r2, err := s.RegisterService(context.Background(), r)
+
+	if err != nil {
+		t.Fatalf("Failed to register second time: %v", err)
+	}
+
+	if r2.Name != entry.Name {
+		t.Errorf("Re-registry failed")
+	}
+
+	if r2.Port != r.Port {
+		t.Errorf("Got a different port the second time: %v vs %v", r, r2)
+	}
+}
+
 func TestSearchWithIdentifier(t *testing.T) {
 	s := InitTestServer()
 	_, err := s.RegisterService(context.Background(), &pb.RegistryEntry{Ip: "10.0.4.5", Port: 50051, Name: "Testing", Identifier: "serverone"})
