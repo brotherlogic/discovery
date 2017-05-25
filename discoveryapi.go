@@ -15,6 +15,7 @@ import (
 type prodHealthChecker struct{}
 
 func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
+	log.Printf("Dialing for health: %v", entry)
 	conn, err := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
 	if err != nil {
 		log.Printf("Can't event dial %v -> %v", entry, err)
@@ -22,6 +23,7 @@ func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
 	defer conn.Close()
 
 	registry := pbg.NewGoserverServiceClient(conn)
+	log.Printf("Asking if %v is alive", entry)
 	_, err = registry.IsAlive(context.Background(), &pbg.Alive{})
 	if err != nil {
 		log.Printf("Error reading health of %v -> %v", entry, err)
