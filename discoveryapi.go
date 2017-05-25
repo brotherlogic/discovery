@@ -32,12 +32,15 @@ func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
 
 // Serve main server function
 func Serve() {
-	lis, _ := net.Listen("tcp", port)
+	lis, err := net.Listen("tcp", port)
+	if err != nil {
+		log.Fatalf("Unable to get tcp port %v -> %v", port, err)
+	}
 	s := grpc.NewServer()
 	server := InitServer()
 	server.loadCheckFile("checkfile")
 	pb.RegisterDiscoveryServiceServer(s, &server)
-	err := s.Serve(lis)
+	err = s.Serve(lis)
 	log.Printf("Failed to serve: %v", err)
 }
 
