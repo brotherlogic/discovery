@@ -147,8 +147,11 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 		}
 	}
 
+	log.Printf("Added to entries %v with %v", s.entries, in)
 	s.entries = append(s.entries, in)
+	log.Printf("Saving Checkfile")
 	s.saveCheckFile()
+	log.Printf("Returning")
 	return in, nil
 }
 
