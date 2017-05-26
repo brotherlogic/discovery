@@ -74,6 +74,7 @@ func (s *Server) cleanEntries() {
 	fails := 0
 	for i, entry := range s.entries {
 		if !s.hc.Check(entry) {
+			log.Printf("Unable to find %v", entry)
 			s.entries = append(s.entries[:(i-fails)], s.entries[(i-fails)+1:]...)
 			fails++
 		}
@@ -90,7 +91,6 @@ func (s *Server) ListAllServices(ctx context.Context, in *pb.Empty) (*pb.Service
 
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
-
 	log.Printf("Registering %v", in)
 
 	// Server is requesting an external port
@@ -100,6 +100,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 		in.Ip = s.getExternalIP(prodHTTPGetter{})
 
 		for _, port := range availablePorts {
+			log.Printf("Assigning port number for external %v", port)
 			taken := false
 			for _, service := range s.entries {
 				if service.Ip == in.Ip && service.Port == port {
@@ -109,7 +110,9 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 				if service.Identifier == in.Identifier && service.Name == in.Name {
 					//Refresh the IP and store the checkfile
 					service.Ip = in.Ip
+					log.Printf("Fast return : %v", service)
 					s.saveCheckFile()
+					log.Printf("Returning quick")
 					return service, nil
 				}
 			}
