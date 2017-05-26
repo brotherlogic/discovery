@@ -29,6 +29,7 @@ func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
 		log.Printf("Error reading health of %v -> %v", entry, err)
 		return false
 	}
+	log.Printf("Got the answer (nil is good): %v", err)
 	return true
 }
 
