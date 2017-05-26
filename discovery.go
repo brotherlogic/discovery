@@ -51,15 +51,19 @@ func (s *Server) getExternalIP(getter httpGetter) string {
 func (s *Server) saveCheckFile() {
 	serviceList := &pb.ServiceList{Services: s.entries}
 	data, _ := proto.Marshal(serviceList)
+	log.Printf("Saving check file: %v", serviceList)
 	ioutil.WriteFile(s.checkFile, data, 0644)
+	log.Printf("Saved")
 }
 
 func (s *Server) loadCheckFile(fileName string) {
+	log.Printf("Loading checkfile")
 	data, _ := ioutil.ReadFile(fileName)
 	serviceList := &pb.ServiceList{}
 	proto.Unmarshal(data, serviceList)
 	s.entries = serviceList.Services
 	s.checkFile = fileName
+	log.Printf("Loaded")
 }
 
 // InitServer builds a server item ready for useo
@@ -71,6 +75,7 @@ func InitServer() Server {
 }
 
 func (s *Server) cleanEntries() {
+	log.Printf("Cleaning")
 	fails := 0
 	for i, entry := range s.entries {
 		if !s.hc.Check(entry) {
@@ -79,13 +84,14 @@ func (s *Server) cleanEntries() {
 			fails++
 		}
 	}
+	log.Printf("Cleaned")
 }
 
 // ListAllServices returns a list of all the services
 func (s *Server) ListAllServices(ctx context.Context, in *pb.Empty) (*pb.ServiceList, error) {
 	log.Printf("Starting Clean")
 	s.cleanEntries()
-	log.Printf("Cleaned")
+	log.Printf("Cleaned: %v", s.entries)
 	return &pb.ServiceList{Services: s.entries}, nil
 }
 
