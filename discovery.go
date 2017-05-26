@@ -82,7 +82,9 @@ func (s *Server) cleanEntries() {
 
 // ListAllServices returns a list of all the services
 func (s *Server) ListAllServices(ctx context.Context, in *pb.Empty) (*pb.ServiceList, error) {
+	log.Printf("Starting Clean")
 	s.cleanEntries()
+	log.Printf("Cleaned")
 	return &pb.ServiceList{Services: s.entries}, nil
 }
 
@@ -157,11 +159,15 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 
 // Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
+	log.Printf("DISCOVERING: %v", in)
 	for _, entry := range s.entries {
 		if entry.Name == in.Name && (in.Identifier == "" || in.Identifier == entry.Identifier) {
+			log.Printf("Returning %v", entry)
+
 			return entry, nil
 		}
 	}
 
+	log.Printf("No such service %v", in)
 	return &pb.RegistryEntry{}, errors.New("Cannot find service called " + in.Name + " on server (maybe): " + in.Identifier)
 }
