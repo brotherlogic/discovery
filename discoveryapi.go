@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"strconv"
+	"time"
 
 	"google.golang.org/grpc"
 
@@ -16,7 +17,7 @@ type prodHealthChecker struct{}
 
 func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
 	log.Printf("Dialing for health: %v", entry)
-	conn, err := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
+	conn, err := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithTimeout(time.Second))
 	if err != nil {
 		log.Printf("Can't event dial %v -> %v", entry, err)
 	}
