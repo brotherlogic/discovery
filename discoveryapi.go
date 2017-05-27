@@ -20,6 +20,7 @@ func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
 	conn, err := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithTimeout(time.Second*5))
 	if err != nil {
 		log.Printf("Can't event dial %v -> %v", entry, err)
+		return false
 	}
 	defer conn.Close()
 
