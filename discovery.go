@@ -80,6 +80,7 @@ func (s *Server) cleanEntries() {
 	for i, entry := range s.entries {
 		if !s.hc.Check(entry) {
 			log.Printf("Unable to find %v", entry)
+			log.Printf("Removing %v from %v with %v -> %v", i, len(s.entries), fails, s.entries)
 			s.entries = append(s.entries[:(i-fails)], s.entries[(i-fails)+1:]...)
 			fails++
 		}
