@@ -64,6 +64,33 @@ func TestSaveState(t *testing.T) {
 	}
 }
 
+func TestRegisterMasterOverride(t *testing.T) {
+	s := InitTestServer()
+	entry1 := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "server1", Name: "Job1", Master: true}
+	entry2 := &pb.RegistryEntry{Ip: "10.0.1.18", Identifier: "server2", Name: "Job1", Master: true}
+
+	s.RegisterService(context.Background(), entry1)
+	s.RegisterService(context.Background(), entry2)
+
+	r, err := s.ListAllServices(context.Background(), &pb.Empty{})
+	if err != nil {
+		t.Errorf("Error receiving service list: %v", err)
+	}
+
+	if len(r.Services) != 2 {
+		t.Fatalf("Wrong number of services received: %v", len(r.Services))
+	}
+
+	index1 := 0
+	if r.Services[0].Ip != "10.0.1.17" {
+		index1 = 2
+	}
+
+	if r.Services[index1].Master {
+		t.Errorf("Entry1 is still master: %v", r.Services)
+	}
+}
+
 func TestGetAll(t *testing.T) {
 	s := InitTestServer()
 	entry1 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Blah1"}
