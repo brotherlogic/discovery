@@ -151,6 +151,11 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 					s.saveCheckFile()
 					return service, nil
 				}
+
+				//Unmaster the service if the incoming also wants to be master
+				if service.Name == in.Name && service.Master && in.Master {
+					service.Master = false
+				}
 			}
 			if !taken {
 				in.Port = portNumber
