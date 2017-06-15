@@ -175,12 +175,20 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 // Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
 	log.Printf("DISCOVERING: %v", in)
+	var nonmaster *pb.RegistryEntry
 	for _, entry := range s.entries {
 		if entry.Name == in.Name && (in.Identifier == "" || in.Identifier == entry.Identifier) {
-			log.Printf("Returning %v", entry)
-
-			return entry, nil
+			if entry.Master {
+				log.Printf("Returning %v", entry)
+				return entry, nil
+			}
+			nonmaster = entry
 		}
+	}
+
+	//Return the non master if possible
+	if nonmaster != nil {
+		return nonmaster, nil
 	}
 
 	log.Printf("No such service %v", in)

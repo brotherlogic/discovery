@@ -64,6 +64,24 @@ func TestSaveState(t *testing.T) {
 	}
 }
 
+func TestReturnMaster(t *testing.T) {
+	s := InitTestServer()
+	entry1 := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "server1", Name: "Job1", Master: true}
+	entry2 := &pb.RegistryEntry{Ip: "10.0.1.18", Identifier: "server2", Name: "Job1", Master: true}
+
+	s.RegisterService(context.Background(), entry1)
+	s.RegisterService(context.Background(), entry2)
+
+	entry, err := s.Discover(context.Background(), &pb.RegistryEntry{Name: "Job1"})
+	if err != nil {
+		t.Fatalf("Error on discover: %v", err)
+	}
+
+	if entry.Identifier != "server2" {
+		t.Errorf("Failed to return actual master: %v", entry)
+	}
+}
+
 func TestRegisterMasterOverride(t *testing.T) {
 	s := InitTestServer()
 	entry1 := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "server1", Name: "Job1", Master: true}
