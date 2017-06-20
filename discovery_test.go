@@ -256,6 +256,28 @@ func TestRegisterService(t *testing.T) {
 	}
 }
 
+func TestCleanWithNoEntries(t *testing.T) {
+	s := InitTestServer()
+	s.hc = testFailChecker{}
+
+	entry1 := &pb.RegistryEntry{Ip: "10.0.4.5", Name: "Testing1"}
+	entry2 := &pb.RegistryEntry{Ip: "10.0.4.5", Name: "Testing2"}
+
+	s.RegisterService(context.Background(), entry1)
+	s.RegisterService(context.Background(), entry2)
+
+	s.cleanEntries()
+
+	r2, err := s.ListAllServices(context.Background(), &pb.Empty{})
+	if err != nil {
+		t.Fatalf("Failed to list: %v", err)
+	}
+
+	if len(r2.Services) > 0 {
+		t.Errorf("Services were not actually removed: %v", r2)
+	}
+}
+
 func TestRegisterWithReregisterService(t *testing.T) {
 	s := InitTestServer()
 	s.hc = testFailChecker{}
