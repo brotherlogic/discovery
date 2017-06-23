@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"io/ioutil"
 	"log"
 	"net"
 	"strconv"
@@ -37,6 +39,13 @@ func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
 
 // Serve main server function
 func Serve() {
+	var quiet = flag.Bool("quiet", true, "Show all output")
+	flag.Parse()
+	if *quiet {
+		log.SetFlags(0)
+		log.SetOutput(ioutil.Discard)
+	}
+
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("Unable to get tcp port %v -> %v", port, err)
