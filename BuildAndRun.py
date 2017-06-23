@@ -34,4 +34,4 @@ if size_1 != size_2 or new_hash != current_hash or not running:
         pass
     for line in os.popen('killall ' + name).readlines():
         pass
-    subprocess.Popen(['./' + name, '--sync=false'])
+    subprocess.Popen(['./' + name])

@@ -13,6 +13,15 @@ import (
 )
 
 func main() {
+
+	fails := 0
+	arr := []int{1, 2, 3, 4}
+	for i, val := range arr {
+		if val == 4 {
+			arr = append(arr[:(i-fails)], arr[(i-fails)+1:]...)
+		}
+	}
+
 	buildFlags := flag.NewFlagSet("BuildServer", flag.ExitOnError)
 
 	if len(os.Args) <= 1 {
