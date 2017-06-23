@@ -39,12 +39,13 @@ func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
 
 // Serve main server function
 func Serve() {
-	var quiet = flag.Bool("quiet", true, "Show all output")
+	var quiet = flag.Bool("quiet", false, "Show all output")
 	flag.Parse()
 	if *quiet {
 		log.SetFlags(0)
 		log.SetOutput(ioutil.Discard)
 	}
+	log.Printf("Logging is on!")
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
