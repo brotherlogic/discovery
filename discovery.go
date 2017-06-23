@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
@@ -24,6 +25,7 @@ type Server struct {
 	entries   []*pb.RegistryEntry
 	checkFile string
 	hc        healthChecker
+	m         *sync.Mutex
 }
 
 type healthChecker interface {
@@ -71,10 +73,12 @@ func InitServer() Server {
 	s := Server{}
 	s.entries = make([]*pb.RegistryEntry, 0)
 	s.hc = prodHealthChecker{}
+	s.m = &sync.Mutex{}
 	return s
 }
 
 func (s *Server) cleanEntries() {
+	s.m.Lock()
 	log.Printf("Cleaning")
 	fails := 0
 	for i, entry := range s.entries {
@@ -89,6 +93,7 @@ func (s *Server) cleanEntries() {
 		}
 	}
 	log.Printf("Cleaned")
+	s.m.Unlock()
 }
 
 // ListAllServices returns a list of all the services
