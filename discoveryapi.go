@@ -19,7 +19,7 @@ type prodHealthChecker struct{}
 
 func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
 	log.Printf("Dialing for health: %v", entry)
-	conn, err := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithTimeout(time.Second*5), grpc.WithInsecure())
+	conn, err := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithTimeout(time.Second*1), grpc.WithInsecure())
 	if err != nil {
 		log.Printf("Can't event dial %v -> %v", entry, err)
 		return false
