@@ -44,26 +44,6 @@ func TestGetExternalIPFail(t *testing.T) {
 	}
 }
 
-func TestSaveState(t *testing.T) {
-	s := InitTestServer()
-	s.checkFile = "test-check"
-	entry1 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Blah1"}
-
-	s.RegisterService(context.Background(), entry1)
-
-	s2 := InitTestServer()
-	s2.loadCheckFile("test-check")
-
-	r, err := s2.ListAllServices(context.Background(), &pb.Empty{})
-	if err != nil {
-		t.Errorf("Error receiving service list: %v", err)
-	}
-
-	if len(r.Services) != 1 {
-		t.Errorf("Wrong number of services received %v", len(r.Services))
-	}
-}
-
 func TestReturnMaster(t *testing.T) {
 	s := InitTestServer()
 	entry1 := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "server1", Name: "Job1", Master: true}

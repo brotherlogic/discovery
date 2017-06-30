@@ -53,7 +53,6 @@ func Serve() {
 	}
 	s := grpc.NewServer()
 	server := InitServer()
-	server.loadCheckFile("checkfile")
 	pb.RegisterDiscoveryServiceServer(s, &server)
 	err = s.Serve(lis)
 	log.Printf("Failed to serve: %v", err)
