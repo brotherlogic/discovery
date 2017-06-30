@@ -8,7 +8,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
 
 	pb "github.com/brotherlogic/discovery/proto"
@@ -48,24 +47,6 @@ func (s *Server) getExternalIP(getter httpGetter) string {
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 	return strings.TrimSpace(string(body))
-}
-
-func (s *Server) saveCheckFile() {
-	serviceList := &pb.ServiceList{Services: s.entries}
-	data, _ := proto.Marshal(serviceList)
-	log.Printf("Saving check file: %v", serviceList)
-	ioutil.WriteFile(s.checkFile, data, 0644)
-	log.Printf("Saved")
-}
-
-func (s *Server) loadCheckFile(fileName string) {
-	log.Printf("Loading checkfile")
-	data, _ := ioutil.ReadFile(fileName)
-	serviceList := &pb.ServiceList{}
-	proto.Unmarshal(data, serviceList)
-	s.entries = serviceList.Services
-	s.checkFile = fileName
-	log.Printf("Loaded")
 }
 
 // InitServer builds a server item ready for useo
@@ -126,7 +107,6 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 					//Refresh the IP and store the checkfile
 					service.Ip = in.Ip
 					log.Printf("Fast return : %v", service)
-					s.saveCheckFile()
 					log.Printf("Returning quick")
 					return service, nil
 				}
@@ -156,7 +136,6 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 				if service.Identifier == in.Identifier && service.Name == in.Name {
 					//Refresh the IP and store the checkfile
 					service.Ip = in.Ip
-					s.saveCheckFile()
 					return service, nil
 				}
 
@@ -178,7 +157,6 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 	log.Printf("Added to entries %v with %v", s.entries, in)
 	s.entries = append(s.entries, in)
 	log.Printf("Saving Checkfile")
-	s.saveCheckFile()
 	log.Printf("Returning")
 	return in, nil
 }
