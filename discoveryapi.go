@@ -21,7 +21,7 @@ func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
 	log.Printf("Dialing for health: %v", entry)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	conn, err := grpc.DialContext(ctx, entry.Ip+":"+strconv.Itoa(int(entry.Port)))
+	conn, err := grpc.DialContext(ctx, entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
 	if err != nil {
 		log.Printf("Can't event dial %v -> %v", entry, err)
 		return false
