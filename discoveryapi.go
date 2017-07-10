@@ -13,9 +13,28 @@ import (
 
 	pb "github.com/brotherlogic/discovery/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
+	pbm "github.com/brotherlogic/monitor/monitorproto"
 )
 
 type prodHealthChecker struct{}
+
+func (s *Server) recordTime(fName string, t time.Duration) {
+	for _, e := range s.entries {
+		if e.GetName() == "monitor" && e.GetMaster() {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			conn, err := grpc.DialContext(ctx, e.Ip+":"+strconv.Itoa(int(e.Port)), grpc.WithInsecure())
+			if err != nil {
+				log.Printf("Can't event dial %v -> %v", e, err)
+			} else {
+				defer conn.Close()
+
+				client := pbm.NewMonitorServiceClient(conn)
+				client.WriteFunctionCall(ctx, &pbm.FunctionCall{Binary: "discovery", Name: fName, Time: int32(t.Nanoseconds() / 1000000)})
+			}
+		}
+	}
+}
 
 func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
 	log.Printf("Dialing for health: %v", entry)

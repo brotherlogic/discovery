@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -163,12 +164,14 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 
 // Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
+	t := time.Now()
 	log.Printf("DISCOVERING: %v", in)
 	var nonmaster *pb.RegistryEntry
 	for _, entry := range s.entries {
 		if entry.Name == in.Name && (in.Identifier == "" || in.Identifier == entry.Identifier) {
 			if entry.Master {
 				log.Printf("Returning %v", entry)
+				s.recordTime("Discover-foundmaster", time.Now().Sub(t))
 				return entry, nil
 			}
 			nonmaster = entry
@@ -177,9 +180,11 @@ func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.Regist
 
 	//Return the non master if possible
 	if nonmaster != nil {
+		s.recordTime("Discover-nonmaster", time.Now().Sub(t))
 		return nonmaster, nil
 	}
 
 	log.Printf("No such service %v", in)
+	s.recordTime("Discover-fail", time.Now().Sub(t))
 	return &pb.RegistryEntry{}, errors.New("Cannot find service called " + in.Name + " on server (maybe): " + in.Identifier)
 }
