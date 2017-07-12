@@ -49,7 +49,7 @@ func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
 
 	registry := pbg.NewGoserverServiceClient(conn)
 	log.Printf("Asking if %v is alive", entry)
-	_, err = registry.IsAlive(context.Background(), &pbg.Alive{})
+	_, err = registry.IsAlive(ctx, &pbg.Alive{})
 	if err != nil {
 		log.Printf("Error reading health of %v -> %v", entry, err)
 		return false
