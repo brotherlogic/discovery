@@ -139,11 +139,6 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 					service.Ip = in.Ip
 					return service, nil
 				}
-
-				//Unmaster the service if the incoming also wants to be master
-				if service.Name == in.Name && service.Master && in.Master {
-					service.Master = false
-				}
 			}
 			if !taken {
 				//Only set the port if it's not set
@@ -169,7 +164,7 @@ func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.Regist
 	var nonmaster *pb.RegistryEntry
 	for _, entry := range s.entries {
 		if entry.Name == in.Name && (in.Identifier == "" || in.Identifier == entry.Identifier) {
-			if entry.Master {
+			if entry.Master || in.Identifier != "" {
 				log.Printf("Returning %v", entry)
 				s.recordTime("Discover-foundmaster", time.Now().Sub(t))
 				return entry, nil
@@ -181,7 +176,7 @@ func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.Regist
 	//Return the non master if possible
 	if nonmaster != nil {
 		s.recordTime("Discover-nonmaster", time.Now().Sub(t))
-		return nonmaster, nil
+		return nil, errors.New("Cannot find a master for service called " + in.Name + " on server (maybe): " + in.Identifier)
 	}
 
 	log.Printf("No such service %v", in)
