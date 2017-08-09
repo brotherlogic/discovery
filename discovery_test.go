@@ -44,6 +44,30 @@ func TestGetExternalIPFail(t *testing.T) {
 	}
 }
 
+func TestStartAsSlave(t *testing.T) {
+	s := InitTestServer()
+	entry1 := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "server1", Name: "Job1"}
+	s.RegisterService(context.Background(), entry1)
+
+	// Shouldn't be able to find
+	entry, err := s.Discover(context.Background(), &pb.RegistryEntry{Name: "Job1"})
+	if err == nil {
+		t.Fatalf("Haven't failed to discover: %v", entry)
+	}
+
+	entry1.Master = true
+	s.RegisterService(context.Background(), entry1)
+
+	entry, err = s.Discover(context.Background(), &pb.RegistryEntry{Name: "Job1"})
+	if err != nil {
+		t.Fatalf("Failed to discover: %v", err)
+	}
+
+	if entry.Identifier != "server1" {
+		t.Errorf("Weird Error %v", entry)
+	}
+}
+
 func TestReturnMaster(t *testing.T) {
 	s := InitTestServer()
 	entry1 := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "server1", Name: "Job1", Master: true}
@@ -57,7 +81,7 @@ func TestReturnMaster(t *testing.T) {
 		t.Fatalf("Error on discover: %v", err)
 	}
 
-	if entry.Identifier != "server2" {
+	if entry.Identifier != "server2" && entry.Identifier != "server1" {
 		t.Errorf("Failed to return actual master: %v", entry)
 	}
 }
@@ -84,8 +108,8 @@ func TestRegisterMasterOverride(t *testing.T) {
 		index1 = 2
 	}
 
-	if r.Services[index1].Master {
-		t.Errorf("Entry1 is still master: %v", r.Services)
+	if !r.Services[index1].Master {
+		t.Errorf("Entry1 is no longers master: %v", r.Services)
 	}
 }
 
@@ -329,7 +353,7 @@ func TestFailedDiscover(t *testing.T) {
 
 func TestDiscover(t *testing.T) {
 	s := InitTestServer()
-	entryAdd := &pb.RegistryEntry{Ip: "10.0.4.5", Port: 50051, Name: "Testing"}
+	entryAdd := &pb.RegistryEntry{Ip: "10.0.4.5", Port: 50051, Name: "Testing", Master: true}
 	s.RegisterService(context.Background(), entryAdd)
 	entry := &pb.RegistryEntry{Name: "Testing"}
 	r, err := s.Discover(context.Background(), entry)
