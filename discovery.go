@@ -107,6 +107,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 				if service.Identifier == in.Identifier && service.Name == in.Name {
 					//Refresh the IP and store the checkfile
 					service.Ip = in.Ip
+					service.Master = in.Master
 					log.Printf("Fast return : %v", service)
 					log.Printf("Returning quick")
 					return service, nil
@@ -137,6 +138,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 				if service.Identifier == in.Identifier && service.Name == in.Name {
 					//Refresh the IP and store the checkfile
 					service.Ip = in.Ip
+					service.Master = in.Master
 					return service, nil
 				}
 			}
