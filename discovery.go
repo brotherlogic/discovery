@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	port = ":50055"
+	port        = ":50055"
+	strikeCount = 3
 )
 
 var externalPorts = map[string][]int32{"main": []int32{50052, 50053}}
@@ -26,10 +27,11 @@ type Server struct {
 	checkFile string
 	hc        healthChecker
 	m         *sync.Mutex
+	strikes   map[*pb.RegistryEntry]int
 }
 
 type healthChecker interface {
-	Check(entry *pb.RegistryEntry) bool
+	Check(count int, entry *pb.RegistryEntry) int
 }
 type httpGetter interface {
 	Get(url string) (*http.Response, error)
@@ -54,6 +56,7 @@ func (s *Server) getExternalIP(getter httpGetter) string {
 func InitServer() Server {
 	s := Server{}
 	s.entries = make([]*pb.RegistryEntry, 0)
+	s.strikes = make(map[*pb.RegistryEntry]int)
 	s.hc = prodHealthChecker{}
 	s.m = &sync.Mutex{}
 	return s
@@ -63,7 +66,9 @@ func (s *Server) cleanEntries() {
 	s.m.Lock()
 	fails := 0
 	for i, entry := range s.entries {
-		if !s.hc.Check(entry) {
+		s.strikes[entry] = s.hc.Check(s.strikes[entry], entry)
+		if s.strikes[entry] > strikeCount {
+			log.Printf("Removing %v", entry)
 			s.entries = append(s.entries[:(i-fails)], s.entries[(i-fails)+1:]...)
 			fails++
 		}

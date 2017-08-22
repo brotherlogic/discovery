@@ -36,14 +36,14 @@ func (s *Server) recordTime(fName string, t time.Duration) {
 	}
 }
 
-func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
+func (healthChecker prodHealthChecker) Check(count int, entry *pb.RegistryEntry) int {
 	t2 := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	conn, err := grpc.DialContext(ctx, entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
 	if err != nil {
 		log.Printf("Can't event dial %v -> %v", entry, err)
-		return false
+		return count + 1
 	}
 	defer conn.Close()
 
@@ -52,9 +52,9 @@ func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
 	_, err = registry.IsAlive(ctx, &pbg.Alive{})
 	if err != nil {
 		log.Printf("Error reading health of %v -> %v given %v (%v) seconds", entry, err, time.Now().Sub(t1), time.Now().Sub(t2))
-		return false
+		return count + 1
 	}
-	return true
+	return 0
 }
 
 // Serve main server function
