@@ -61,15 +61,9 @@ func InitServer() Server {
 
 func (s *Server) cleanEntries() {
 	s.m.Lock()
-	log.Printf("Cleaning")
 	fails := 0
 	for i, entry := range s.entries {
 		if !s.hc.Check(entry) {
-			log.Printf("Unable to find %v", entry)
-			log.Printf("Removing (%v) %v from %v with %v -> %v", entry, i, len(s.entries), fails, s.entries)
-			log.Printf("WITH %v", s.entries[:(i-fails)])
-			log.Printf("AND %v", s.entries[(i-fails)+1:])
-			log.Printf("REMOVING %v", s.entries[i-fails])
 			s.entries = append(s.entries[:(i-fails)], s.entries[(i-fails)+1:]...)
 			fails++
 		}
@@ -80,16 +74,12 @@ func (s *Server) cleanEntries() {
 
 // ListAllServices returns a list of all the services
 func (s *Server) ListAllServices(ctx context.Context, in *pb.Empty) (*pb.ServiceList, error) {
-	log.Printf("Starting Clean")
 	s.cleanEntries()
-	log.Printf("Cleaned: %v", s.entries)
 	return &pb.ServiceList{Services: s.entries}, nil
 }
 
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
-	log.Printf("Registering %v", in)
-
 	// Server is requesting an external port
 	if in.ExternalPort {
 		availablePorts := externalPorts["main"]
@@ -97,7 +87,6 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 		in.Ip = s.getExternalIP(prodHTTPGetter{})
 
 		for _, port := range availablePorts {
-			log.Printf("Assigning port number for external %v", port)
 			taken := false
 			for _, service := range s.entries {
 				if service.Ip == in.Ip && service.Port == port {
@@ -108,8 +97,6 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 					//Refresh the IP and store the checkfile
 					service.Ip = in.Ip
 					service.Master = in.Master
-					log.Printf("Fast return : %v", service)
-					log.Printf("Returning quick")
 					return service, nil
 				}
 			}
@@ -127,7 +114,6 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 	} else {
 		var portNumber int32
 		for portNumber = 50055 + 1; portNumber < 60000; portNumber++ {
-			log.Printf("Assigning port number %v", portNumber)
 			taken := false
 			for _, service := range s.entries {
 				if service.Port == portNumber {
@@ -152,22 +138,17 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 		}
 	}
 
-	log.Printf("Added to entries %v with %v", s.entries, in)
 	s.entries = append(s.entries, in)
-	log.Printf("Saving Checkfile")
-	log.Printf("Returning")
 	return in, nil
 }
 
 // Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
 	t := time.Now()
-	log.Printf("DISCOVERING: %v", in)
 	var nonmaster *pb.RegistryEntry
 	for _, entry := range s.entries {
 		if entry.Name == in.Name && (in.Identifier == "" || in.Identifier == entry.Identifier) {
 			if entry.Master || in.Identifier != "" {
-				log.Printf("Returning %v", entry)
 				s.recordTime("Discover-foundmaster", time.Now().Sub(t))
 				return entry, nil
 			}

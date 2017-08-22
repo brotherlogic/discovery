@@ -37,7 +37,6 @@ func (s *Server) recordTime(fName string, t time.Duration) {
 }
 
 func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
-	log.Printf("Dialing for health: %v", entry)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 	conn, err := grpc.DialContext(ctx, entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
@@ -48,13 +47,11 @@ func (healthChecker prodHealthChecker) Check(entry *pb.RegistryEntry) bool {
 	defer conn.Close()
 
 	registry := pbg.NewGoserverServiceClient(conn)
-	log.Printf("Asking if %v is alive", entry)
-	r, err := registry.IsAlive(ctx, &pbg.Alive{})
+	_, err = registry.IsAlive(ctx, &pbg.Alive{})
 	if err != nil {
 		log.Printf("Error reading health of %v -> %v", entry, err)
 		return false
 	}
-	log.Printf("Got the answer (nil is good): %v (also %v)", err, r)
 	return true
 }
 
