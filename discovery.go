@@ -68,7 +68,6 @@ func (s *Server) cleanEntries() {
 			fails++
 		}
 	}
-	log.Printf("Cleaned")
 	s.m.Unlock()
 }
 
@@ -162,7 +161,7 @@ func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.Regist
 		return nil, errors.New("Cannot find a master for service called " + in.Name + " on server (maybe): " + in.Identifier)
 	}
 
-	log.Printf("No such service %v", in)
+	log.Printf("No such service %v -> %v", in, s.entries)
 	s.recordTime("Discover-fail", time.Now().Sub(t))
 	return &pb.RegistryEntry{}, errors.New("Cannot find service called " + in.Name + " on server (maybe): " + in.Identifier)
 }
