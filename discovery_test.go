@@ -21,14 +21,14 @@ func TestGetExternalIP(t *testing.T) {
 
 type testPassChecker struct{}
 
-func (healthChecker testPassChecker) Check(entry *pb.RegistryEntry) bool {
-	return true
+func (healthChecker testPassChecker) Check(val int, entry *pb.RegistryEntry) int {
+	return 0
 }
 
 type testFailChecker struct{}
 
-func (healthChecker testFailChecker) Check(entry *pb.RegistryEntry) bool {
-	return false
+func (healthChecker testFailChecker) Check(val int, entry *pb.RegistryEntry) int {
+	return 100
 }
 
 type testFailGetter struct{}
