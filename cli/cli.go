@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
+	"github.com/brotherlogic/goserver/utils"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
@@ -30,7 +32,7 @@ func main() {
 		switch os.Args[1] {
 		case "list":
 			if err := buildFlags.Parse(os.Args[2:]); err == nil {
-				conn, _ := grpc.Dial("192.168.86.64:50055", grpc.WithInsecure())
+				conn, _ := grpc.Dial(utils.RegistryIP+":"+strconv.Itoa(utils.RegistryPort), grpc.WithInsecure())
 				defer conn.Close()
 
 				registry := pbdi.NewDiscoveryServiceClient(conn)
