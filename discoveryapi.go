@@ -49,11 +49,17 @@ func (healthChecker prodHealthChecker) Check(count int, entry *pb.RegistryEntry)
 
 	t1 := time.Now()
 	registry := pbg.NewGoserverServiceClient(conn)
-	_, err = registry.IsAlive(ctx, &pbg.Alive{})
+	resp, err := registry.IsAlive(ctx, &pbg.Alive{})
 	if err != nil {
 		log.Printf("Error reading health of %v -> %v given %v (%v) seconds", entry, err, time.Now().Sub(t1), time.Now().Sub(t2))
 		return count + 1
 	}
+
+	if resp.Name != entry.GetName() {
+		log.Printf("Wrong name on return: %v", resp)
+		return count + 1
+	}
+
 	return 0
 }
 
