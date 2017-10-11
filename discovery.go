@@ -67,6 +67,7 @@ func (s *Server) cleanEntries() {
 	fails := 0
 	for i, entry := range s.entries {
 		s.strikes[entry] = s.hc.Check(s.strikes[entry], entry)
+		log.Printf("Cleaning %v -> %v", entry, s.strikes[entry])
 		if s.strikes[entry] > strikeCount {
 			log.Printf("Removing %v", entry)
 			s.entries = append(s.entries[:(i-fails)], s.entries[(i-fails)+1:]...)
