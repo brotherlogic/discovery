@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -67,9 +66,7 @@ func (s *Server) cleanEntries() {
 	fails := 0
 	for i, entry := range s.entries {
 		s.strikes[entry] = s.hc.Check(s.strikes[entry], entry)
-		log.Printf("Cleaning %v -> %v", entry, s.strikes[entry])
 		if s.strikes[entry] > strikeCount {
-			log.Printf("Removing %v", entry)
 			s.entries = append(s.entries[:(i-fails)], s.entries[(i-fails)+1:]...)
 			fails++
 		}
@@ -167,7 +164,6 @@ func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.Regist
 		return nil, errors.New("Cannot find a master for service called " + in.Name + " on server (maybe): " + in.Identifier)
 	}
 
-	log.Printf("No such service %v -> %v", in, s.entries)
 	s.recordTime("Discover-fail", time.Now().Sub(t))
 	return &pb.RegistryEntry{}, errors.New("Cannot find service called " + in.Name + " on server (maybe): " + in.Identifier)
 }
