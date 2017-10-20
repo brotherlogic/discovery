@@ -28,7 +28,7 @@ func (s *Server) recordTime(fName string, t time.Duration) {
 				defer conn.Close()
 
 				client := pbm.NewMonitorServiceClient(conn)
-				client.WriteFunctionCall(ctx, &pbm.FunctionCall{Binary: "discovery", Name: fName, Time: int32(t.Nanoseconds() / 1000000)})
+				client.WriteFunctionCall(ctx, &pbm.FunctionCall{Binary: "discovery", Name: fName, Time: int32(t.Nanoseconds() / 1000000)}, grpc.FailFast(false))
 			}
 		}
 	}
@@ -47,7 +47,7 @@ func (healthChecker prodHealthChecker) Check(count int, entry *pb.RegistryEntry)
 
 	t1 := time.Now()
 	registry := pbg.NewGoserverServiceClient(conn)
-	resp, err := registry.IsAlive(ctx, &pbg.Alive{})
+	resp, err := registry.IsAlive(ctx, &pbg.Alive{}, grpc.FailFast(false))
 	if err != nil {
 		log.Printf("Error reading health of %v -> %v given %v (%v) seconds", entry, err, time.Now().Sub(t1), time.Now().Sub(t2))
 		return count + 1
@@ -63,7 +63,7 @@ func (healthChecker prodHealthChecker) Check(count int, entry *pb.RegistryEntry)
 
 // Serve main server function
 func Serve() {
-	var quiet = flag.Bool("quiet", false, "Show all output")
+	var quiet = flag.Bool("quiet", true, "Show all output")
 	flag.Parse()
 	if *quiet {
 		log.SetFlags(0)
