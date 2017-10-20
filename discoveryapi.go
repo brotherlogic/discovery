@@ -24,9 +24,7 @@ func (s *Server) recordTime(fName string, t time.Duration) {
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
 			conn, err := grpc.DialContext(ctx, e.Ip+":"+strconv.Itoa(int(e.Port)), grpc.WithInsecure())
-			if err != nil {
-				log.Printf("Can't event dial %v -> %v", e, err)
-			} else {
+			if err == nil {
 				defer conn.Close()
 
 				client := pbm.NewMonitorServiceClient(conn)
