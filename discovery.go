@@ -43,9 +43,17 @@ func (httpGetter prodHTTPGetter) Get(url string) (*http.Response, error) {
 }
 
 func (s *Server) getExternalIP(getter httpGetter) string {
-	resp, err := getter.Get("http://myexternalip.com/raw")
-	if err != nil {
-		return ""
+	if s.external == "" || time.Now().Sub(s.lastGet) > time.Hour {
+		resp, err := getter.Get("http://myexternalip.com/raw")
+		if err != nil {
+			log.Printf("GET ERROR: %v", err)
+			return ""
+		}
+		defer resp.Body.Close()
+		body, _ := ioutil.ReadAll(resp.Body)
+		s.external = strings.TrimSpace(string(body))
+		s.lastGet = time.Now()
+		return strings.TrimSpace(string(body))
 	}
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
