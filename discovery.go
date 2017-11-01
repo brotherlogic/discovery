@@ -28,6 +28,8 @@ type Server struct {
 	hc        healthChecker
 	m         *sync.Mutex
 	strikes   map[*pb.RegistryEntry]int
+	external  string
+	lastGet   time.Time
 }
 
 type healthChecker interface {
@@ -43,13 +45,18 @@ func (httpGetter prodHTTPGetter) Get(url string) (*http.Response, error) {
 }
 
 func (s *Server) getExternalIP(getter httpGetter) string {
-	resp, err := getter.Get("http://myexternalip.com/raw")
-	if err != nil {
-		return ""
+	if s.external == "" || time.Now().Sub(s.lastGet) > time.Hour {
+		resp, err := getter.Get("http://myexternalip.com/raw")
+		if err != nil {
+			return ""
+		}
+		defer resp.Body.Close()
+		body, _ := ioutil.ReadAll(resp.Body)
+		s.external = strings.TrimSpace(string(body))
+		s.lastGet = time.Now()
+		return strings.TrimSpace(string(body))
 	}
-	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
-	return strings.TrimSpace(string(body))
+	return s.external
 }
 
 // InitServer builds a server item ready for useo
