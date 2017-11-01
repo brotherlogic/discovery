@@ -88,7 +88,9 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 	if in.ExternalPort {
 		availablePorts := externalPorts["main"]
 		// Reset the request IP to an external IP
+		log.Printf("Getting external")
 		in.Ip = s.getExternalIP(prodHTTPGetter{})
+		log.Printf("Got: %v", in.Ip)
 
 		if in.Ip == "" {
 			return nil, errors.New("Unable to get IP")
