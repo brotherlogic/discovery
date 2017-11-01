@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -82,6 +83,7 @@ func (s *Server) ListAllServices(ctx context.Context, in *pb.Empty) (*pb.Service
 
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
+	log.Printf("Requesting Register %v", in)
 	// Server is requesting an external port
 	if in.ExternalPort {
 		availablePorts := externalPorts["main"]
@@ -93,11 +95,13 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 		}
 
 		for _, port := range availablePorts {
+			log.Printf("Trying external port %v for %v", port, in)
 			taken := false
 			for _, service := range s.entries {
 				if service.Ip == in.Ip && service.Port == port {
 					taken = true
 				}
+
 				// If we've already registered this service, return immediately
 				if service.Identifier == in.Identifier && service.Name == in.Name {
 					//Refresh the IP and store the checkfile
