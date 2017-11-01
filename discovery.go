@@ -88,6 +88,10 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 		// Reset the request IP to an external IP
 		in.Ip = s.getExternalIP(prodHTTPGetter{})
 
+		if in.Ip == "" {
+			return nil, errors.New("Unable to get IP")
+		}
+
 		for _, port := range availablePorts {
 			taken := false
 			for _, service := range s.entries {

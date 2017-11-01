@@ -36,7 +36,7 @@ func main() {
 				defer conn.Close()
 
 				registry := pbdi.NewDiscoveryServiceClient(conn)
-				bits, err := registry.ListAllServices(context.Background(), &pbdi.Empty{})
+				bits, err := registry.ListAllServices(context.Background(), &pbdi.Empty{}, grpc.FailFast(false))
 				if err != nil {
 					log.Printf("Error building job: %v", err)
 				}
