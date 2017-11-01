@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 	"testing"
@@ -213,6 +214,8 @@ func TestRegisterMACAddressRefreshWithExternalPort(t *testing.T) {
 	if err != nil {
 		t.Errorf("Error registering service: %v", err)
 	}
+
+	log.Printf("Trying this one: %v", r2)
 
 	if r2.Port != r.Port {
 		t.Errorf("Same identifier has led to different ports: %v vs %v", r, r2)
