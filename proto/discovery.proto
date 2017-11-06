@@ -20,6 +20,9 @@ message RegistryEntry {
 
 	// Boolean to show we're master/slave
 	bool master = 6;
+
+	// The time at which this binary was registered
+	int64 register_time = 7;
 }
 
 message ServiceList {
