@@ -252,7 +252,7 @@ func TestRegisterForExternalPortTooManyTimes(t *testing.T) {
 
 func TestRegisterService(t *testing.T) {
 	s := InitTestServer()
-	entry := &pb.RegistryEntry{Ip: "10.0.4.5", Port: 50051, Name: "Testing"}
+	entry := &pb.RegistryEntry{Ip: "10.0.4.5", Name: "Testing"}
 	r, err := s.RegisterService(context.Background(), entry)
 	if err != nil {
 		t.Errorf("Error registering service: %v", err)
@@ -261,6 +261,12 @@ func TestRegisterService(t *testing.T) {
 	if r.Name != entry.Name {
 		t.Errorf("Problem with name resolution %v vs %v", r.Name, entry.Name)
 	}
+
+	if r.RegisterTime == 0 {
+		t.Errorf("Bad time on register: %v", r)
+	}
+
+	log.Printf("REGISTERED: %v", r.RegisterTime)
 }
 
 func TestCleanWithNoEntries(t *testing.T) {

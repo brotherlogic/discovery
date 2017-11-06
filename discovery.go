@@ -28,8 +28,6 @@ type Server struct {
 	hc        healthChecker
 	m         *sync.Mutex
 	strikes   map[*pb.RegistryEntry]int
-	external  string
-	lastGet   time.Time
 }
 
 type healthChecker interface {
@@ -45,19 +43,13 @@ func (httpGetter prodHTTPGetter) Get(url string) (*http.Response, error) {
 }
 
 func (s *Server) getExternalIP(getter httpGetter) string {
-	if s.external == "" || time.Now().Sub(s.lastGet) > time.Hour {
-		resp, err := getter.Get("http://myexternalip.com/raw")
-		if err != nil {
-			log.Printf("GET ERROR: %v", err)
-			return ""
-		}
-		defer resp.Body.Close()
-		body, _ := ioutil.ReadAll(resp.Body)
-		s.external = strings.TrimSpace(string(body))
-		s.lastGet = time.Now()
-		return strings.TrimSpace(string(body))
+	resp, err := getter.Get("http://myexternalip.com/raw")
+	if err != nil {
+		return ""
 	}
-	return s.external
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
+	return strings.TrimSpace(string(body))
 }
 
 // InitServer builds a server item ready for useo
@@ -75,7 +67,9 @@ func (s *Server) cleanEntries() {
 	fails := 0
 	for i, entry := range s.entries {
 		s.strikes[entry] = s.hc.Check(s.strikes[entry], entry)
+		log.Printf("Cleaning %v -> %v", entry, s.strikes[entry])
 		if s.strikes[entry] > strikeCount {
+			log.Printf("Removing %v", entry)
 			s.entries = append(s.entries[:(i-fails)], s.entries[(i-fails)+1:]...)
 			fails++
 		}
@@ -91,27 +85,18 @@ func (s *Server) ListAllServices(ctx context.Context, in *pb.Empty) (*pb.Service
 
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
-	log.Printf("Requesting Register %v", in)
 	// Server is requesting an external port
 	if in.ExternalPort {
 		availablePorts := externalPorts["main"]
 		// Reset the request IP to an external IP
-		log.Printf("Getting external")
 		in.Ip = s.getExternalIP(prodHTTPGetter{})
-		log.Printf("Got: %v", in.Ip)
-
-		if in.Ip == "" {
-			return nil, errors.New("Unable to get IP")
-		}
 
 		for _, port := range availablePorts {
-			log.Printf("Trying external port %v for %v", port, in)
 			taken := false
 			for _, service := range s.entries {
 				if service.Ip == in.Ip && service.Port == port {
 					taken = true
 				}
-
 				// If we've already registered this service, return immediately
 				if service.Identifier == in.Identifier && service.Name == in.Name {
 					//Refresh the IP and store the checkfile
@@ -123,6 +108,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 
 			if !taken {
 				in.Port = port
+				in.RegisterTime = time.Now().Unix()
 				break
 			}
 		}
@@ -152,6 +138,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 				//Only set the port if it's not set
 				if in.Port <= 0 {
 					in.Port = portNumber
+					in.RegisterTime = time.Now().Unix()
 				}
 				break
 			}
@@ -182,6 +169,7 @@ func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.Regist
 		return nil, errors.New("Cannot find a master for service called " + in.Name + " on server (maybe): " + in.Identifier)
 	}
 
+	log.Printf("No such service %v -> %v", in, s.entries)
 	s.recordTime("Discover-fail", time.Now().Sub(t))
 	return &pb.RegistryEntry{}, errors.New("Cannot find service called " + in.Name + " on server (maybe): " + in.Identifier)
 }
