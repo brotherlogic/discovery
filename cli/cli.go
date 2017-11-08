@@ -41,7 +41,7 @@ func main() {
 					log.Printf("Error building job: %v", err)
 				}
 				for _, bit := range bits.Services {
-					log.Printf("%v", bit)
+					fmt.Printf("%v\n", bit)
 				}
 			}
 		}
