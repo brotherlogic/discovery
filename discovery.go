@@ -181,6 +181,6 @@ func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.Regist
 		return nil, errors.New("Cannot find a master for service called " + in.Name + " on server (maybe): " + in.Identifier)
 	}
 
-	s.recordTime("Discover-fail", time.Now().Sub(t))
+	s.recordTime("Discover-Fail", time.Now().Sub(t))
 	return &pb.RegistryEntry{}, errors.New("Cannot find service called " + in.Name + " on server (maybe): " + in.Identifier)
 }
