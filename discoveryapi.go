@@ -36,7 +36,7 @@ func (s *Server) recordTime(fName string, t time.Duration) {
 
 func (healthChecker prodHealthChecker) Check(count int, entry *pb.RegistryEntry) int {
 	t2 := time.Now()
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*200)
 	defer cancel()
 	conn, err := grpc.DialContext(ctx, entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
 	if err != nil {
