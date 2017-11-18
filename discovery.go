@@ -70,6 +70,7 @@ func InitServer() Server {
 
 func (s *Server) cleanEntries() {
 	s.m.Lock()
+	log.Printf("STARTING: %v", time.Now())
 	fails := 0
 	for i, entry := range s.entries {
 		s.strikes[entry] = s.hc.Check(s.strikes[entry], entry)
@@ -80,13 +81,13 @@ func (s *Server) cleanEntries() {
 			fails++
 		}
 	}
+	log.Printf("FINISHING: %v", time.Now())
 	s.m.Unlock()
 }
 
 // ListAllServices returns a list of all the services
 func (s *Server) ListAllServices(ctx context.Context, in *pb.Empty) (*pb.ServiceList, error) {
 	t := time.Now()
-	s.cleanEntries()
 	s.recordTime("ListAllServices", time.Now().Sub(t))
 	return &pb.ServiceList{Services: s.entries}, nil
 }

@@ -78,6 +78,14 @@ func Serve() {
 	s := grpc.NewServer()
 	server := InitServer()
 	pb.RegisterDiscoveryServiceServer(s, &server)
+
+	go func() {
+		for true {
+			time.Sleep(time.Second * 5)
+			server.cleanEntries()
+		}
+	}()
+
 	err = s.Serve(lis)
 	log.Printf("Failed to serve: %v", err)
 }

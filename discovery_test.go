@@ -375,22 +375,6 @@ func TestDiscover(t *testing.T) {
 	}
 }
 
-func TestRemoveFailingServer(t *testing.T) {
-	s := InitTestServer()
-	s.hc = testFailChecker{}
-	entryAdd := &pb.RegistryEntry{Ip: "10.0.4.5", Port: 50051, Name: "Testing"}
-	s.RegisterService(context.Background(), entryAdd)
-	entries, err := s.ListAllServices(context.Background(), &pb.Empty{})
-
-	if err != nil {
-		t.Errorf("Failed to list services: %v", err)
-	}
-
-	if len(entries.Services) != 0 {
-		t.Errorf("Failing service has not returned false: %v", entries)
-	}
-}
-
 func InitTestServer() Server {
 	s := InitServer()
 	s.hc = testPassChecker{}
