@@ -78,6 +78,10 @@ func Serve() {
 	s := grpc.NewServer()
 	server := InitServer()
 	pb.RegisterDiscoveryServiceServer(s, &server)
+
+	//Let's grab the external port IP on start up
+	server.getExternalIP(prodHTTPGetter{})
+
 	err = s.Serve(lis)
 	log.Printf("Failed to serve: %v", err)
 }

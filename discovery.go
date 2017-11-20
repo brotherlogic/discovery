@@ -44,6 +44,7 @@ func (httpGetter prodHTTPGetter) Get(url string) (*http.Response, error) {
 	return http.Get(url)
 }
 
+// GetExternalIP gets the external IP
 func (s *Server) getExternalIP(getter httpGetter) string {
 	if s.external == "" || time.Now().Sub(s.lastGet) > time.Hour {
 		resp, err := getter.Get("http://myexternalip.com/raw")
