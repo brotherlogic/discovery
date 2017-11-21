@@ -86,6 +86,8 @@ func Serve() {
 		}
 	}()
 
+	server.getExternalIP(prodHTTPGetter{})
+
 	err = s.Serve(lis)
 	log.Printf("Failed to serve: %v", err)
 }
