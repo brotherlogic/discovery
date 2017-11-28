@@ -134,6 +134,7 @@ func TestGetAll(t *testing.T) {
 
 func TestRegisterForExternalPort(t *testing.T) {
 	s := InitTestServer()
+	s.setExternalIP(prodHTTPGetter{})
 	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", ExternalPort: true}
 	r, err := s.RegisterService(context.Background(), entry)
 	if err != nil {
