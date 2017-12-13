@@ -8,6 +8,7 @@ branches:
     - master
 
 before_install:
+- ./look_for_logs.sh
 - go get github.com/axw/gocov/gocov
 - go get github.com/mattn/goveralls
 - go get github.com/golang/lint/golint
