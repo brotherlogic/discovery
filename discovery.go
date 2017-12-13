@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -50,7 +49,6 @@ func (s *Server) setExternalIP(getter httpGetter) {
 		defer resp.Body.Close()
 		body, _ := ioutil.ReadAll(resp.Body)
 		s.external = strings.TrimSpace(string(body))
-		log.Printf("HERE: %v", s.external)
 	}
 }
 
@@ -75,18 +73,14 @@ func InitServer() Server {
 
 func (s *Server) cleanEntries() {
 	s.m.Lock()
-	log.Printf("STARTING: %v", time.Now())
 	fails := 0
 	for i, entry := range s.entries {
 		s.strikes[entry] = s.hc.Check(s.strikes[entry], entry)
-		log.Printf("Cleaning %v -> %v", entry, s.strikes[entry])
 		if s.strikes[entry] > strikeCount {
-			log.Printf("Removing %v", entry)
 			s.entries = append(s.entries[:(i-fails)], s.entries[(i-fails)+1:]...)
 			fails++
 		}
 	}
-	log.Printf("FINISHING: %v", time.Now())
 	s.m.Unlock()
 }
 
@@ -110,7 +104,6 @@ func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.Regist
 		return nil, errors.New("Cannot find a master for service called " + in.Name + " on server (maybe): " + in.Identifier)
 	}
 
-	log.Printf("No such service %v -> %v", in, s.entries)
 	s.recordTime("Discover-fail", time.Now().Sub(t))
 	return &pb.RegistryEntry{}, errors.New("Cannot find service called " + in.Name + " on server (maybe): " + in.Identifier)
 }
