@@ -40,8 +40,17 @@ func main() {
 				if err != nil {
 					log.Printf("Error building job: %v", err)
 				}
+				fmt.Printf("MASTERS\n-------\n")
 				for _, bit := range bits.Services {
-					fmt.Printf("%v\n", bit)
+					if bit.GetMaster() {
+						fmt.Printf("%v\n", bit)
+					}
+				}
+				fmt.Printf("SLAVES\n-------\n")
+				for _, bit := range bits.Services {
+					if !bit.GetMaster() {
+						fmt.Printf("%v\n", bit)
+					}
 				}
 			}
 		}
