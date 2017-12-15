@@ -2,8 +2,7 @@ package main
 
 import (
 	"context"
-	"flag"
-	"io/ioutil"
+	"fmt"
 	"log"
 	"net"
 	"strconv"
@@ -35,26 +34,21 @@ func (s *Server) recordTime(fName string, t time.Duration) {
 }
 
 func (healthChecker prodHealthChecker) Check(count int, entry *pb.RegistryEntry) int {
-	t2 := time.Now()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*200)
 	defer cancel()
 	conn, err := grpc.DialContext(ctx, entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
 	if err != nil {
-		log.Printf("Can't event dial %v -> %v", entry, err)
 		return count + 1
 	}
 	defer conn.Close()
 
-	t1 := time.Now()
 	registry := pbg.NewGoserverServiceClient(conn)
 	resp, err := registry.IsAlive(ctx, &pbg.Alive{}, grpc.FailFast(false))
 	if err != nil {
-		log.Printf("Error reading health of %v -> %v given %v (%v) seconds", entry, err, time.Now().Sub(t1), time.Now().Sub(t2))
 		return count + 1
 	}
 
 	if resp.Name != entry.GetName() {
-		log.Printf("Wrong name on return: %v", resp)
 		return count + 1
 	}
 
@@ -63,13 +57,7 @@ func (healthChecker prodHealthChecker) Check(count int, entry *pb.RegistryEntry)
 
 // Serve main server function
 func Serve() {
-	var quiet = flag.Bool("quiet", true, "Show all output")
-	flag.Parse()
-	if *quiet {
-		log.SetFlags(0)
-		log.SetOutput(ioutil.Discard)
-	}
-	log.Printf("Logging is on!")
+	fmt.Printf("Logging is onn")
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
@@ -89,7 +77,7 @@ func Serve() {
 	server.setExternalIP(prodHTTPGetter{})
 
 	err = s.Serve(lis)
-	log.Printf("Failed to serve: %v", err)
+	fmt.Printf("Failed to serve: %v\n", err)
 }
 
 func main() {

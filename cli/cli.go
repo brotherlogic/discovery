@@ -38,7 +38,7 @@ func main() {
 				registry := pbdi.NewDiscoveryServiceClient(conn)
 				bits, err := registry.ListAllServices(context.Background(), &pbdi.Empty{}, grpc.FailFast(false))
 				if err != nil {
-					log.Printf("Error building job: %v", err)
+					log.Fatalf("Error building job: %v", err)
 				}
 				fmt.Printf("MASTERS\n-------\n")
 				for _, bit := range bits.Services {
