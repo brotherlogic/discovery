@@ -11,6 +11,9 @@ import (
 	"golang.org/x/net/context"
 
 	pb "github.com/brotherlogic/discovery/proto"
+
+	//Needed to pull in gzip encoding init
+	_ "google.golang.org/grpc/encoding/gzip"
 )
 
 const (
