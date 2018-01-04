@@ -69,7 +69,7 @@ func InitServer() Server {
 	s := Server{}
 	s.entries = make([]*pb.RegistryEntry, 0)
 	s.strikes = make(map[*pb.RegistryEntry]int)
-	s.hc = prodHealthChecker{}
+	s.hc = prodHealthChecker{logger: s.recordLog}
 	s.m = &sync.Mutex{}
 	return s
 }

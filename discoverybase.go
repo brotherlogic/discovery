@@ -15,7 +15,9 @@ import (
 	pbm "github.com/brotherlogic/monitor/monitorproto"
 )
 
-type prodHealthChecker struct{}
+type prodHealthChecker struct {
+	logger func(logd string)
+}
 
 func (s *Server) recordTime(fName string, t time.Duration) {
 	for _, e := range s.entries {
@@ -33,6 +35,24 @@ func (s *Server) recordTime(fName string, t time.Duration) {
 	}
 }
 
+func (s *Server) recordLog(logDetail string) {
+	go func() {
+		for _, e := range s.entries {
+			if e.GetName() == "monitor" && e.GetMaster() {
+				ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+				defer cancel()
+				conn, err := grpc.DialContext(ctx, e.Ip+":"+strconv.Itoa(int(e.Port)), grpc.WithInsecure())
+				if err == nil {
+					defer conn.Close()
+
+					client := pbm.NewMonitorServiceClient(conn)
+					client.WriteMessageLog(ctx, &pbm.MessageLog{Entry: &pb.RegistryEntry{Name: "discovery"}, Message: logDetail}, grpc.FailFast(false))
+				}
+			}
+		}
+	}()
+}
+
 func (healthChecker prodHealthChecker) Check(count int, entry *pb.RegistryEntry) int {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*200)
 	defer cancel()
@@ -45,6 +65,7 @@ func (healthChecker prodHealthChecker) Check(count int, entry *pb.RegistryEntry)
 	registry := pbg.NewGoserverServiceClient(conn)
 	resp, err := registry.IsAlive(ctx, &pbg.Alive{}, grpc.FailFast(false))
 	if err != nil {
+		healthChecker.logger(fmt.Sprintf("Alive fail: %v", err))
 		return count + 1
 	}
 
