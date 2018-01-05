@@ -23,6 +23,12 @@ message RegistryEntry {
 
 	// The time at which this binary was registered
 	int64 register_time = 7;
+
+	// The time at which this binary should be cleaned
+	int64 time_to_clean = 8;
+
+	// The time at which this binary was last seen
+	int64 last_seen_time = 9;
 }
 
 message ServiceList {
@@ -33,8 +39,6 @@ message Empty {}
 
 service DiscoveryService {
 	rpc RegisterService (RegistryEntry) returns (RegistryEntry) {}
-
 	rpc Discover (RegistryEntry) returns (RegistryEntry) {}
-
-        rpc ListAllServices (Empty) returns (ServiceList) {}
+  rpc ListAllServices (Empty) returns (ServiceList) {}
 }

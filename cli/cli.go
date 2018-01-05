@@ -12,6 +12,8 @@ import (
 	"google.golang.org/grpc"
 
 	pbdi "github.com/brotherlogic/discovery/proto"
+
+	_ "google.golang.org/grpc/encoding/gzip"
 )
 
 func main() {
