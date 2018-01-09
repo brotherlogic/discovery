@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -280,7 +281,7 @@ func TestCleanWithNoEntries(t *testing.T) {
 	s.RegisterService(context.Background(), entry1)
 	s.RegisterService(context.Background(), entry2)
 
-	s.cleanEntries()
+	s.cleanEntries(time.Now().Add(time.Second * 4))
 
 	r2, err := s.ListAllServices(context.Background(), &pb.Empty{})
 	if err != nil {
@@ -309,7 +310,7 @@ func TestRegisterWithReregisterService(t *testing.T) {
 		t.Errorf("Register has not received a port number: %v", r)
 	}
 
-	s.cleanEntries()
+	s.cleanEntries(time.Now())
 
 	r2, err := s.RegisterService(context.Background(), r)
 

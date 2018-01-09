@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"strconv"
 	"time"
 
@@ -77,9 +78,7 @@ func (healthChecker prodHealthChecker) Check(count int, entry *pb.RegistryEntry)
 }
 
 // Serve main server function
-func Serve() {
-	fmt.Printf("Logging is onn")
-
+func Serve(port string) *grpc.Server {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("Unable to get tcp port %v -> %v", port, err)
@@ -90,17 +89,27 @@ func Serve() {
 
 	go func() {
 		for true {
-			time.Sleep(time.Second * 5)
-			server.cleanEntries()
+			time.Sleep(time.Second)
+			server.cleanEntries(time.Now())
 		}
 	}()
 
 	server.setExternalIP(prodHTTPGetter{})
 
-	err = s.Serve(lis)
-	fmt.Printf("Failed to serve: %v\n", err)
+	go func() {
+		err = s.Serve(lis)
+		if err != nil {
+			fmt.Printf("Server Response: %v\n", err)
+		}
+		os.Exit(0)
+	}()
+
+	return s
 }
 
 func main() {
-	Serve()
+	Serve(port)
+	for true {
+		time.Sleep(time.Minute)
+	}
 }

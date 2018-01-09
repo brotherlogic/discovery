@@ -1,14 +1,11 @@
 package main
 
 import (
-	"errors"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
-
-	"golang.org/x/net/context"
 
 	pb "github.com/brotherlogic/discovery/proto"
 
@@ -31,7 +28,6 @@ type Server struct {
 	m         *sync.Mutex
 	external  string
 	lastGet   time.Time
-	strikes   map[*pb.RegistryEntry]int
 }
 
 type healthChecker interface {
@@ -68,45 +64,20 @@ func (s *Server) getExternalIP(getter httpGetter) string {
 func InitServer() Server {
 	s := Server{}
 	s.entries = make([]*pb.RegistryEntry, 0)
-	s.strikes = make(map[*pb.RegistryEntry]int)
 	s.hc = prodHealthChecker{logger: s.recordLog}
 	s.m = &sync.Mutex{}
 	return s
 }
 
-func (s *Server) cleanEntries() {
+func (s *Server) cleanEntries(t time.Time) {
 	s.m.Lock()
 	fails := 0
 	for i, entry := range s.entries {
-		s.strikes[entry] = s.hc.Check(s.strikes[entry], entry)
-		if s.strikes[entry] > strikeCount {
+		//Clean if we haven't seen this entry in the time to clean window
+		if t.Sub(time.Unix(entry.GetLastSeenTime(), 0)).Nanoseconds()/1000000 > entry.GetTimeToClean() {
 			s.entries = append(s.entries[:(i-fails)], s.entries[(i-fails)+1:]...)
 			fails++
 		}
 	}
 	s.m.Unlock()
-}
-
-// Discover supports the Discover rpc end point
-func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
-	t := time.Now()
-	var nonmaster *pb.RegistryEntry
-	for _, entry := range s.entries {
-		if entry.Name == in.Name && (in.Identifier == "" || in.Identifier == entry.Identifier) {
-			if entry.Master || in.Identifier != "" {
-				s.recordTime("Discover-foundmaster", time.Now().Sub(t))
-				return entry, nil
-			}
-			nonmaster = entry
-		}
-	}
-
-	//Return the non master if possible
-	if nonmaster != nil {
-		s.recordTime("Discover-nonmaster", time.Now().Sub(t))
-		return nil, errors.New("Cannot find a master for service called " + in.Name + " on server (maybe): " + in.Identifier)
-	}
-
-	s.recordTime("Discover-fail", time.Now().Sub(t))
-	return &pb.RegistryEntry{}, errors.New("Cannot find service called " + in.Name + " on server (maybe): " + in.Identifier)
 }
