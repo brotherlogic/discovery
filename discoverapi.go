@@ -19,6 +19,13 @@ func (s *Server) ListAllServices(ctx context.Context, in *pb.Empty) (*pb.Service
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
 	t := time.Now()
+	in.LastSeenTime = t.Unix()
+
+	// Adjust the clean time if necessary (default to 3 seconds)
+	if in.GetTimeToClean() == 0 {
+		in.TimeToClean = 1000 * 3
+	}
+
 	// Server is requesting an external port
 	if in.ExternalPort {
 		availablePorts := externalPorts["main"]
@@ -87,4 +94,28 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 	s.recordTime("Register-New", time.Now().Sub(t))
 	s.entries = append(s.entries, in)
 	return in, nil
+}
+
+// Discover supports the Discover rpc end point
+func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
+	t := time.Now()
+	var nonmaster *pb.RegistryEntry
+	for _, entry := range s.entries {
+		if entry.Name == in.Name && (in.Identifier == "" || in.Identifier == entry.Identifier) {
+			if entry.Master || in.Identifier != "" {
+				s.recordTime("Discover-foundmaster", time.Now().Sub(t))
+				return entry, nil
+			}
+			nonmaster = entry
+		}
+	}
+
+	//Return the non master if possible
+	if nonmaster != nil {
+		s.recordTime("Discover-nonmaster", time.Now().Sub(t))
+		return nil, errors.New("Cannot find a master for service called " + in.Name + " on server (maybe): " + in.Identifier)
+	}
+
+	s.recordTime("Discover-fail", time.Now().Sub(t))
+	return &pb.RegistryEntry{}, errors.New("Cannot find service called " + in.Name + " on server (maybe): " + in.Identifier)
 }
