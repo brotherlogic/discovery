@@ -1,4 +1,4 @@
-package main
+package integration
 
 import (
 	"context"
@@ -10,6 +10,7 @@ import (
 
 	"google.golang.org/grpc"
 
+	discovery "github.com/brotherlogic/discovery/core"
 	pb "github.com/brotherlogic/discovery/proto"
 )
 
@@ -25,7 +26,7 @@ func Get() (port string, err error) {
 }
 
 func runServer(testPort string) *grpc.Server {
-	s := Serve(testPort)
+	s := discovery.Serve(testPort)
 
 	// Give the binary 10 seconds to become alive
 	time.Sleep(time.Second * 2)
@@ -70,7 +71,7 @@ func TestNormalClean(t *testing.T) {
 
 	s := runServer(port)
 
-	err := register(port, "test-binary", -1)
+	err := register(port, "test-binary", 0)
 	if err != nil {
 		t.Fatalf("Unable to register: %v", err)
 	}

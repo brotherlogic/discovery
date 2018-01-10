@@ -17,5 +17,8 @@ before_install:
   fi
   
 script:
-- fgt golint $(find . | grep .go$ | grep -v discovery.pb.go)
-- $HOME/gopath/bin/goveralls -service=travis-ci -ignore discoverybase.go,cleaning_test.go -package github.com/brotherlogic/discovery
+- fgt golint core
+- fgt golint cli
+- fgt golint integration_tests
+- go test -v integration_tests/*
+- $HOME/gopath/bin/goveralls -service=travis-ci -ignore core/discoverybase.go -package github.com/brotherlogic/discovery/core
