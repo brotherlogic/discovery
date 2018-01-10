@@ -1,4 +1,4 @@
-package main
+package discovery
 
 import (
 	"context"
@@ -105,11 +105,4 @@ func Serve(port string) *grpc.Server {
 	}()
 
 	return s
-}
-
-func main() {
-	Serve(port)
-	for true {
-		time.Sleep(time.Minute)
-	}
 }
