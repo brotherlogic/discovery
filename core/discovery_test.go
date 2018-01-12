@@ -182,8 +182,6 @@ func TestRegisterMACAddressRefreshWithExternalPort(t *testing.T) {
 		t.Errorf("Error registering service: %v", err)
 	}
 
-	log.Printf("Trying this one: %v", r2)
-
 	if r2.Port != r.Port {
 		t.Errorf("Same identifier has led to different ports: %v vs %v", r, r2)
 	}
@@ -331,4 +329,89 @@ func InitTestServer() Server {
 	s := InitServer()
 	s.hc = testPassChecker{}
 	return s
+}
+
+func TestFailHeartbeat(t *testing.T) {
+	s := InitTestServer()
+
+	entry1 := &pb.RegistryEntry{Ip: "10.0.4.5", Identifier: "ShouldBeMaster", Name: "Testing"}
+	entry2 := &pb.RegistryEntry{Ip: "10.0.4.6", Identifier: "ShouldBeSlave", Name: "Testing"}
+
+	s.RegisterService(context.Background(), entry1)
+	s.RegisterService(context.Background(), entry2)
+
+	v, err := s.Discover(context.Background(), &pb.RegistryEntry{Name: "Testing"})
+	if err == nil {
+		t.Fatalf("Successful discover with non master: %v", v)
+	}
+
+	entry1.Master = true
+	_, err = s.RegisterService(context.Background(), entry1)
+	if err != nil {
+		t.Fatalf("Unable to re-register as master: %v", err)
+	}
+
+	v, err = s.Discover(context.Background(), &pb.RegistryEntry{Name: "Testing"})
+	if err != nil || v.GetIp() != "10.0.4.5" {
+		t.Fatalf("Master is incorrect: %v", v)
+	}
+
+	entry2.Master = true
+	v, err = s.RegisterService(context.Background(), entry2)
+	if err == nil {
+		t.Errorf("Succesful promote to master: %v", v)
+	}
+}
+
+func TestCleanWithMaster(t *testing.T) {
+	s := InitTestServer()
+	entry := &pb.RegistryEntry{Ip: "10.0.4.5", Identifier: "ShouldBeMaster", Name: "Testing"}
+	_, err := s.RegisterService(context.Background(), entry)
+	if err != nil {
+		t.Fatalf("Error doing initial reg: %v", err)
+	}
+	entry.Master = true
+	_, err = s.RegisterService(context.Background(), entry)
+	if err != nil {
+		t.Fatalf("Error registering as master")
+	}
+
+	s.cleanEntries(time.Now().Add(time.Hour))
+
+	v, err := s.RegisterService(context.Background(), entry)
+	if err == nil {
+		t.Errorf("Reregister as master after clean has not failed: %v", v)
+	}
+}
+
+func TestFailHeartbeatExternal(t *testing.T) {
+	s := InitTestServer()
+
+	entry1 := &pb.RegistryEntry{Ip: "10.0.4.5", Identifier: "ShouldBeMaster", Name: "Testing", ExternalPort: true}
+	entry2 := &pb.RegistryEntry{Ip: "10.0.4.6", Identifier: "ShouldBeSlave", Name: "Testing", ExternalPort: true}
+
+	s.RegisterService(context.Background(), entry1)
+	s.RegisterService(context.Background(), entry2)
+
+	v, err := s.Discover(context.Background(), &pb.RegistryEntry{Name: "Testing"})
+	if err == nil {
+		t.Fatalf("Successful discover with non master: %v", v)
+	}
+
+	entry1.Master = true
+	_, err = s.RegisterService(context.Background(), entry1)
+	if err != nil {
+		t.Fatalf("Unable to re-register as master: %v", err)
+	}
+
+	v, err = s.Discover(context.Background(), &pb.RegistryEntry{Name: "Testing"})
+	if err != nil || v.GetIdentifier() != "ShouldBeMaster" {
+		t.Fatalf("Master is incorrect: %v", v)
+	}
+
+	entry2.Master = true
+	v, err = s.RegisterService(context.Background(), entry2)
+	if err == nil {
+		t.Errorf("Succesful promote to master: %v", v)
+	}
 }
