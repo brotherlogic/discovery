@@ -22,11 +22,12 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 	t := time.Now()
 	in.LastSeenTime = t.Unix()
 
+	s.mm.Lock()
 	if _, ok := s.masterMap[in.GetName()]; ok && !in.GetMaster() {
-		s.mm.Lock()
 		delete(s.masterMap, in.GetName())
-		s.mm.Unlock()
+
 	}
+	s.mm.Unlock()
 
 	// Adjust the clean time if necessary (default to 3 seconds)
 	if in.GetTimeToClean() == 0 {
