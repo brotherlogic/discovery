@@ -22,11 +22,6 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 	t := time.Now()
 	in.LastSeenTime = t.Unix()
 
-	//Reject any master registrations
-	if in.GetMaster() {
-		return nil, fmt.Errorf("Unable to register as master (%v)", in)
-	}
-
 	// Adjust the clean time if necessary (default to 3 seconds)
 	if in.GetTimeToClean() == 0 {
 		in.TimeToClean = 1000 * 3
@@ -46,6 +41,15 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 				}
 				// If we've already registered this service, return immediately
 				if service.Identifier == in.Identifier && service.Name == in.Name {
+
+					// Add to master map if this is master
+					if in.GetMaster() {
+						if val, ok := s.masterMap[in.GetName()]; ok && val.Identifier != in.Identifier {
+							return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v", val, in)
+						}
+						s.masterMap[in.GetName()] = service
+					}
+
 					//Refresh the IP and store the checkfile
 					service.Ip = in.Ip
 					service.Master = in.Master
@@ -78,6 +82,15 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 
 				// If we've already registered this service, return immediately
 				if service.Identifier == in.Identifier && service.Name == in.Name {
+
+					// Add to master map if this is master
+					if in.GetMaster() {
+						if val, ok := s.masterMap[in.GetName()]; ok && val.Identifier != in.Identifier {
+							return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v", val, in)
+						}
+						s.masterMap[in.GetName()] = service
+					}
+
 					//Refresh the IP and store the checkfile
 					service.Ip = in.Ip
 					service.Master = in.Master
@@ -95,6 +108,11 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 				break
 			}
 		}
+	}
+
+	//Reject any master registrations that are new
+	if in.GetMaster() {
+		return nil, fmt.Errorf("Unable to register as master (%v)", in)
 	}
 
 	s.recordTime("Register-New", time.Now().Sub(t))
