@@ -2,6 +2,7 @@ package discovery
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"golang.org/x/net/context"
@@ -20,6 +21,11 @@ func (s *Server) ListAllServices(ctx context.Context, in *pb.Empty) (*pb.Service
 func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
 	t := time.Now()
 	in.LastSeenTime = t.Unix()
+
+	//Reject any master registrations
+	if in.GetMaster() {
+		return nil, fmt.Errorf("Unable to register as master (%v)", in)
+	}
 
 	// Adjust the clean time if necessary (default to 3 seconds)
 	if in.GetTimeToClean() == 0 {

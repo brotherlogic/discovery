@@ -46,6 +46,16 @@ func TestGetExternalIPFail(t *testing.T) {
 	}
 }
 
+func TestFailAsMasterRegister(t *testing.T) {
+	s := InitTestServer()
+	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "server1", Name: "Job1", Master: true}
+	res, err := s.RegisterService(context.Background(), entry)
+
+	if err == nil {
+		t.Errorf("Master register has not failed: %v", res)
+	}
+}
+
 func TestStartAsSlave(t *testing.T) {
 	s := InitTestServer()
 	entry1 := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "server1", Name: "Job1"}
@@ -67,51 +77,6 @@ func TestStartAsSlave(t *testing.T) {
 
 	if entry.Identifier != "server1" {
 		t.Errorf("Weird Error %v", entry)
-	}
-}
-
-func TestReturnMaster(t *testing.T) {
-	s := InitTestServer()
-	entry1 := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "server1", Name: "Job1", Master: true}
-	entry2 := &pb.RegistryEntry{Ip: "10.0.1.18", Identifier: "server2", Name: "Job1", Master: true}
-
-	s.RegisterService(context.Background(), entry1)
-	s.RegisterService(context.Background(), entry2)
-
-	entry, err := s.Discover(context.Background(), &pb.RegistryEntry{Name: "Job1"})
-	if err != nil {
-		t.Fatalf("Error on discover: %v", err)
-	}
-
-	if entry.Identifier != "server2" && entry.Identifier != "server1" {
-		t.Errorf("Failed to return actual master: %v", entry)
-	}
-}
-
-func TestRegisterMasterOverride(t *testing.T) {
-	s := InitTestServer()
-	entry1 := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "server1", Name: "Job1", Master: true}
-	entry2 := &pb.RegistryEntry{Ip: "10.0.1.18", Identifier: "server2", Name: "Job1", Master: true}
-
-	s.RegisterService(context.Background(), entry1)
-	s.RegisterService(context.Background(), entry2)
-
-	r, err := s.ListAllServices(context.Background(), &pb.Empty{})
-	if err != nil {
-		t.Errorf("Error receiving service list: %v", err)
-	}
-
-	if len(r.Services) != 2 {
-		t.Fatalf("Wrong number of services received: %v", len(r.Services))
-	}
-
-	index1 := 0
-	if r.Services[0].Ip != "10.0.1.17" {
-		index1 = 2
-	}
-
-	if !r.Services[index1].Master {
-		t.Errorf("Entry1 is no longers master: %v", r.Services)
 	}
 }
 
@@ -359,21 +324,6 @@ func TestFailedDiscover(t *testing.T) {
 	_, err := s.Discover(context.Background(), entry)
 	if err == nil {
 		t.Errorf("Disoovering non existing service did not fail: %v", err)
-	}
-}
-
-func TestDiscover(t *testing.T) {
-	s := InitTestServer()
-	entryAdd := &pb.RegistryEntry{Ip: "10.0.4.5", Port: 50051, Name: "Testing", Master: true}
-	s.RegisterService(context.Background(), entryAdd)
-	entry := &pb.RegistryEntry{Name: "Testing"}
-	r, err := s.Discover(context.Background(), entry)
-	if err != nil {
-		t.Errorf("Error registering service: %v", err)
-	}
-
-	if r.Ip != entryAdd.Ip {
-		t.Errorf("Discovery process failed %v vs %v", r.Ip, entryAdd.Ip)
 	}
 }
 
