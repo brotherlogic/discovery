@@ -331,6 +331,49 @@ func InitTestServer() Server {
 	return s
 }
 
+func TestBecomeMaster(t *testing.T) {
+	s := InitTestServer()
+
+	entry1 := &pb.RegistryEntry{Ip: "10.0.4.5", Identifier: "ShouldBeMaster", Name: "Testing"}
+	entry2 := &pb.RegistryEntry{Ip: "10.0.4.6", Identifier: "ShouldBeSlave", Name: "Testing"}
+
+	s.RegisterService(context.Background(), entry1)
+	s.RegisterService(context.Background(), entry2)
+
+	v, err := s.Discover(context.Background(), &pb.RegistryEntry{Name: "Testing"})
+	if err == nil {
+		t.Fatalf("Successful discover with non master: %v", v)
+	}
+
+	entry1.Master = true
+	_, err = s.RegisterService(context.Background(), entry1)
+	if err != nil {
+		t.Fatalf("Unable to re-register as master: %v", err)
+	}
+
+	v, err = s.Discover(context.Background(), &pb.RegistryEntry{Name: "Testing"})
+	if err != nil || v.GetIp() != "10.0.4.5" {
+		t.Fatalf("Master is incorrect: %v", v)
+	}
+
+	entry1.Master = false
+	_, err = s.RegisterService(context.Background(), entry1)
+	if err != nil {
+		t.Fatalf("Unable to re-register as slave: %v", err)
+	}
+
+	v, err = s.Discover(context.Background(), &pb.RegistryEntry{Name: "Testing"})
+	if err == nil {
+		t.Fatalf("Master is being returned: %v", v)
+	}
+
+	entry2.Master = true
+	_, err = s.RegisterService(context.Background(), entry2)
+	if err != nil {
+		t.Errorf("Unable to promote to master: %v", err)
+	}
+}
+
 func TestFailHeartbeat(t *testing.T) {
 	s := InitTestServer()
 
