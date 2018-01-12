@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/brotherlogic/goserver/utils"
 	"golang.org/x/net/context"
@@ -38,7 +39,9 @@ func main() {
 				defer conn.Close()
 
 				registry := pbdi.NewDiscoveryServiceClient(conn)
-				bits, err := registry.ListAllServices(context.Background(), &pbdi.Empty{}, grpc.FailFast(false))
+				ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+				defer cancel()
+				bits, err := registry.ListAllServices(ctx, &pbdi.Empty{}, grpc.FailFast(false))
 				if err != nil {
 					log.Fatalf("Error building job: %v", err)
 				}
