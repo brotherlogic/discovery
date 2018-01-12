@@ -28,6 +28,7 @@ type Server struct {
 	external  string
 	lastGet   time.Time
 	masterMap map[string]*pb.RegistryEntry
+	mm        *sync.Mutex
 }
 
 type healthChecker interface {
@@ -66,6 +67,7 @@ func InitServer() Server {
 	s.entries = make([]*pb.RegistryEntry, 0)
 	s.hc = prodHealthChecker{logger: s.recordLog}
 	s.m = &sync.Mutex{}
+	s.mm = &sync.Mutex{}
 	s.masterMap = make(map[string]*pb.RegistryEntry)
 	return s
 }
@@ -77,7 +79,9 @@ func (s *Server) cleanEntries(t time.Time) {
 		//Clean if we haven't seen this entry in the time to clean window
 		if t.Sub(time.Unix(entry.GetLastSeenTime(), 0)).Nanoseconds()/1000000 > entry.GetTimeToClean() {
 			if entry.GetMaster() {
+				s.mm.Lock()
 				delete(s.masterMap, entry.GetName())
+				s.mm.Unlock()
 			}
 			s.entries = append(s.entries[:(i-fails)], s.entries[(i-fails)+1:]...)
 			fails++
