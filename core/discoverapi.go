@@ -23,9 +23,8 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 	in.LastSeenTime = t.Unix()
 
 	s.mm.Lock()
-	if _, ok := s.masterMap[in.GetName()]; ok && !in.GetMaster() {
+	if val, ok := s.masterMap[in.GetName()]; ok && val.GetIdentifier() == in.GetIdentifier() && !in.GetMaster() {
 		delete(s.masterMap, in.GetName())
-
 	}
 	s.mm.Unlock()
 
