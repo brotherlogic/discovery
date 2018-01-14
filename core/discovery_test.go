@@ -176,8 +176,7 @@ func TestRegisterMACAddressRefreshWithExternalPort(t *testing.T) {
 		t.Errorf("Error registering service: %v", err)
 	}
 
-	entry2 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "Magic", ExternalPort: true}
-	r2, err := s.RegisterService(context.Background(), entry2)
+	r2, err := s.RegisterService(context.Background(), r)
 	if err != nil {
 		t.Errorf("Error registering service: %v", err)
 	}
