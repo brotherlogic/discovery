@@ -51,10 +51,10 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 
 					// Add to master map if this is master
 					if in.GetMaster() {
+						s.mm.Lock()
 						if val, ok := s.masterMap[in.GetName()]; ok && val.Identifier != in.Identifier {
 							return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v", val, in)
 						}
-						s.mm.Lock()
 						s.masterMap[in.GetName()] = service
 						s.mm.Unlock()
 					}
