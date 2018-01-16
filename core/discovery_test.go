@@ -46,6 +46,27 @@ func TestGetExternalIPFail(t *testing.T) {
 	}
 }
 
+func TestDoubleRegister(t *testing.T) {
+	s := InitTestServer()
+	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1"}
+	res, err := s.RegisterService(context.Background(), entry)
+	if err != nil {
+		t.Fatalf("Error registering service: %v", err)
+	}
+
+	time.Sleep(time.Second * 2)
+
+	entry2 := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1"}
+	res2, err := s.RegisterService(context.Background(), entry2)
+	if err != nil {
+		t.Fatalf("Error registering service: %v", err)
+	}
+
+	if res.GetRegisterTime() == res2.GetRegisterTime() {
+		t.Errorf("Two things are the same: %v and %v", res, res2)
+	}
+}
+
 func TestFailAsMasterRegister(t *testing.T) {
 	s := InitTestServer()
 	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "server1", Name: "Job1", Master: true}
@@ -145,8 +166,7 @@ func TestRegisterMACAddressRefresh(t *testing.T) {
 		t.Errorf("Error registering service: %v", err)
 	}
 
-	entry2 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "Magic"}
-	r2, err := s.RegisterService(context.Background(), entry2)
+	r2, err := s.RegisterService(context.Background(), r)
 	if err != nil {
 		t.Errorf("Error registering service: %v", err)
 	}
