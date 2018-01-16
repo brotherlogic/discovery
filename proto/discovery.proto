@@ -29,6 +29,9 @@ message RegistryEntry {
 
 	// The time at which this binary was last seen
 	int64 last_seen_time = 9;
+
+	// We are never going to be master
+	bool ignores_master = 10;
 }
 
 message ServiceList {

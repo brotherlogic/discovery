@@ -47,14 +47,16 @@ func main() {
 				}
 				fmt.Printf("MASTERS\n-------\n")
 				for _, bit := range bits.Services {
+					uptime := time.Unix(bit.GetLastSeenTime(), 0).Sub(time.Unix(bit.GetRegisterTime(), 0))
 					if bit.GetMaster() {
-						fmt.Printf("%v\n", bit)
+						fmt.Printf("%v [%v]\n", bit, uptime)
 					}
 				}
 				fmt.Printf("SLAVES\n-------\n")
-				for _, bit := range bits.Services {
+		for _, bit := range bits.Services {
+								uptime := time.Unix(bit.GetLastSeenTime(), 0).Sub(time.Unix(bit.GetRegisterTime(), 0))
 					if !bit.GetMaster() {
-						fmt.Printf("%v\n", bit)
+						fmt.Printf("%v [%v]\n", bit, uptime)
 					}
 				}
 			}
