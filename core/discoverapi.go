@@ -88,8 +88,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 				}
 
 				// If we've already registered this service, return immediately
-				if service.GetRegisterTime() > 0 && service.Identifier == in.Identifier && service.Name == in.Name {
-
+				if in.GetRegisterTime() > 0 && service.Identifier == in.Identifier && service.Name == in.Name {
 					// Add to master map if this is master
 					if in.GetMaster() {
 						s.mm.Lock()
