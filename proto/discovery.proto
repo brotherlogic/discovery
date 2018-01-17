@@ -40,8 +40,16 @@ message ServiceList {
 
 message Empty {}
 
+message StateResponse {
+	string counts = 1;
+}
+
+message StateRequest {
+}
+
 service DiscoveryService {
 	rpc RegisterService (RegistryEntry) returns (RegistryEntry) {}
 	rpc Discover (RegistryEntry) returns (RegistryEntry) {}
   rpc ListAllServices (Empty) returns (ServiceList) {}
+	rpc State (StateRequest) returns (StateResponse) {}
 }
