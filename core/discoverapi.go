@@ -110,6 +110,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 					//Refresh the IP and store the checkfile
 					service.Ip = in.Ip
 					service.Master = in.Master
+					service.Port = in.Port
 					service.LastSeenTime = time.Now().Unix()
 					s.recordTime("Register-Internal-Found", time.Now().Sub(t))
 					return service, nil
