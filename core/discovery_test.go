@@ -13,6 +13,18 @@ import (
 	pb "github.com/brotherlogic/discovery/proto"
 )
 
+func TestGetState(t *testing.T) {
+	s := InitTestServer()
+	s.RegisterService(context.Background(), &pb.RegistryEntry{Name: "Blah"})
+	state, err := s.State(context.Background(), &pb.StateRequest{})
+	if err != nil {
+		t.Fatalf("Error getting state: %v", err)
+	}
+	if state.GetCounts() != "Counts: map[Blah:1]" {
+		t.Errorf("Error reading state: %v", state)
+	}
+}
+
 func TestGetExternalIP(t *testing.T) {
 	s := InitTestServer()
 	externalIP := s.getExternalIP(prodHTTPGetter{})

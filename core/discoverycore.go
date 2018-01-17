@@ -29,6 +29,8 @@ type Server struct {
 	lastGet   time.Time
 	masterMap map[string]*pb.RegistryEntry
 	mm        *sync.Mutex
+	countM    *sync.Mutex
+	counts    map[string]int
 }
 
 type healthChecker interface {
@@ -69,6 +71,8 @@ func InitServer() Server {
 	s.m = &sync.Mutex{}
 	s.mm = &sync.Mutex{}
 	s.masterMap = make(map[string]*pb.RegistryEntry)
+	s.counts = make(map[string]int)
+	s.countM = &sync.Mutex{}
 	return s
 }
 

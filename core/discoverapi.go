@@ -19,6 +19,14 @@ func (s *Server) ListAllServices(ctx context.Context, in *pb.Empty) (*pb.Service
 
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
+
+	s.countM.Lock()
+	if _, ok := s.counts[in.GetName()]; !ok {
+		s.counts[in.GetName()] = 0
+	}
+	s.counts[in.GetName()]++
+	s.countM.Unlock()
+
 	t := time.Now()
 	in.LastSeenTime = t.Unix()
 
@@ -150,4 +158,12 @@ func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.Regist
 
 	s.recordTime("Discover-fail", time.Now().Sub(t))
 	return &pb.RegistryEntry{}, errors.New("Cannot find service called " + in.Name + " on server (maybe): " + in.Identifier)
+}
+
+//State gets the state of the server
+func (s *Server) State(ctx context.Context, in *pb.StateRequest) (*pb.StateResponse, error) {
+	s.countM.Lock()
+	resp := fmt.Sprintf("Counts: %v", s.counts)
+	s.countM.Unlock()
+	return &pb.StateResponse{Counts: resp}, nil
 }
