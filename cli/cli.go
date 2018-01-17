@@ -33,6 +33,18 @@ func main() {
 		fmt.Printf("Commands: list\n")
 	} else {
 		switch os.Args[1] {
+		case "state":
+			conn, _ := grpc.Dial(utils.RegistryIP+":"+strconv.Itoa(utils.RegistryPort), grpc.WithInsecure())
+			defer conn.Close()
+
+			registry := pbdi.NewDiscoveryServiceClient(conn)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			state, err := registry.State(ctx, &pbdi.StateRequest{})
+			if err != nil {
+				log.Fatalf("Error getting state: %v", err)
+			}
+			fmt.Printf("STATE: %v\n", state)
 		case "list":
 			if err := buildFlags.Parse(os.Args[2:]); err == nil {
 				conn, _ := grpc.Dial(utils.RegistryIP+":"+strconv.Itoa(utils.RegistryPort), grpc.WithInsecure())
