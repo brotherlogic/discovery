@@ -12,14 +12,11 @@ import (
 
 // ListAllServices returns a list of all the services
 func (s *Server) ListAllServices(ctx context.Context, in *pb.Empty) (*pb.ServiceList, error) {
-	t := time.Now()
-	s.recordTime("ListAllServices", time.Now().Sub(t))
 	return &pb.ServiceList{Services: s.entries}, nil
 }
 
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
-
 	s.countM.Lock()
 	if _, ok := s.counts[in.GetName()]; !ok {
 		s.counts[in.GetName()] = 0
@@ -27,8 +24,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 	s.counts[in.GetName()]++
 	s.countM.Unlock()
 
-	t := time.Now()
-	in.LastSeenTime = t.Unix()
+	in.LastSeenTime = time.Now().Unix()
 
 	s.mm.Lock()
 	if val, ok := s.masterMap[in.GetName()]; ok && val.GetIdentifier() == in.GetIdentifier() && !in.GetMaster() {
@@ -69,7 +65,6 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 					service.Ip = in.Ip
 					service.Master = in.Master
 					service.LastSeenTime = time.Now().Unix()
-					s.recordTime("Register-External-Found", time.Now().Sub(t))
 					return service, nil
 				}
 			}
@@ -83,7 +78,6 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 
 		//Throw an error if we can't find a port number
 		if in.Port <= 0 {
-			s.recordTime("Register-External-NoAllocate", time.Now().Sub(t))
 			return in, errors.New("Unable to allocate external port")
 		}
 	} else {
@@ -112,7 +106,6 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 					service.Master = in.Master
 					service.Port = in.Port
 					service.LastSeenTime = time.Now().Unix()
-					s.recordTime("Register-Internal-Found", time.Now().Sub(t))
 					return service, nil
 				}
 			}
@@ -132,19 +125,16 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 		return nil, fmt.Errorf("Unable to register as master (%v)", in)
 	}
 
-	s.recordTime("Register-New", time.Now().Sub(t))
 	s.entries = append(s.entries, in)
 	return in, nil
 }
 
 // Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.RegistryEntry, error) {
-	t := time.Now()
 	var nonmaster *pb.RegistryEntry
 	for _, entry := range s.entries {
 		if entry.Name == in.Name && (in.Identifier == "" || in.Identifier == entry.Identifier) {
 			if entry.Master || in.Identifier != "" {
-				s.recordTime("Discover-foundmaster", time.Now().Sub(t))
 				return entry, nil
 			}
 			nonmaster = entry
@@ -153,11 +143,9 @@ func (s *Server) Discover(ctx context.Context, in *pb.RegistryEntry) (*pb.Regist
 
 	//Return the non master if possible
 	if nonmaster != nil {
-		s.recordTime("Discover-nonmaster", time.Now().Sub(t))
 		return nil, errors.New("Cannot find a master for service called " + in.Name + " on server (maybe): " + in.Identifier)
 	}
 
-	s.recordTime("Discover-fail", time.Now().Sub(t))
 	return &pb.RegistryEntry{}, errors.New("Cannot find service called " + in.Name + " on server (maybe): " + in.Identifier)
 }
 
