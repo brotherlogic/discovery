@@ -54,7 +54,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 					taken = true
 				}
 				// If we've already registered this service, return immediately
-				if in.GetRegisterTime() > 0 && service.Identifier == in.Identifier && service.Name == in.Name {
+				if in.GetRegisterTime() > 0 && service.Identifier == in.Identifier && service.Name == in.Name && service.Port == in.Port {
 					// Add to master map if this is master
 					if in.GetMaster() {
 						s.mm.Lock()
@@ -96,7 +96,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 				}
 
 				// If we've already registered this service, return immediately
-				if in.GetRegisterTime() > 0 && service.Identifier == in.Identifier && service.Name == in.Name {
+				if in.GetRegisterTime() > 0 && service.Identifier == in.Identifier && service.Name == in.Name && service.Port == in.Port {
 					// Add to master map if this is master
 					if in.GetMaster() {
 						s.mm.Lock()
@@ -110,6 +110,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 					//Refresh the IP and store the checkfile
 					service.Ip = in.Ip
 					service.Master = in.Master
+					service.Port = in.Port
 					service.LastSeenTime = time.Now().Unix()
 					s.recordTime("Register-Internal-Found", time.Now().Sub(t))
 					return service, nil
