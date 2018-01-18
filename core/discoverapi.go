@@ -154,5 +154,5 @@ func (s *Server) State(ctx context.Context, in *pb.StateRequest) (*pb.StateRespo
 	s.countM.Lock()
 	resp := fmt.Sprintf("Counts: %v", s.counts)
 	s.countM.Unlock()
-	return &pb.StateResponse{Counts: resp}, nil
+	return &pb.StateResponse{Counts: resp, Len: int32(len(s.entries))}, nil
 }

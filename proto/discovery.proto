@@ -42,6 +42,7 @@ message Empty {}
 
 message StateResponse {
 	string counts = 1;
+	int32 len = 2;
 }
 
 message StateRequest {
