@@ -24,7 +24,6 @@ type Server struct {
 	entries   []*pb.RegistryEntry
 	checkFile string
 	hc        healthChecker
-	m         *sync.Mutex
 	external  string
 	lastGet   time.Time
 	masterMap map[string]*pb.RegistryEntry
@@ -68,7 +67,6 @@ func InitServer() Server {
 	s := Server{}
 	s.entries = make([]*pb.RegistryEntry, 0)
 	s.hc = prodHealthChecker{logger: s.recordLog}
-	s.m = &sync.Mutex{}
 	s.mm = &sync.Mutex{}
 	s.masterMap = make(map[string]*pb.RegistryEntry)
 	s.counts = make(map[string]int)
@@ -77,7 +75,6 @@ func InitServer() Server {
 }
 
 func (s *Server) cleanEntries(t time.Time) {
-	s.m.Lock()
 	fails := 0
 	for i, entry := range s.entries {
 		//Clean if we haven't seen this entry in the time to clean window
@@ -91,5 +88,4 @@ func (s *Server) cleanEntries(t time.Time) {
 			fails++
 		}
 	}
-	s.m.Unlock()
 }
