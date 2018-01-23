@@ -55,6 +55,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 					if in.GetMaster() {
 						s.mm.Lock()
 						if val, ok := s.masterMap[in.GetName()]; ok && val.Identifier != in.Identifier {
+							s.mm.Unlock()
 							return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v", val, in)
 						}
 						s.masterMap[in.GetName()] = service
@@ -95,6 +96,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 					if in.GetMaster() {
 						s.mm.Lock()
 						if val, ok := s.masterMap[in.GetName()]; ok && val.Identifier != in.Identifier {
+							s.mm.Unlock()
 							return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v", val, in)
 						}
 						s.masterMap[in.GetName()] = service
