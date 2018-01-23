@@ -32,6 +32,9 @@ message RegistryEntry {
 
 	// We are never going to be master
 	bool ignores_master = 10;
+
+	// The time at which we were set master
+	int64 master_time = 11;
 }
 
 message ServiceList {

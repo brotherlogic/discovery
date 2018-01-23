@@ -29,6 +29,9 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 	s.mm.Lock()
 	if val, ok := s.masterMap[in.GetName()]; ok && val.GetIdentifier() == in.GetIdentifier() && !in.GetMaster() {
 		delete(s.masterMap, in.GetName())
+		if in.MasterTime > 0 {
+			in.MasterTime = 0
+		}
 	}
 	s.mm.Unlock()
 
@@ -60,6 +63,10 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 						}
 						s.masterMap[in.GetName()] = service
 						s.mm.Unlock()
+
+						if in.GetMasterTime() == 0 {
+							in.MasterTime = time.Now().Unix()
+						}
 					}
 
 					//Refresh the IP and store the checkfile
@@ -101,6 +108,9 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 						}
 						s.masterMap[in.GetName()] = service
 						s.mm.Unlock()
+						if in.GetMasterTime() == 0 {
+							in.MasterTime = time.Now().Unix()
+						}
 					}
 
 					//Refresh the IP and store the checkfile

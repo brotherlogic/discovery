@@ -388,9 +388,13 @@ func TestBecomeMaster(t *testing.T) {
 	}
 
 	entry1.Master = false
-	_, err = s.RegisterService(context.Background(), entry1)
+	entry1Back, err := s.RegisterService(context.Background(), entry1)
 	if err != nil {
 		t.Fatalf("Unable to re-register as slave: %v", err)
+	}
+
+	if entry1Back.MasterTime > 0 {
+		t.Fatalf("Master time not reset: %v", entry1Back)
 	}
 
 	v, err = s.Discover(context.Background(), &pb.RegistryEntry{Name: "Testing"})
@@ -399,10 +403,15 @@ func TestBecomeMaster(t *testing.T) {
 	}
 
 	entry2.Master = true
-	_, err = s.RegisterService(context.Background(), entry2)
+	entry2Back, err := s.RegisterService(context.Background(), entry2)
 	if err != nil {
 		t.Errorf("Unable to promote to master: %v", err)
 	}
+
+	if entry2Back.GetMasterTime() == 0 {
+		t.Errorf("Master time not set on new master: %v", entry2Back)
+	}
+
 }
 
 func TestFailHeartbeat(t *testing.T) {
