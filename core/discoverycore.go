@@ -77,7 +77,7 @@ func InitServer() Server {
 
 func (s *Server) cleanEntries(t time.Time) {
 	ts := time.Now()
-	num = len(s.entries)
+	num := len(s.entries)
 	fails := 0
 	for i, entry := range s.entries {
 		//Clean if we haven't seen this entry in the time to clean window
