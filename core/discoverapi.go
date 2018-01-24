@@ -65,7 +65,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 						s.mm.Unlock()
 
 						if in.GetMasterTime() == 0 {
-							in.MasterTime = time.Now().Unix()
+							service.MasterTime = time.Now().Unix()
 						}
 					}
 
@@ -109,7 +109,7 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 						s.masterMap[in.GetName()] = service
 						s.mm.Unlock()
 						if in.GetMasterTime() == 0 {
-							in.MasterTime = time.Now().Unix()
+							service.MasterTime = time.Now().Unix()
 						}
 					}
 
