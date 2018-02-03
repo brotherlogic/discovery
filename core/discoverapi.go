@@ -57,16 +57,17 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 					// Add to master map if this is master
 					if in.GetMaster() {
 						s.mm.Lock()
-						if val, ok := s.masterMap[in.GetName()]; ok && val.Identifier != in.Identifier {
-							s.mm.Unlock()
-							return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v", val, in)
-						}
-						s.masterMap[in.GetName()] = service
-						s.mm.Unlock()
-
-						if in.GetMasterTime() == 0 {
+						if val, ok := s.masterMap[in.GetName()]; ok {
+							if val.Identifier != in.Identifier {
+								s.mm.Unlock()
+								return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v", val, in)
+							}
+						} else {
 							service.MasterTime = time.Now().Unix()
 						}
+
+						s.masterMap[in.GetName()] = service
+						s.mm.Unlock()
 					}
 
 					//Refresh the IP and store the checkfile
@@ -102,15 +103,17 @@ func (s *Server) RegisterService(ctx context.Context, in *pb.RegistryEntry) (*pb
 					// Add to master map if this is master
 					if in.GetMaster() {
 						s.mm.Lock()
-						if val, ok := s.masterMap[in.GetName()]; ok && val.Identifier != in.Identifier {
-							s.mm.Unlock()
-							return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v", val, in)
-						}
-						s.masterMap[in.GetName()] = service
-						s.mm.Unlock()
-						if in.GetMasterTime() == 0 {
+						if val, ok := s.masterMap[in.GetName()]; ok {
+							if val.Identifier != in.Identifier {
+								s.mm.Unlock()
+								return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v", val, in)
+							}
+						} else {
 							service.MasterTime = time.Now().Unix()
 						}
+
+						s.masterMap[in.GetName()] = service
+						s.mm.Unlock()
 					}
 
 					//Refresh the IP and store the checkfile
