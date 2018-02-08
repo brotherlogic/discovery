@@ -23,7 +23,6 @@ var externalPorts = map[string][]int32{"main": []int32{50052, 50053}}
 type Server struct {
 	entries   []*pb.RegistryEntry
 	checkFile string
-	hc        healthChecker
 	external  string
 	lastGet   time.Time
 	masterMap map[string]*pb.RegistryEntry
@@ -32,9 +31,6 @@ type Server struct {
 	counts    map[string]int
 }
 
-type healthChecker interface {
-	Check(count int, entry *pb.RegistryEntry) int
-}
 type httpGetter interface {
 	Get(url string) (*http.Response, error)
 }
@@ -66,7 +62,6 @@ func (s *Server) getExternalIP(getter httpGetter) string {
 func InitServer() Server {
 	s := Server{}
 	s.entries = make([]*pb.RegistryEntry, 0)
-	s.hc = prodHealthChecker{logger: s.recordLog}
 	s.mm = &sync.Mutex{}
 	s.masterMap = make(map[string]*pb.RegistryEntry)
 	s.counts = make(map[string]int)
