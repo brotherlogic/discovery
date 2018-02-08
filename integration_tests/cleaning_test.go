@@ -45,14 +45,14 @@ func register(port string, binary string, timeToLive int64) error {
 	}
 
 	client := pb.NewDiscoveryServiceClient(conn)
-	resp, err := client.RegisterService(context.Background(), &pb.RegistryEntry{Name: binary, Identifier: "testing", TimeToClean: timeToLive})
+	resp, err := client.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: binary, Identifier: "testing", TimeToClean: timeToLive}})
 
 	log.Printf("Got register response: %v", resp)
 
 	return err
 }
 
-func list(port string) (*pb.ServiceList, error) {
+func list(port string) (*pb.ListResponse, error) {
 	conn, err := grpc.Dial(port, grpc.WithInsecure())
 	defer conn.Close()
 	if err != nil {
@@ -60,7 +60,7 @@ func list(port string) (*pb.ServiceList, error) {
 	}
 
 	client := pb.NewDiscoveryServiceClient(conn)
-	return client.ListAllServices(context.Background(), &pb.Empty{})
+	return client.ListAllServices(context.Background(), &pb.ListRequest{})
 }
 
 func TestNormalClean(t *testing.T) {
@@ -82,7 +82,7 @@ func TestNormalClean(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to list: %v", err)
 	}
-	if len(servers.GetServices()) != 1 {
+	if len(servers.GetServices().GetServices()) != 1 {
 		t.Fatalf("Error running test, server is not registered: %v", servers)
 	}
 
@@ -93,7 +93,7 @@ func TestNormalClean(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to list: %v", err)
 	}
-	if len(servers.Services) > 0 {
+	if len(servers.GetServices().Services) > 0 {
 		t.Errorf("Server has not been cleaned after 4 seconds: %v", servers)
 	}
 
@@ -118,7 +118,7 @@ func TestLongClean(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to list: %v", err)
 	}
-	if len(servers.GetServices()) != 1 {
+	if len(servers.GetServices().GetServices()) != 1 {
 		t.Fatalf("Error running test, server is not registered: %v", servers)
 	}
 
@@ -129,7 +129,7 @@ func TestLongClean(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to list: %v", err)
 	}
-	if len(servers.Services) != 1 {
+	if len(servers.GetServices().Services) != 1 {
 		t.Errorf("Server has been cleaned after 4 seconds: %v", servers)
 	}
 
@@ -140,7 +140,7 @@ func TestLongClean(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to list: %v", err)
 	}
-	if len(servers.Services) > 0 {
+	if len(servers.GetServices().Services) > 0 {
 		t.Errorf("Server has not been cleaned after 5 seconds: %v", servers)
 	}
 

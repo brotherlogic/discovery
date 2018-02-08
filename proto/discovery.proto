@@ -51,9 +51,35 @@ message StateResponse {
 message StateRequest {
 }
 
+message RegisterRequest {
+	RegistryEntry service = 1;
+	string caller = 2;
+}
+
+message RegisterResponse {
+	RegistryEntry service = 1;
+}
+
+message DiscoverRequest {
+	RegistryEntry request = 1;
+	string caller = 2;
+}
+
+message DiscoverResponse {
+	RegistryEntry service = 1;
+}
+
+message ListRequest {
+	string caller = 1;
+}
+
+message ListResponse {
+	ServiceList services = 1;
+}
+
 service DiscoveryService {
-	rpc RegisterService (RegistryEntry) returns (RegistryEntry) {}
-	rpc Discover (RegistryEntry) returns (RegistryEntry) {}
-  rpc ListAllServices (Empty) returns (ServiceList) {}
+	rpc RegisterService (RegisterRequest) returns (RegisterResponse) {}
+	rpc Discover (DiscoverRequest) returns (DiscoverResponse) {}
+  rpc ListAllServices (ListRequest) returns (ListResponse) {}
 	rpc State (StateRequest) returns (StateResponse) {}
 }

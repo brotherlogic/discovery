@@ -5,16 +5,18 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
-	"github.com/brotherlogic/goserver/utils"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	pbdi "github.com/brotherlogic/discovery/proto"
 
 	_ "google.golang.org/grpc/encoding/gzip"
+)
+
+const (
+	port = ":50055"
 )
 
 func main() {
@@ -34,7 +36,7 @@ func main() {
 	} else {
 		switch os.Args[1] {
 		case "state":
-			conn, _ := grpc.Dial(utils.RegistryIP+":"+strconv.Itoa(utils.RegistryPort), grpc.WithInsecure())
+			conn, _ := grpc.Dial(port, grpc.WithInsecure())
 			defer conn.Close()
 
 			registry := pbdi.NewDiscoveryServiceClient(conn)
@@ -47,18 +49,18 @@ func main() {
 			fmt.Printf("STATE: %v\n", state)
 		case "list":
 			if err := buildFlags.Parse(os.Args[2:]); err == nil {
-				conn, _ := grpc.Dial(utils.RegistryIP+":"+strconv.Itoa(utils.RegistryPort), grpc.WithInsecure())
+				conn, _ := grpc.Dial(port, grpc.WithInsecure())
 				defer conn.Close()
 
 				registry := pbdi.NewDiscoveryServiceClient(conn)
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 				defer cancel()
-				bits, err := registry.ListAllServices(ctx, &pbdi.Empty{}, grpc.FailFast(false))
+				bits, err := registry.ListAllServices(ctx, &pbdi.ListRequest{}, grpc.FailFast(false))
 				if err != nil {
 					log.Fatalf("Error building job: %v", err)
 				}
 				fmt.Printf("MASTERS\n-------\n")
-				for _, bit := range bits.Services {
+				for _, bit := range bits.GetServices().Services {
 					regtime := time.Unix(bit.GetLastSeenTime(), 0).Sub(time.Unix(bit.GetRegisterTime(), 0))
 					mastertime := time.Unix(bit.GetLastSeenTime(), 0).Sub(time.Unix(bit.GetMasterTime(), 0))
 					if bit.GetMaster() {
@@ -66,7 +68,7 @@ func main() {
 					}
 				}
 				fmt.Printf("SLAVES\n-------\n")
-				for _, bit := range bits.Services {
+				for _, bit := range bits.GetServices().Services {
 					regtime := time.Unix(bit.GetLastSeenTime(), 0).Sub(time.Unix(bit.GetRegisterTime(), 0))
 					if !bit.GetMaster() {
 						fmt.Printf("%v [%v]\n", bit, regtime)
