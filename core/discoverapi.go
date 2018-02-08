@@ -160,10 +160,10 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 
 	//Return the non master if possible
 	if nonmaster != nil {
-		return nil, errors.New("Cannot find a master for service called " + in.Name + " on server (maybe): " + in.Identifier)
+		return nil, errors.New("Cannot find a master for service called " + in.GetName() + " on server (maybe): " + in.GetIdentifier())
 	}
 
-	return &pb.DiscoverResponse{}, errors.New("Cannot find service called " + in.Name + " on server (maybe): " + in.Identifier)
+	return &pb.DiscoverResponse{}, errors.New("Cannot find service called " + in.GetName() + " on server (maybe): " + in.GetIdentifier())
 }
 
 //State gets the state of the server
