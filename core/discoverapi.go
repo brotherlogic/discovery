@@ -150,7 +150,7 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 	in := req.GetRequest()
 	var nonmaster *pb.RegistryEntry
 	for _, entry := range s.entries {
-		if entry.Name == in.Name && (in.Identifier == "" || in.Identifier == entry.Identifier) {
+		if entry.Name == in.GetName() && (in.GetIdentifier() == "" || in.GetIdentifier() == entry.Identifier) {
 			if entry.Master || in.Identifier != "" {
 				return &pb.DiscoverResponse{Service: entry}, nil
 			}
