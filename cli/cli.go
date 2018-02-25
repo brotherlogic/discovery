@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	port = ":50055"
+	port = "192.168.86.88:50055"
 )
 
 func main() {
