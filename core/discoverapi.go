@@ -36,9 +36,9 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 	}
 	s.mm.Unlock()
 
-	// Adjust the clean time if necessary (default to 3 seconds)
+	// Adjust the clean time if necessary (default to 5 seconds)
 	if in.GetTimeToClean() == 0 {
-		in.TimeToClean = 1000 * 3
+		in.TimeToClean = 1000 * 5
 	}
 
 	// Server is requesting an external port
