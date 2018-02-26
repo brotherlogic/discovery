@@ -59,7 +59,7 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 					if in.GetMaster() {
 						s.mm.Lock()
 						if val, ok := s.masterMap[in.GetName()]; ok {
-							if val.Identifier != in.Identifier && (time.Now().Unix()-val.GetLastSeenTime() < val.GetTimeToClean()) {
+							if val.Identifier != in.Identifier && ((time.Now().Unix() - val.GetLastSeenTime()*1000) < val.GetTimeToClean()) {
 								s.mm.Unlock()
 								return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v", val, in)
 							}
@@ -105,7 +105,7 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 					if in.GetMaster() {
 						s.mm.Lock()
 						if val, ok := s.masterMap[in.GetName()]; ok {
-							if val.Identifier != in.Identifier && (time.Now().Unix()-val.GetLastSeenTime() < val.GetTimeToClean()) {
+							if val.Identifier != in.Identifier && ((time.Now().Unix() - val.GetLastSeenTime()*1000) < val.GetTimeToClean()) {
 								s.mm.Unlock()
 								return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v", val, in)
 							}
