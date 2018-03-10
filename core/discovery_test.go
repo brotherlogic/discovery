@@ -271,7 +271,7 @@ func TestCleanWithNoEntries(t *testing.T) {
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry1})
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry2})
 
-	s.cleanEntries(time.Now().Add(time.Second * 4))
+	s.cleanEntries(time.Now().Add(time.Second * 6))
 
 	r2, err := s.ListAllServices(context.Background(), &pb.ListRequest{})
 	if err != nil {
