@@ -29,7 +29,7 @@ running = len(os.popen('ps -ef | grep ' + name).readlines()) > 3
               
 if size_1 != size_2 or new_hash != current_hash or not running:
     if not running:
-        for line in os.popen('cat out.txt | mail -s "Crash Report ' + name + '" brotherlogic@gmail.com').readlines():
+        for line in os.popen('cat out.txt | mail -E -s "Crash Report ' + name + '" brotherlogic@gmail.com').readlines():
             pass
     for line in os.popen('echo "" > out.txt').readlines():
         pass

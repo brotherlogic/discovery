@@ -57,6 +57,30 @@ func TestGetExternalIPFail(t *testing.T) {
 	}
 }
 
+func TestServerDiscover(t *testing.T) {
+	s := InitTestServer()
+	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1"}
+	_, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
+
+	if err != nil {
+		t.Fatalf("Error registering service: %v", err)
+	}
+
+	val, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Job1"}})
+	if err == nil {
+		t.Errorf("Master discover has succeeded: %v", err)
+	}
+
+	val, err = s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Job1", Identifier: "Server1"}})
+	if err != nil {
+		t.Errorf("Server discover has failed: %v", err)
+	}
+
+	if val.Service.Ip != "10.0.1.17" {
+		t.Errorf("Response has come back wrong: %v", val)
+	}
+}
+
 func TestDoubleRegister(t *testing.T) {
 	s := InitTestServer()
 	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1"}
