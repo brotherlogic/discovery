@@ -81,6 +81,26 @@ func TestServerDiscover(t *testing.T) {
 	}
 }
 
+func TestRegisterPort(t *testing.T) {
+	s := InitTestServer()
+	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1", Port: 12345}
+	_, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
+
+	if err != nil {
+		t.Fatalf("Error registering service: %v", err)
+	}
+
+	val, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Job1", Identifier: "Server1"}})
+	if err != nil {
+		t.Errorf("Server discover has failed: %v", err)
+	}
+
+	if val.Service.Ip != "10.0.1.17" || val.Service.Port != 12345 {
+		t.Errorf("Response has come back wrong: %v", val)
+	}
+
+}
+
 func TestDoubleRegister(t *testing.T) {
 	s := InitTestServer()
 	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1"}
@@ -254,9 +274,9 @@ func TestRegisterMACAddressRefreshWithExternalPort(t *testing.T) {
 func TestRegisterForExternalPortTooManyTimes(t *testing.T) {
 	s := InitTestServer()
 	var entries = [...]*pb.RegistryEntry{
-		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing1", ExternalPort: true},
-		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing2", ExternalPort: true},
-		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing3", ExternalPort: true},
+		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing1", ExternalPort: true, Port: 1234},
+		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing2", ExternalPort: true, Port: 1234},
+		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing3", ExternalPort: true, Port: 1234},
 	}
 
 	var err error

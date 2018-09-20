@@ -3,38 +3,38 @@ syntax = "proto3";
 package discovery;
 
 message RegistryEntry {
-	// The ip address associated with this entry
-	string ip = 1;
-
-	// The port number assigned / requested for this entry
-	int32 port = 2;
-
-	// The name of this service
-	string name = 3;
-
+  // The ip address associated with this entry
+  string ip = 1;
+  
+  // The port number assigned / requested for this entry
+  int32 port = 2;
+  
+  // The name of this service
+  string name = 3;
+  
   // Is this an external facing port
   bool external_port = 4;
-
+  
   // This is the machine identifier
   string identifier = 5;
-
-	// Boolean to show we're master/slave
-	bool master = 6;
-
-	// The time at which this binary was registered
-	int64 register_time = 7;
-
-	// The time at which this binary should be cleaned
-	int64 time_to_clean = 8;
-
-	// The time at which this binary was last seen
-	int64 last_seen_time = 9;
-
-	// We are never going to be master
-	bool ignores_master = 10;
-
-	// The time at which we were set master
-	int64 master_time = 11;
+  
+  // Boolean to show we're master/slave
+  bool master = 6;
+  
+  // The time at which this binary was registered
+  int64 register_time = 7;
+  
+  // The time at which this binary should be cleaned
+  int64 time_to_clean = 8;
+  
+  // The time at which this binary was last seen
+  int64 last_seen_time = 9;
+  
+  // We are never going to be master
+  bool ignores_master = 10;
+  
+  // The time at which we were set master
+  int64 master_time = 11;
 }
 
 message ServiceList {
@@ -70,16 +70,16 @@ message DiscoverResponse {
 }
 
 message ListRequest {
-	string caller = 1;
+  string caller = 1;
 }
 
 message ListResponse {
-	ServiceList services = 1;
+  ServiceList services = 1;
 }
 
 service DiscoveryService {
-	rpc RegisterService (RegisterRequest) returns (RegisterResponse) {}
-	rpc Discover (DiscoverRequest) returns (DiscoverResponse) {}
+  rpc RegisterService (RegisterRequest) returns (RegisterResponse) {}
+  rpc Discover (DiscoverRequest) returns (DiscoverResponse) {}
   rpc ListAllServices (ListRequest) returns (ListResponse) {}
-	rpc State (StateRequest) returns (StateResponse) {}
+  rpc State (StateRequest) returns (StateResponse) {}
 }
