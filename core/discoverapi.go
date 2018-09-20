@@ -18,6 +18,18 @@ func (s *Server) ListAllServices(ctx context.Context, in *pb.ListRequest) (*pb.L
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	in := req.GetService()
+
+	if in.ExternalPort {
+		in.Ip = s.getExternalIP(prodHTTPGetter{})
+	}
+
+	//Validate us if we're trying to use a port number already used
+	for _, en := range s.entries {
+		if en.Port == in.Port && en.Name != in.Name && en.Ip == in.Ip {
+			return nil, fmt.Errorf("This port is already registered")
+		}
+	}
+
 	s.countM.Lock()
 	if _, ok := s.counts[in.GetName()]; !ok {
 		s.counts[in.GetName()] = 0
@@ -41,100 +53,49 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 		in.TimeToClean = 1000 * 5
 	}
 
-	// Server is requesting an external port
-	if in.ExternalPort {
-		availablePorts := externalPorts["main"]
-		// Reset the request IP to an external IP
-		in.Ip = s.getExternalIP(prodHTTPGetter{})
-
-		for _, port := range availablePorts {
-			taken := false
-			for _, service := range s.entries {
-				if service.Ip == in.Ip && service.Port == port {
-					taken = true
-				}
-				// If we've already registered this service, return immediately
-				if in.GetRegisterTime() > 0 && service.Identifier == in.Identifier && service.Name == in.Name && service.Port == in.Port {
-					// Add to master map if this is master
-					if in.GetMaster() {
-						s.mm.Lock()
-						if val, ok := s.masterMap[in.GetName()]; ok {
-							if val.Identifier != in.Identifier && ((time.Now().Unix()-val.GetLastSeenTime())*1000 < val.GetTimeToClean()) {
-								s.mm.Unlock()
-								return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v given %v,%v", val, in, (time.Now().Unix()-val.GetLastSeenTime())*1000, val.GetTimeToClean())
-							}
-						} else {
-							service.MasterTime = time.Now().Unix()
-						}
-
-						s.masterMap[in.GetName()] = service
-						s.mm.Unlock()
-					}
-
-					//Refresh the IP and store the checkfile
-					service.Ip = in.Ip
-					service.Master = in.Master
-					service.LastSeenTime = time.Now().Unix()
-					return &pb.RegisterResponse{Service: service}, nil
-				}
-			}
-
-			if !taken {
-				in.Port = port
-				in.RegisterTime = time.Now().Unix()
-				break
+	// Get the new port number
+	for portNumber := int32(50055 + 1); in.Port == 0 && portNumber < 60000; portNumber++ {
+		taken := false
+		for _, service := range s.entries {
+			if service.Port == portNumber {
+				taken = true
 			}
 		}
-
-		//Throw an error if we can't find a port number
-		if in.Port <= 0 {
-			return &pb.RegisterResponse{}, errors.New("Unable to allocate external port")
+		if !taken {
+			in.Port = portNumber
 		}
-	} else {
-		var portNumber int32
-		for portNumber = 50055 + 1; portNumber < 60000; portNumber++ {
-			taken := false
-			for _, service := range s.entries {
-				if service.Port == portNumber {
-					taken = true
-				}
 
-				// If we've already registered this service, return immediately
-				if in.GetRegisterTime() > 0 && service.Identifier == in.Identifier && service.Name == in.Name && service.Port == in.Port {
-					// Add to master map if this is master
-					if in.GetMaster() {
-						s.mm.Lock()
-						if val, ok := s.masterMap[in.GetName()]; ok {
-							if val.Identifier != in.Identifier && ((time.Now().Unix()-val.GetLastSeenTime())*1000 < val.GetTimeToClean()) {
-								s.mm.Unlock()
-								return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v", val, in)
-							}
-						} else {
-							service.MasterTime = time.Now().Unix()
-						}
+	}
 
-						s.masterMap[in.GetName()] = service
+	// If we've already registered this service, return immediately
+	for _, service := range s.entries {
+		if in.GetRegisterTime() > 0 && service.Identifier == in.Identifier && service.Name == in.Name && service.Port == in.Port {
+			// Add to master map if this is master
+			if in.GetMaster() {
+				s.mm.Lock()
+				if val, ok := s.masterMap[in.GetName()]; ok {
+					if val.Identifier != in.Identifier && ((time.Now().Unix()-val.GetLastSeenTime())*1000 < val.GetTimeToClean()) {
 						s.mm.Unlock()
+						return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v", val, in)
 					}
+				} else {
+					service.MasterTime = time.Now().Unix()
+				}
 
-					//Refresh the IP and store the checkfile
-					service.Ip = in.Ip
-					service.Master = in.Master
-					service.Port = in.Port
-					service.LastSeenTime = time.Now().Unix()
-					return &pb.RegisterResponse{Service: service}, nil
-				}
+				s.masterMap[in.GetName()] = service
+				s.mm.Unlock()
 			}
-			if !taken {
-				//Only set the port if it's not set
-				if in.Port <= 0 {
-					in.Port = portNumber
-					in.RegisterTime = time.Now().Unix()
-				}
-				break
-			}
+
+			//Refresh the IP and store the checkfile
+			service.Ip = in.Ip
+			service.Master = in.Master
+			service.Port = in.Port
+			service.LastSeenTime = time.Now().Unix()
+			return &pb.RegisterResponse{Service: service}, nil
 		}
 	}
+
+	in.RegisterTime = time.Now().Unix()
 
 	//Reject any master registrations that are new
 	if in.GetMaster() {
