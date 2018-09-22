@@ -53,8 +53,16 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 		in.TimeToClean = 1000 * 5
 	}
 
+	startPort := int32(50056)
+	endPort := int32(60000)
+
+	if in.ExternalPort {
+		startPort = 50052
+		endPort = 50053
+	}
+
 	// Get the new port number
-	for portNumber := int32(50055 + 1); in.Port == 0 && portNumber < 60000; portNumber++ {
+	for portNumber := startPort; in.Port == 0 && portNumber <= endPort; portNumber++ {
 		taken := false
 		for _, service := range s.entries {
 			if service.Port == portNumber {
