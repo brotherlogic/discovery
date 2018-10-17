@@ -15,22 +15,6 @@ import (
 	pbm "github.com/brotherlogic/monitor/monitorproto"
 )
 
-func (s *Server) recordTime(fName string, t time.Duration) {
-	for _, e := range s.entries {
-		if e.GetName() == "monitor" && e.GetMaster() {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-			defer cancel()
-			conn, err := grpc.DialContext(ctx, e.Ip+":"+strconv.Itoa(int(e.Port)), grpc.WithInsecure())
-			if err == nil {
-				defer conn.Close()
-
-				client := pbm.NewMonitorServiceClient(conn)
-				client.WriteFunctionCall(ctx, &pbm.FunctionCall{Binary: "discovery", Name: fName, Time: int32(t.Nanoseconds() / 1000000)}, grpc.FailFast(false))
-			}
-		}
-	}
-}
-
 func (s *Server) recordLog(logDetail string) {
 	go func() {
 		for _, e := range s.entries {
