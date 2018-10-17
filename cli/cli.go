@@ -47,6 +47,26 @@ func main() {
 				log.Fatalf("Error getting state: %v", err)
 			}
 			fmt.Printf("STATE: %v\n", state)
+		case "statechange":
+			conn, _ := grpc.Dial(port, grpc.WithInsecure())
+			defer conn.Close()
+
+			registry := pbdi.NewDiscoveryServiceClient(conn)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+			defer cancel()
+			state1, err := registry.State(ctx, &pbdi.StateRequest{})
+			if err != nil {
+				log.Fatalf("Error getting state: %v", err)
+			}
+
+			time.Sleep(time.Second * 5)
+			state2, err := registry.State(ctx, &pbdi.StateRequest{})
+			if err != nil {
+				log.Fatalf("Error getting state: %v", err)
+			}
+
+			fmt.Printf("STATE: %v\n", state1)
+			fmt.Printf("STATE: %v\n", state2)
 		case "list":
 			if err := buildFlags.Parse(os.Args[2:]); err == nil {
 				conn, _ := grpc.Dial(port, grpc.WithInsecure())
