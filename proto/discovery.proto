@@ -44,29 +44,30 @@ message ServiceList {
 message Empty {}
 
 message StateResponse {
-	string counts = 1;
-	int32 len = 2;
+  int64 longest_call = 1;
+  string most_frequent = 2;
+  int32 frequency = 3;
 }
 
 message StateRequest {
 }
 
 message RegisterRequest {
-	RegistryEntry service = 1;
-	string caller = 2;
+  RegistryEntry service = 1;
+  string caller = 2;
 }
 
 message RegisterResponse {
-	RegistryEntry service = 1;
+  RegistryEntry service = 1;
 }
 
 message DiscoverRequest {
-	RegistryEntry request = 1;
-	string caller = 2;
+  RegistryEntry request = 1;
+  string caller = 2;
 }
 
 message DiscoverResponse {
-	RegistryEntry service = 1;
+  RegistryEntry service = 1;
 }
 
 message ListRequest {

@@ -19,8 +19,8 @@ func TestGetState(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error getting state: %v", err)
 	}
-	if state.GetCounts() != "Counts: map[Blah:1]" {
-		t.Errorf("Error reading state: %v", state)
+	if state.Frequency != 1 {
+		t.Errorf("HMmm: %v", state.Frequency)
 	}
 }
 

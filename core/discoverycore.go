@@ -29,6 +29,7 @@ type Server struct {
 	mm        *sync.Mutex
 	countM    *sync.Mutex
 	counts    map[string]int
+	longest   int64
 }
 
 type httpGetter interface {
@@ -66,6 +67,7 @@ func InitServer() Server {
 	s.masterMap = make(map[string]*pb.RegistryEntry)
 	s.counts = make(map[string]int)
 	s.countM = &sync.Mutex{}
+	s.longest = -1
 	return s
 }
 

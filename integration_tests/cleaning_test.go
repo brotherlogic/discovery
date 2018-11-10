@@ -87,7 +87,7 @@ func TestNormalClean(t *testing.T) {
 	}
 
 	//Wait for 4 seconds to allow time for cleaning
-	time.Sleep(time.Second * 3)
+	time.Sleep(time.Second * 4)
 
 	servers, err = list(port)
 	if err != nil {
@@ -97,6 +97,7 @@ func TestNormalClean(t *testing.T) {
 		t.Errorf("Server has not been cleaned after 4 seconds: %v", servers)
 	}
 
+	log.Printf("Stopping discover service")
 	s.Stop()
 }
 

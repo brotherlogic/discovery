@@ -116,11 +116,16 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 
 // Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.DiscoverResponse, error) {
+	st := time.Now()
 	in := req.GetRequest()
 	var nonmaster *pb.RegistryEntry
 	for _, entry := range s.entries {
 		if entry.Name == in.GetName() && (in.GetIdentifier() == "" || in.GetIdentifier() == entry.Identifier) {
 			if entry.Master || in.Identifier != "" {
+				rt := time.Now().Sub(st).Nanoseconds() / 1000000
+				if rt > s.longest {
+					s.longest = rt
+				}
 				return &pb.DiscoverResponse{Service: entry}, nil
 			}
 			nonmaster = entry
@@ -132,13 +137,25 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 		return nil, errors.New("Cannot find a master for service called " + in.GetName() + " on server (maybe): " + in.GetIdentifier())
 	}
 
+	rt := time.Now().Sub(st).Nanoseconds() / 1000000
+	if rt > s.longest {
+		s.longest = rt
+	}
 	return &pb.DiscoverResponse{}, errors.New("Cannot find service called " + in.GetName() + " on server (maybe): " + in.GetIdentifier())
 }
 
 //State gets the state of the server
 func (s *Server) State(ctx context.Context, in *pb.StateRequest) (*pb.StateResponse, error) {
 	s.countM.Lock()
-	resp := fmt.Sprintf("Counts: %v", s.counts)
+	longest := ""
+	longestCount := 0
+	for name, number := range s.counts {
+		if number > longestCount {
+			longestCount = number
+			longest = name
+		}
+	}
+
 	s.countM.Unlock()
-	return &pb.StateResponse{Counts: resp, Len: int32(len(s.entries))}, nil
+	return &pb.StateResponse{MostFrequent: longest, Frequency: int32(longestCount), LongestCall: s.longest}, nil
 }
