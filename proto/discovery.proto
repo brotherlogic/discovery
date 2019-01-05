@@ -47,6 +47,7 @@ message StateResponse {
   int64 longest_call = 1;
   string most_frequent = 2;
   int32 frequency = 3;
+  string count = 4;
 }
 
 message StateRequest {

@@ -12,11 +12,13 @@ import (
 
 // ListAllServices returns a list of all the services
 func (s *Server) ListAllServices(ctx context.Context, in *pb.ListRequest) (*pb.ListResponse, error) {
+	s.countList++
 	return &pb.ListResponse{Services: &pb.ServiceList{Services: s.entries}}, nil
 }
 
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
+	s.countRegister++
 	in := req.GetService()
 
 	if in.ExternalPort {
@@ -116,6 +118,7 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 
 // Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.DiscoverResponse, error) {
+	s.countDiscover++
 	st := time.Now()
 	in := req.GetRequest()
 	var nonmaster *pb.RegistryEntry
@@ -157,5 +160,5 @@ func (s *Server) State(ctx context.Context, in *pb.StateRequest) (*pb.StateRespo
 	}
 
 	s.countM.Unlock()
-	return &pb.StateResponse{MostFrequent: longest, Frequency: int32(longestCount), LongestCall: s.longest}, nil
+	return &pb.StateResponse{MostFrequent: longest, Frequency: int32(longestCount), LongestCall: s.longest, Count: fmt.Sprintf("D %v, R %v, L %v", s.countDiscover, s.countRegister, s.countList)}, nil
 }

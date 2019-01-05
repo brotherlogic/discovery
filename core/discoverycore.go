@@ -21,15 +21,18 @@ var externalPorts = map[string][]int32{"main": []int32{50052, 50053}}
 
 // Server the central server object
 type Server struct {
-	entries   []*pb.RegistryEntry
-	checkFile string
-	external  string
-	lastGet   time.Time
-	masterMap map[string]*pb.RegistryEntry
-	mm        *sync.Mutex
-	countM    *sync.Mutex
-	counts    map[string]int
-	longest   int64
+	entries       []*pb.RegistryEntry
+	checkFile     string
+	external      string
+	lastGet       time.Time
+	masterMap     map[string]*pb.RegistryEntry
+	mm            *sync.Mutex
+	countM        *sync.Mutex
+	counts        map[string]int
+	longest       int64
+	countRegister int64
+	countDiscover int64
+	countList     int64
 }
 
 type httpGetter interface {
