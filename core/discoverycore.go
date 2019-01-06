@@ -33,6 +33,8 @@ type Server struct {
 	countRegister int64
 	countDiscover int64
 	countList     int64
+	taken         []bool
+	extTaken      []bool
 }
 
 type httpGetter interface {
@@ -71,6 +73,8 @@ func InitServer() Server {
 	s.counts = make(map[string]int)
 	s.countM = &sync.Mutex{}
 	s.longest = -1
+	s.taken = make([]bool, 10000)
+	s.extTaken = make([]bool, 2)
 	return s
 }
 

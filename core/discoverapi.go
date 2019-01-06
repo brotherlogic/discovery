@@ -16,6 +16,39 @@ func (s *Server) ListAllServices(ctx context.Context, in *pb.ListRequest) (*pb.L
 	return &pb.ListResponse{Services: &pb.ServiceList{Services: s.entries}}, nil
 }
 
+func (s *Server) updateCounts(in *pb.RegistryEntry) {
+	s.countM.Lock()
+	s.counts[in.GetName()]++
+	s.countM.Unlock()
+
+}
+
+func (s *Server) updateMasterMap(in *pb.RegistryEntry) {
+	s.mm.Lock()
+	if val, ok := s.masterMap[in.GetName()]; ok && val.GetIdentifier() == in.GetIdentifier() && !in.GetMaster() {
+		delete(s.masterMap, in.GetName())
+		if in.MasterTime > 0 {
+			in.MasterTime = 0
+		}
+	}
+	s.mm.Unlock()
+}
+
+func (s *Server) getPortNumber(in *pb.RegistryEntry) {
+	startPort := int32(50056)
+	if in.ExternalPort {
+		startPort = 50052
+	}
+
+	for i := range s.taken {
+		if !s.taken[i] {
+			s.taken[i] = true
+			in.Port = startPort + int32(i)
+			break
+		}
+	}
+}
+
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	s.countRegister++
@@ -32,49 +65,19 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 		}
 	}
 
-	s.countM.Lock()
-	if _, ok := s.counts[in.GetName()]; !ok {
-		s.counts[in.GetName()] = 0
-	}
-	s.counts[in.GetName()]++
-	s.countM.Unlock()
+	s.updateCounts(in)
 
 	in.LastSeenTime = time.Now().Unix()
 
-	s.mm.Lock()
-	if val, ok := s.masterMap[in.GetName()]; ok && val.GetIdentifier() == in.GetIdentifier() && !in.GetMaster() {
-		delete(s.masterMap, in.GetName())
-		if in.MasterTime > 0 {
-			in.MasterTime = 0
-		}
-	}
-	s.mm.Unlock()
+	s.updateMasterMap(in)
 
 	// Adjust the clean time if necessary (default to 5 seconds)
 	if in.GetTimeToClean() == 0 {
 		in.TimeToClean = 1000 * 5
 	}
 
-	startPort := int32(50056)
-	endPort := int32(60000)
-
-	if in.ExternalPort {
-		startPort = 50052
-		endPort = 50053
-	}
-
-	// Get the new port number
-	for portNumber := startPort; in.Port == 0 && portNumber <= endPort; portNumber++ {
-		taken := false
-		for _, service := range s.entries {
-			if service.Port == portNumber {
-				taken = true
-			}
-		}
-		if !taken {
-			in.Port = portNumber
-		}
-
+	if in.Port == 0 {
+		s.getPortNumber(in)
 	}
 
 	// If we've already registered this service, return immediately
