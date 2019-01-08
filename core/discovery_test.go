@@ -2,6 +2,7 @@ package discovery
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"testing"
@@ -534,5 +535,27 @@ func TestFailHeartbeatExternal(t *testing.T) {
 	v2, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry2})
 	if err == nil {
 		t.Errorf("Succesful promote to master: %v", v2)
+	}
+}
+
+func TestFailExternalGet(t *testing.T) {
+	s := InitTestServer()
+
+	//Register 100 regular servers
+	for i := 0; i < 100; i++ {
+		_, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Ip: "10.0.1.1", Name: fmt.Sprintf("Service-%v", i)}})
+		if err != nil {
+			t.Errorf("Bad register: %v", err)
+		}
+	}
+
+	r, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Ip: "10.0.1.1", Name: "thing", ExternalPort: true}})
+
+	if err != nil {
+		t.Errorf("Bad register: %v", err)
+	}
+
+	if r.Service.Port > 50053 {
+		t.Errorf("Oh dead: %v", r)
 	}
 }
