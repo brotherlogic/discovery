@@ -35,17 +35,20 @@ func (s *Server) updateMasterMap(in *pb.RegistryEntry) {
 }
 
 func (s *Server) getPortNumber(in *pb.RegistryEntry) {
-	startPort := int32(50056)
+	startPort := 50056
 	if in.ExternalPort {
 		startPort = 50052
 	}
 
-	for i := range s.taken {
+	i := startPort - 50052
+	for i < len(s.taken) {
 		if !s.taken[i] {
 			s.taken[i] = true
-			in.Port = startPort + int32(i)
+			in.Port = int32(startPort + i)
 			break
 		}
+
+		i++
 	}
 }
 
