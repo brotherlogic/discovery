@@ -52,6 +52,22 @@ func register(port string, binary string, timeToLive int64) error {
 	return err
 }
 
+func registerExternal(port string, binary string, timeToLive int64) error {
+	log.Printf("Registering on port %v", port)
+	conn, err := grpc.Dial(port, grpc.WithInsecure())
+	defer conn.Close()
+	if err != nil {
+		return err
+	}
+
+	client := pb.NewDiscoveryServiceClient(conn)
+	resp, err := client.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: binary, Identifier: "testing", TimeToClean: timeToLive, ExternalPort: true}})
+
+	log.Printf("Got register response: %v", resp)
+
+	return err
+}
+
 func list(port string) (*pb.ListResponse, error) {
 	conn, err := grpc.Dial(port, grpc.WithInsecure())
 	defer conn.Close()
@@ -61,6 +77,45 @@ func list(port string) (*pb.ListResponse, error) {
 
 	client := pb.NewDiscoveryServiceClient(conn)
 	return client.ListAllServices(context.Background(), &pb.ListRequest{})
+}
+
+func TestPortClean(t *testing.T) {
+	port, err := Get()
+	if err != nil {
+		log.Fatalf("Unable to find port: %v", err)
+	}
+
+	s := runServer(port)
+	err = registerExternal(port, "test-binary", 3000)
+
+	time.Sleep(time.Second)
+	servers, err := list(port)
+	if err != nil {
+		t.Fatalf("Unable to list: %v", err)
+	}
+
+	ogPort := servers.GetServices().GetServices()[0].Port
+
+	// Run the clean
+	time.Sleep(time.Second * 4)
+
+	servers, err = list(port)
+	if err != nil || len(servers.GetServices().GetServices()) != 0 {
+		t.Fatalf("Cleaning failed %v and %v", err, servers)
+	}
+
+	//Re-register
+	err = registerExternal(port, "test-binary", 0)
+	servers, err = list(port)
+	if err != nil || len(servers.GetServices().GetServices()) != 1 {
+		t.Fatalf("Failed to bring server back up %v and %v", err, servers)
+	}
+
+	if servers.GetServices().GetServices()[0].Port != ogPort {
+		t.Errorf("Port has not been cleaned %v -> %v", ogPort, servers.GetServices().GetServices()[0].Port)
+	}
+
+	s.Stop()
 }
 
 func TestNormalClean(t *testing.T) {
