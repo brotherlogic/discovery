@@ -89,6 +89,7 @@ func (s *Server) cleanEntries(t time.Time) {
 				s.mm.Unlock()
 			}
 			s.entries = append(s.entries[:(i-fails)], s.entries[(i-fails)+1:]...)
+			s.taken[int(entry.Port)-50052] = false
 			fails++
 		}
 	}

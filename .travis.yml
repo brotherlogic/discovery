@@ -20,5 +20,5 @@ script:
 - fgt golint core
 - fgt golint cli
 - fgt golint integration_tests
-- go test -v integration_tests/*
+- ./integ.sh
 - $HOME/gopath/bin/goveralls -service=travis-ci -ignore core/discoverybase.go -package github.com/brotherlogic/discovery/core
