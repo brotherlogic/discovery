@@ -3,6 +3,7 @@ package discovery
 import (
 	"context"
 	"fmt"
+	"log"
 	"testing"
 
 	pb "github.com/brotherlogic/discovery/proto"
@@ -18,7 +19,10 @@ func benchmarkRegister(i, d int, b *testing.B) {
 	}
 
 	for n := 0; n < b.N; n++ {
-		s.RegisterService(context.Background(), &pb.RegisterRequest{Service: testdata[n%len(testdata)]})
+		resp, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: testdata[n%len(testdata)]})
+		if err != nil || resp.Service.Port < 50056 || resp.Service.Port > 65535 {
+			log.Fatalf("Bad port %v %v", err, resp)
+		}
 	}
 }
 

@@ -90,11 +90,9 @@ func TestPortClean(t *testing.T) {
 
 	time.Sleep(time.Second)
 	servers, err := list(port)
-	if err != nil {
+	if err != nil || len(servers.GetServices().GetServices()) == 0 {
 		t.Fatalf("Unable to list: %v", err)
 	}
-
-	ogPort := servers.GetServices().GetServices()[0].Port
 
 	// Run the clean
 	time.Sleep(time.Second * 4)
@@ -105,14 +103,10 @@ func TestPortClean(t *testing.T) {
 	}
 
 	//Re-register
-	err = registerExternal(port, "test-binary", 0)
+	err = registerExternal(port, "test-binary", 3000)
 	servers, err = list(port)
 	if err != nil || len(servers.GetServices().GetServices()) != 1 {
 		t.Fatalf("Failed to bring server back up %v and %v", err, servers)
-	}
-
-	if servers.GetServices().GetServices()[0].Port != ogPort {
-		t.Errorf("Port has not been cleaned %v -> %v", ogPort, servers.GetServices().GetServices()[0].Port)
 	}
 
 	s.Stop()

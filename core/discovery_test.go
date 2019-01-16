@@ -15,7 +15,7 @@ import (
 
 func TestGetState(t *testing.T) {
 	s := InitTestServer()
-	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "Blah"}})
+	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "Blah", TimeToClean: 100}})
 	state, err := s.State(context.Background(), &pb.StateRequest{})
 	if err != nil {
 		t.Fatalf("Error getting state: %v", err)
@@ -60,51 +60,47 @@ func TestGetExternalIPFail(t *testing.T) {
 
 func TestServerDiscover(t *testing.T) {
 	s := InitTestServer()
-	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1"}
+	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1", TimeToClean: 100}
 	_, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
 
 	if err != nil {
 		t.Fatalf("Error registering service: %v", err)
 	}
 
-	val, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Job1"}})
+	val, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Job1", TimeToClean: 100}})
 	if err == nil {
 		t.Errorf("Master discover has succeeded: %v", err)
 	}
 
-	val, err = s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Job1", Identifier: "Server1"}})
+	val, err = s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Job1", Identifier: "Server1", TimeToClean: 100}})
 	if err != nil {
-		t.Errorf("Server discover has failed: %v", err)
+		t.Fatalf("Server discover has failed: %v", err)
 	}
 
 	if val.Service.Ip != "10.0.1.17" {
 		t.Errorf("Response has come back wrong: %v", val)
 	}
+
+	val, err = s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Job2", Identifier: "Server2", TimeToClean: 100}})
+	if err == nil {
+		t.Fatalf("Server discover has passed: %v", val)
+	}
+
 }
 
 func TestRegisterPort(t *testing.T) {
 	s := InitTestServer()
-	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1", Port: 12345}
-	_, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
+	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1", Port: 12345, TimeToClean: 100}
+	resp, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
 
-	if err != nil {
-		t.Fatalf("Error registering service: %v", err)
+	if err == nil {
+		t.Fatalf("Managed to register under a bad port: %v", resp)
 	}
-
-	val, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Job1", Identifier: "Server1"}})
-	if err != nil {
-		t.Errorf("Server discover has failed: %v", err)
-	}
-
-	if val.Service.Ip != "10.0.1.17" || val.Service.Port != 12345 {
-		t.Errorf("Response has come back wrong: %v", val)
-	}
-
 }
 
 func TestDoubleRegister(t *testing.T) {
 	s := InitTestServer()
-	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1"}
+	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1", TimeToClean: 100}
 	res, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
 	if err != nil {
 		t.Fatalf("Error registering service: %v", err)
@@ -112,7 +108,7 @@ func TestDoubleRegister(t *testing.T) {
 
 	time.Sleep(time.Second * 2)
 
-	entry2 := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1"}
+	entry2 := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1", TimeToClean: 100}
 	res2, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry2})
 	if err != nil {
 		t.Fatalf("Error registering service: %v", err)
@@ -123,19 +119,9 @@ func TestDoubleRegister(t *testing.T) {
 	}
 }
 
-func TestFailAsMasterRegister(t *testing.T) {
-	s := InitTestServer()
-	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "server1", Name: "Job1", Master: true}
-	res, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
-
-	if err == nil {
-		t.Errorf("Master register has not failed: %v", res)
-	}
-}
-
 func TestStartAsSlave(t *testing.T) {
 	s := InitTestServer()
-	entry1 := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "server1", Name: "Job1"}
+	entry1 := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "server1", Name: "Job1", TimeToClean: 100}
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry1})
 
 	// Shouldn't be able to find
@@ -159,8 +145,8 @@ func TestStartAsSlave(t *testing.T) {
 
 func TestGetAll(t *testing.T) {
 	s := InitTestServer()
-	entry1 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Blah1"}
-	entry2 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Blah2"}
+	entry1 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Blah1", TimeToClean: 100}
+	entry2 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Blah2", TimeToClean: 100}
 
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry1})
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry2})
@@ -178,7 +164,7 @@ func TestGetAll(t *testing.T) {
 func TestRegisterForExternalPort(t *testing.T) {
 	s := InitTestServer()
 	s.setExternalIP(prodHTTPGetter{})
-	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", ExternalPort: true}
+	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", ExternalPort: true, TimeToClean: 100}
 	r, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
 	if err != nil {
 		t.Errorf("Error registering service: %v", err)
@@ -195,14 +181,14 @@ func TestRegisterForExternalPort(t *testing.T) {
 
 func TestRefreshIP(t *testing.T) {
 	s := InitTestServer()
-	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "Magic"}
+	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "Magic", TimeToClean: 100}
 
 	_, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
 	if err != nil {
 		t.Errorf("Error registering service: %v", err)
 	}
 
-	entry2 := &pb.RegistryEntry{Ip: "10.0.1.20", Name: "Testing", Identifier: "Magic"}
+	entry2 := &pb.RegistryEntry{Ip: "10.0.1.20", Name: "Testing", Identifier: "Magic2", TimeToClean: 100}
 	r2, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry2})
 	if err != nil {
 		t.Errorf("Error registering service: %v", err)
@@ -215,7 +201,7 @@ func TestRefreshIP(t *testing.T) {
 
 func TestRegisterMACAddressRefresh(t *testing.T) {
 	s := InitTestServer()
-	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "Magic"}
+	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "Magic", TimeToClean: 100}
 
 	r, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
 	if err != nil {
@@ -231,7 +217,7 @@ func TestRegisterMACAddressRefresh(t *testing.T) {
 		t.Errorf("Same identifier has led to different ports: %v vs %v", r, r2)
 	}
 
-	entry3 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "MagicJohnson"}
+	entry3 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "MagicJohnson", TimeToClean: 100}
 	r3, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry3})
 	if err != nil {
 		t.Errorf("Error registering service: %v", err)
@@ -245,7 +231,7 @@ func TestRegisterMACAddressRefresh(t *testing.T) {
 
 func TestRegisterMACAddressRefreshWithExternalPort(t *testing.T) {
 	s := InitTestServer()
-	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "Magic", ExternalPort: true}
+	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "Magic", ExternalPort: true, TimeToClean: 100}
 
 	r, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
 	if err != nil {
@@ -261,7 +247,7 @@ func TestRegisterMACAddressRefreshWithExternalPort(t *testing.T) {
 		t.Errorf("Same identifier has led to different ports: %v vs %v", r, r2)
 	}
 
-	entry3 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "MagicJohnson", ExternalPort: true}
+	entry3 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "MagicJohnson", ExternalPort: true, TimeToClean: 100}
 	r3, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry3})
 	if err != nil {
 		t.Errorf("Error registering service: %v", err)
@@ -275,9 +261,9 @@ func TestRegisterMACAddressRefreshWithExternalPort(t *testing.T) {
 func TestRegisterForExternalPortTooManyTimes(t *testing.T) {
 	s := InitTestServer()
 	var entries = [...]*pb.RegistryEntry{
-		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing1", ExternalPort: true, Port: 1234},
-		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing2", ExternalPort: true, Port: 1234},
-		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing3", ExternalPort: true, Port: 1234},
+		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing1", ExternalPort: true, TimeToClean: 100},
+		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing2", ExternalPort: true, TimeToClean: 100},
+		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing3", ExternalPort: true, TimeToClean: 100},
 	}
 
 	var err error
@@ -292,7 +278,7 @@ func TestRegisterForExternalPortTooManyTimes(t *testing.T) {
 
 func TestRegisterService(t *testing.T) {
 	s := InitTestServer()
-	entry := &pb.RegistryEntry{Ip: "10.0.4.5", Name: "Testing"}
+	entry := &pb.RegistryEntry{Ip: "10.0.4.5", Name: "Testing", TimeToClean: 100}
 	r, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
 	if err != nil {
 		t.Errorf("Error registering service: %v", err)
@@ -310,8 +296,8 @@ func TestRegisterService(t *testing.T) {
 func TestCleanWithNoEntries(t *testing.T) {
 	s := InitTestServer()
 
-	entry1 := &pb.RegistryEntry{Ip: "10.0.4.5", Name: "Testing1"}
-	entry2 := &pb.RegistryEntry{Ip: "10.0.4.5", Name: "Testing2"}
+	entry1 := &pb.RegistryEntry{Ip: "10.0.4.5", Name: "Testing1", TimeToClean: 100}
+	entry2 := &pb.RegistryEntry{Ip: "10.0.4.5", Name: "Testing2", TimeToClean: 100}
 
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry1})
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry2})
@@ -330,7 +316,7 @@ func TestCleanWithNoEntries(t *testing.T) {
 
 func TestRegisterWithReregisterService(t *testing.T) {
 	s := InitTestServer()
-	entry := &pb.RegistryEntry{Ip: "10.0.4.5", Name: "Testing"}
+	entry := &pb.RegistryEntry{Ip: "10.0.4.5", Name: "Testing", TimeToClean: 1}
 	r, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
 	if err != nil {
 		t.Errorf("Error registering service: %v", err)
@@ -344,7 +330,12 @@ func TestRegisterWithReregisterService(t *testing.T) {
 		t.Errorf("Register has not received a port number: %v", r)
 	}
 
-	s.cleanEntries(time.Now())
+	s.cleanEntries(time.Now().Add(time.Second))
+
+	r4, err := s.ListAllServices(context.Background(), &pb.ListRequest{})
+	if err != nil || len(r4.GetServices().Services) != 0 {
+		t.Fatalf("Service has not been cleaned %v or %v", r4, err)
+	}
 
 	r2, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: r.GetService()})
 
@@ -363,15 +354,15 @@ func TestRegisterWithReregisterService(t *testing.T) {
 
 func TestSearchWithIdentifier(t *testing.T) {
 	s := InitTestServer()
-	_, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Ip: "10.0.4.5", Port: 50051, Name: "Testing", Identifier: "serverone"}})
+	_, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Ip: "10.0.4.5", Name: "Testing", Identifier: "serverone", TimeToClean: 100}})
 	if err != nil {
 		t.Errorf("Error registering service: %v", err)
 	}
-	_, err = s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Ip: "10.0.4.6", Port: 50051, Name: "Testing", Identifier: "servertwo"}})
+	_, err = s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Ip: "10.0.4.6", Name: "Testing", Identifier: "servertwo", TimeToClean: 100}})
 	if err != nil {
 		t.Errorf("Error registering service: %v", err)
 	}
-	_, err = s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Ip: "10.0.4.7", Port: 50051, Name: "Testing", Identifier: "serverthree"}})
+	_, err = s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Ip: "10.0.4.7", Name: "Testing", Identifier: "serverthree", TimeToClean: 100}})
 	if err != nil {
 		t.Errorf("Error registering service: %v", err)
 	}
@@ -404,8 +395,8 @@ func InitTestServer() Server {
 func TestBecomeMaster(t *testing.T) {
 	s := InitTestServer()
 
-	entry1 := &pb.RegistryEntry{Ip: "10.0.4.5", Identifier: "ShouldBeMaster", Name: "Testing"}
-	entry2 := &pb.RegistryEntry{Ip: "10.0.4.6", Identifier: "ShouldBeSlave", Name: "Testing"}
+	entry1 := &pb.RegistryEntry{Ip: "10.0.4.5", Identifier: "ShouldBeMaster", Name: "Testing", TimeToClean: 100}
+	entry2 := &pb.RegistryEntry{Ip: "10.0.4.6", Identifier: "ShouldBeSlave", Name: "Testing", TimeToClean: 100}
 
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry1})
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry2})
@@ -456,8 +447,8 @@ func TestBecomeMaster(t *testing.T) {
 func TestFailHeartbeat(t *testing.T) {
 	s := InitTestServer()
 
-	entry1 := &pb.RegistryEntry{Ip: "10.0.4.5", Identifier: "ShouldBeMaster", Name: "Testing"}
-	entry2 := &pb.RegistryEntry{Ip: "10.0.4.6", Identifier: "ShouldBeSlave", Name: "Testing"}
+	entry1 := &pb.RegistryEntry{Ip: "10.0.4.5", Identifier: "ShouldBeMaster", Name: "Testing", TimeToClean: 100}
+	entry2 := &pb.RegistryEntry{Ip: "10.0.4.6", Identifier: "ShouldBeSlave", Name: "Testing", TimeToClean: 100}
 
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry1})
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry2})
@@ -487,7 +478,7 @@ func TestFailHeartbeat(t *testing.T) {
 
 func TestCleanWithMaster(t *testing.T) {
 	s := InitTestServer()
-	entry := &pb.RegistryEntry{Ip: "10.0.4.5", Identifier: "ShouldBeMaster", Name: "Testing"}
+	entry := &pb.RegistryEntry{Ip: "10.0.4.5", Identifier: "ShouldBeMaster", Name: "Testing", TimeToClean: 100}
 	_, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
 	if err != nil {
 		t.Fatalf("Error doing initial reg: %v", err)
@@ -501,16 +492,16 @@ func TestCleanWithMaster(t *testing.T) {
 	s.cleanEntries(time.Now().Add(time.Hour))
 
 	v, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
-	if err == nil {
-		t.Errorf("Reregister as master after clean has not failed: %v", v)
+	if err != nil {
+		t.Errorf("Failure to reregister as master: %v", v)
 	}
 }
 
 func TestFailHeartbeatExternal(t *testing.T) {
 	s := InitTestServer()
 
-	entry1 := &pb.RegistryEntry{Ip: "10.0.4.5", Identifier: "ShouldBeMaster", Name: "Testing", ExternalPort: true}
-	entry2 := &pb.RegistryEntry{Ip: "10.0.4.6", Identifier: "ShouldBeSlave", Name: "Testing", ExternalPort: true}
+	entry1 := &pb.RegistryEntry{Ip: "10.0.4.5", Identifier: "ShouldBeMaster", Name: "Testing", ExternalPort: true, TimeToClean: 100}
+	entry2 := &pb.RegistryEntry{Ip: "10.0.4.6", Identifier: "ShouldBeSlave", Name: "Testing", ExternalPort: true, TimeToClean: 100}
 
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry1})
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry2})
@@ -543,13 +534,13 @@ func TestFailExternalGet(t *testing.T) {
 
 	//Register 100 regular servers
 	for i := 0; i < 100; i++ {
-		_, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Ip: "10.0.1.1", Name: fmt.Sprintf("Service-%v", i)}})
+		_, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Ip: "10.0.1.1", Name: fmt.Sprintf("Service-%v", i), TimeToClean: 100}})
 		if err != nil {
 			t.Errorf("Bad register: %v", err)
 		}
 	}
 
-	r, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Ip: "10.0.1.1", Name: "thing", ExternalPort: true}})
+	r, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Ip: "10.0.1.1", Name: "thing", ExternalPort: true, TimeToClean: 100}})
 
 	if err != nil {
 		t.Errorf("Bad register: %v", err)
@@ -557,5 +548,21 @@ func TestFailExternalGet(t *testing.T) {
 
 	if r.Service.Port > 50053 {
 		t.Errorf("Oh dead: %v", r)
+	}
+}
+
+func TestGetBadPortNumber(t *testing.T) {
+	i := 0
+	s := InitTestServer()
+	for s.getPortNumber(&pb.RegistryEntry{Ip: "10.0.1.1", Name: "Blah"}) != -1 {
+		i++
+	}
+}
+
+func TestBadRegister(t *testing.T) {
+	s := InitTestServer()
+	_, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "alsoblah"}})
+	if err == nil {
+		t.Errorf("Register without clean did not fail")
 	}
 }

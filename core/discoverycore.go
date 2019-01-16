@@ -1,6 +1,7 @@
 package discovery
 
 import (
+	"hash/fnv"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -35,6 +36,7 @@ type Server struct {
 	countList     int64
 	taken         []bool
 	extTaken      []bool
+	portMap       map[int32]*pb.RegistryEntry
 }
 
 type httpGetter interface {
@@ -73,24 +75,39 @@ func InitServer() Server {
 	s.counts = make(map[string]int)
 	s.countM = &sync.Mutex{}
 	s.longest = -1
-	s.taken = make([]bool, 10000)
+	s.taken = make([]bool, 65536-50056)
 	s.extTaken = make([]bool, 2)
+	s.portMap = make(map[int32]*pb.RegistryEntry)
 	return s
 }
 
 func (s *Server) cleanEntries(t time.Time) {
-	fails := 0
-	for i, entry := range s.entries {
+	for key, entry := range s.portMap {
 		//Clean if we haven't seen this entry in the time to clean window
-		if t.Sub(time.Unix(entry.GetLastSeenTime(), 0)).Nanoseconds()/1000000 > entry.GetTimeToClean() {
+		if t.UnixNano()-entry.GetLastSeenTime() > entry.GetTimeToClean()*1000000 {
 			if entry.GetMaster() {
 				s.mm.Lock()
 				delete(s.masterMap, entry.GetName())
 				s.mm.Unlock()
 			}
-			s.entries = append(s.entries[:(i-fails)], s.entries[(i-fails)+1:]...)
-			s.taken[int(entry.Port)-50052] = false
-			fails++
+			delete(s.portMap, key)
 		}
 	}
+}
+
+func conv(v1 uint32) int32 {
+	v2 := int32(v1)
+	if v2 < 0 {
+		return -v2
+	}
+	return v2
+}
+
+func (s *Server) hashPortNumber(identifier, job string) int32 {
+	//Gets a port number between 50056 and 65535
+	portRange := int32(65535 - 50056)
+	h := fnv.New32a()
+	h.Write([]byte(identifier + job))
+
+	return 50056 + conv(h.Sum32())%portRange
 }
