@@ -13,7 +13,11 @@ import (
 // ListAllServices returns a list of all the services
 func (s *Server) ListAllServices(ctx context.Context, in *pb.ListRequest) (*pb.ListResponse, error) {
 	s.countList++
-	return &pb.ListResponse{Services: &pb.ServiceList{Services: s.entries}}, nil
+	entries := []*pb.RegistryEntry{}
+	for _, val := range s.portMap {
+		entries = append(entries, val)
+	}
+	return &pb.ListResponse{Services: &pb.ServiceList{Services: entries}}, nil
 }
 
 func (s *Server) updateCounts(in *pb.RegistryEntry) {
@@ -23,18 +27,7 @@ func (s *Server) updateCounts(in *pb.RegistryEntry) {
 
 }
 
-func (s *Server) updateMasterMap(in *pb.RegistryEntry) {
-	s.mm.Lock()
-	if val, ok := s.masterMap[in.GetName()]; ok && val.GetIdentifier() == in.GetIdentifier() && !in.GetMaster() {
-		delete(s.masterMap, in.GetName())
-		if in.MasterTime > 0 {
-			in.MasterTime = 0
-		}
-	}
-	s.mm.Unlock()
-}
-
-func (s *Server) getPortNumber(in *pb.RegistryEntry) {
+func (s *Server) getPortNumber(in *pb.RegistryEntry) int32 {
 	startPort := 50056
 	if in.ExternalPort {
 		startPort = 50052
@@ -44,12 +37,13 @@ func (s *Server) getPortNumber(in *pb.RegistryEntry) {
 	for i < len(s.taken) {
 		if !s.taken[i] {
 			s.taken[i] = true
-			in.Port = int32(startPort + i)
-			break
+			return int32(startPort + i)
 		}
 
 		i++
 	}
+
+	return -1
 }
 
 // RegisterService supports the RegisterService rpc end point
@@ -57,100 +51,103 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 	s.countRegister++
 	in := req.GetService()
 
+	//Reject the request with no time to clean
+	if in.GetTimeToClean() == 0 {
+		return &pb.RegisterResponse{}, fmt.Errorf("You must specify a clean time")
+	}
+
+	// Set the port information up front
 	if in.ExternalPort {
 		in.Ip = s.getExternalIP(prodHTTPGetter{})
 	}
-
-	//Validate us if we're trying to use a port number already used
-	for _, en := range s.entries {
-		if en.Port == in.Port && en.Name != in.Name && en.Ip == in.Ip {
-			return nil, fmt.Errorf("This port is already registered")
+	if in.Port == 0 {
+		if in.ExternalPort {
+			pn := s.getPortNumber(in)
+			if pn > 50053 {
+				return nil, fmt.Errorf("External ports have been exhausted")
+			}
+			in.Port = pn
+		} else {
+			in.Port = s.hashPortNumber(in.Identifier, in.Name)
 		}
+	} else if !in.ExternalPort {
+		if s.hashPortNumber(in.Identifier, in.Name) != in.Port {
+			return nil, fmt.Errorf("Unable to register %v under %v port is %v but it should be %v", in.Name, in.Identifier, in.Port, s.hashPortNumber(in.Identifier, in.Name))
+		}
+	}
+	if in.RegisterTime == 0 {
+		in.RegisterTime = time.Now().UnixNano()
 	}
 
 	s.updateCounts(in)
 
-	in.LastSeenTime = time.Now().Unix()
-
-	s.updateMasterMap(in)
-
-	// Adjust the clean time if necessary (default to 5 seconds)
-	if in.GetTimeToClean() == 0 {
-		in.TimeToClean = 1000 * 5
+	_, ok := s.portMap[in.Port]
+	if !ok {
+		//Not seen this server before or it was cleaned
+		s.portMap[in.Port] = in
+		in.RegisterTime = time.Now().UnixNano()
+		in.LastSeenTime = time.Now().UnixNano()
+		return &pb.RegisterResponse{Service: in}, nil
 	}
 
-	if in.Port == 0 {
-		s.getPortNumber(in)
-	}
-
-	// If we've already registered this service, return immediately
-	for _, service := range s.entries {
-		if in.GetRegisterTime() > 0 && service.Identifier == in.Identifier && service.Name == in.Name && service.Port == in.Port {
-			// Add to master map if this is master
-			if in.GetMaster() {
-				s.mm.Lock()
-				if val, ok := s.masterMap[in.GetName()]; ok {
-					if val.Identifier != in.Identifier && ((time.Now().Unix()-val.GetLastSeenTime())*1000 < val.GetTimeToClean()) {
-						s.mm.Unlock()
-						return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v", val, in)
-					}
-				} else {
-					service.MasterTime = time.Now().Unix()
-				}
-
-				s.masterMap[in.GetName()] = service
-				s.mm.Unlock()
-			}
-
-			//Refresh the IP and store the checkfile
-			service.Ip = in.Ip
-			service.Master = in.Master
-			service.Port = in.Port
-			service.LastSeenTime = time.Now().Unix()
-			return &pb.RegisterResponse{Service: service}, nil
-		}
-	}
-
-	in.RegisterTime = time.Now().Unix()
-
-	//Reject any master registrations that are new
+	//Deal with request to be master
 	if in.GetMaster() {
-		return nil, fmt.Errorf("Unable to register as master (%v)", in)
+		s.mm.Lock()
+		if val, ok := s.masterMap[in.GetName()]; ok {
+			// Someone else is master if they have a lease and it has not expired yet
+			if val.Identifier != in.Identifier || val.LastSeenTime*1000000+val.TimeToClean < time.Now().UnixNano() {
+				s.mm.Unlock()
+				return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v", val, in)
+			}
+		}
+
+		//Refresh master lease and return
+		in.LastSeenTime = time.Now().UnixNano()
+		in.MasterTime = time.Now().UnixNano()
+		s.masterMap[in.GetName()] = in
+		s.mm.Unlock()
+		return &pb.RegisterResponse{Service: in}, nil
 	}
 
-	s.entries = append(s.entries, in)
+	//Clean the master if this is a match and we're registering as non-master
+	s.mm.Lock()
+	if val, ok := s.masterMap[in.GetName()]; ok {
+		if val.Identifier == in.Identifier {
+			delete(s.masterMap, in.GetName())
+		}
+		in.MasterTime = 0
+	}
+	s.mm.Unlock()
+
+	in.LastSeenTime = time.Now().UnixNano()
+	s.portMap[in.Port] = in
 	return &pb.RegisterResponse{Service: in}, nil
 }
 
 // Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.DiscoverResponse, error) {
 	s.countDiscover++
-	st := time.Now()
 	in := req.GetRequest()
-	var nonmaster *pb.RegistryEntry
-	for _, entry := range s.entries {
-		if entry.Name == in.GetName() && (in.GetIdentifier() == "" || in.GetIdentifier() == entry.Identifier) {
-			if entry.Master || in.Identifier != "" {
-				rt := time.Now().Sub(st).Nanoseconds() / 1000000
-				if rt > s.longest {
-					s.longest = rt
-				}
-				return &pb.DiscoverResponse{Service: entry}, nil
-			}
-			nonmaster = entry
+
+	// Check if we've been asked for something specific
+	if in.GetIdentifier() != "" && in.GetName() != "" {
+		port := s.hashPortNumber(in.GetIdentifier(), in.GetName())
+		if val, ok := s.portMap[port]; ok {
+			return &pb.DiscoverResponse{Service: val}, nil
 		}
+
+		return nil, fmt.Errorf("Unable to locate %v on server %v", in.GetName(), in.GetIdentifier())
 	}
 
-	//Return the non master if possible
-	if nonmaster != nil {
-		return nil, errors.New("Cannot find a master for service called " + in.GetName() + " on server (maybe): " + in.GetIdentifier())
+	// Return the master if it exists
+	s.mm.Lock()
+	val, ok := s.masterMap[in.GetName()]
+	s.mm.Unlock()
+	if ok && val.LastSeenTime+val.TimeToClean*1000000 > time.Now().UnixNano() {
+		return &pb.DiscoverResponse{Service: val}, nil
 	}
 
-	rt := time.Now().Sub(st).Nanoseconds() / 1000000
-	if rt > s.longest {
-		s.longest = rt
-	}
-	return &pb.DiscoverResponse{}, errors.New("Cannot find service called " + in.GetName() + " on server (maybe): " + in.GetIdentifier())
+	return &pb.DiscoverResponse{}, errors.New("Cannot find master for " + in.GetName() + " on server (maybe): " + in.GetIdentifier())
 }
 
 //State gets the state of the server
