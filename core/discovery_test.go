@@ -566,3 +566,31 @@ func TestBadRegister(t *testing.T) {
 		t.Errorf("Register without clean did not fail")
 	}
 }
+
+func TestDoubleMasterRegister(t *testing.T) {
+	s := InitTestServer()
+
+	resp, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "alsoblah", TimeToClean: 1, Master: true}})
+	if err != nil {
+		t.Fatalf("Error in registering as master: %v", err)
+	}
+
+	if !resp.GetService().Master {
+		t.Fatalf("We're not master: %v", resp.GetService())
+	}
+
+	val, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "blah"}})
+	if err != nil || val.GetService().Identifier != "alsoblah" {
+		t.Fatalf("Bad master discover: %v, %v", val, err)
+	}
+
+	//Let the master registry expire
+	time.Sleep(time.Second)
+
+	//Re-register
+	_, err = s.RegisterService(context.Background(), &pb.RegisterRequest{Service: resp.GetService()})
+	if err != nil {
+		t.Fatalf("Error in re-registering as master: %v", err)
+	}
+
+}

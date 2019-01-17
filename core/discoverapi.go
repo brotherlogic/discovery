@@ -84,10 +84,7 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 	_, ok := s.portMap[in.Port]
 	if !ok {
 		//Not seen this server before or it was cleaned
-		s.portMap[in.Port] = in
 		in.RegisterTime = time.Now().UnixNano()
-		in.LastSeenTime = time.Now().UnixNano()
-		return &pb.RegisterResponse{Service: in}, nil
 	}
 
 	//Deal with request to be master
