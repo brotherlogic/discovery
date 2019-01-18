@@ -93,8 +93,10 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 
 	//Deal with request to be master
 	if in.GetMaster() {
+		seenMaster := false
 		s.mm.Lock()
 		if val, ok := s.masterMap[in.GetName()]; ok {
+			seenMaster = true
 			// Someone else is master if they have a lease and it has not expired yet
 			if val.Identifier != in.Identifier && val.LastSeenTime+val.TimeToClean*1000000 >= time.Now().UnixNano() {
 				s.mm.Unlock()
@@ -104,7 +106,9 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 
 		//Refresh master lease and return
 		in.LastSeenTime = time.Now().UnixNano()
-		in.MasterTime = time.Now().UnixNano()
+		if !seenMaster {
+			in.MasterTime = time.Now().UnixNano()
+		}
 		s.masterMap[in.GetName()] = in
 		s.mm.Unlock()
 		s.portMapMutex.Lock()
