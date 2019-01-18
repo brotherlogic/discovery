@@ -14,6 +14,8 @@ import (
 func (s *Server) ListAllServices(ctx context.Context, in *pb.ListRequest) (*pb.ListResponse, error) {
 	s.countList++
 	entries := []*pb.RegistryEntry{}
+	s.portMapMutex.Lock()
+	defer s.portMapMutex.Unlock()
 	for _, val := range s.portMap {
 		entries = append(entries, val)
 	}
@@ -81,7 +83,9 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 
 	s.updateCounts(in)
 
+	s.portMapMutex.Lock()
 	_, ok := s.portMap[in.Port]
+	s.portMapMutex.Unlock()
 	if !ok {
 		//Not seen this server before or it was cleaned
 		in.RegisterTime = time.Now().UnixNano()
@@ -103,6 +107,8 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 		in.MasterTime = time.Now().UnixNano()
 		s.masterMap[in.GetName()] = in
 		s.mm.Unlock()
+		s.portMapMutex.Lock()
+		defer s.portMapMutex.Unlock()
 		s.portMap[in.Port] = in
 		return &pb.RegisterResponse{Service: in}, nil
 	}
@@ -118,6 +124,8 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 	s.mm.Unlock()
 
 	in.LastSeenTime = time.Now().UnixNano()
+	s.portMapMutex.Lock()
+	defer s.portMapMutex.Unlock()
 	s.portMap[in.Port] = in
 	return &pb.RegisterResponse{Service: in}, nil
 }
@@ -130,6 +138,8 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 	// Check if we've been asked for something specific
 	if in.GetIdentifier() != "" && in.GetName() != "" {
 		port := s.hashPortNumber(in.GetIdentifier(), in.GetName())
+		s.portMapMutex.Lock()
+		defer s.portMapMutex.Unlock()
 		if val, ok := s.portMap[port]; ok {
 			return &pb.DiscoverResponse{Service: val}, nil
 		}
