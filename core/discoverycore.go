@@ -37,6 +37,7 @@ type Server struct {
 	taken         []bool
 	extTaken      []bool
 	portMap       map[int32]*pb.RegistryEntry
+	portMapMutex  *sync.Mutex
 }
 
 type httpGetter interface {
@@ -78,10 +79,13 @@ func InitServer() Server {
 	s.taken = make([]bool, 65536-50056)
 	s.extTaken = make([]bool, 2)
 	s.portMap = make(map[int32]*pb.RegistryEntry)
+	s.portMapMutex = &sync.Mutex{}
 	return s
 }
 
 func (s *Server) cleanEntries(t time.Time) {
+	s.portMapMutex.Lock()
+	defer s.portMapMutex.Unlock()
 	for key, entry := range s.portMap {
 		//Clean if we haven't seen this entry in the time to clean window
 		if t.UnixNano()-entry.GetLastSeenTime() > entry.GetTimeToClean()*1000000 {
