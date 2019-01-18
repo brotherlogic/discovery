@@ -92,7 +92,7 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 		s.mm.Lock()
 		if val, ok := s.masterMap[in.GetName()]; ok {
 			// Someone else is master if they have a lease and it has not expired yet
-			if val.Identifier != in.Identifier || val.LastSeenTime+val.TimeToClean*1000000 >= time.Now().UnixNano() {
+			if val.Identifier != in.Identifier && val.LastSeenTime+val.TimeToClean*1000000 >= time.Now().UnixNano() {
 				s.mm.Unlock()
 				return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v also %v", val.Identifier, in.Identifier, val.LastSeenTime+val.TimeToClean*1000000-time.Now().UnixNano())
 			}
