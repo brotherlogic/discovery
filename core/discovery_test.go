@@ -597,6 +597,8 @@ func TestDoubleMasterRegister(t *testing.T) {
 		t.Fatalf("We're not master: %v", resp.GetService())
 	}
 
+	firstMasterTime := resp.GetService().MasterTime
+
 	val, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "blah"}})
 	if err != nil || val.GetService().Identifier != "alsoblah" {
 		t.Fatalf("Bad master discover: %v, %v", val, err)
@@ -613,5 +615,44 @@ func TestDoubleMasterRegister(t *testing.T) {
 	val, err = s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "blah"}})
 	if err != nil || val.GetService().Identifier != "alsoblah" || !val.GetService().Master {
 		t.Fatalf("Bad master discover: %v, %v", val, err)
+	}
+
+	if val.GetService().MasterTime == firstMasterTime {
+		t.Errorf("Master time has not been reset %v vs %v", val.GetService().MasterTime, firstMasterTime)
+	}
+}
+
+func TestDoubleMasterRegisterNoClean(t *testing.T) {
+	s := InitTestServer()
+
+	resp, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "alsoblah", TimeToClean: 1, Master: true}})
+	if err != nil {
+		t.Fatalf("Error in registering as master: %v", err)
+	}
+
+	if !resp.GetService().Master {
+		t.Fatalf("We're not master: %v", resp.GetService())
+	}
+
+	firstMasterTime := resp.GetService().MasterTime
+
+	val, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "blah"}})
+	if err != nil || val.GetService().Identifier != "alsoblah" {
+		t.Fatalf("Bad master discover: %v, %v", val, err)
+	}
+
+	//Re-register
+	_, err = s.RegisterService(context.Background(), &pb.RegisterRequest{Service: resp.GetService()})
+	if err != nil {
+		t.Fatalf("Error in re-registering as master: %v", err)
+	}
+
+	val, err = s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "blah"}})
+	if err != nil || val.GetService().Identifier != "alsoblah" || !val.GetService().Master {
+		t.Fatalf("Bad master discover: %v, %v", val, err)
+	}
+
+	if val.GetService().MasterTime != firstMasterTime {
+		t.Errorf("Master time has been reset %v vs %v", val.GetService().MasterTime, firstMasterTime)
 	}
 }
