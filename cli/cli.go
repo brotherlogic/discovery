@@ -21,6 +21,8 @@ const (
 
 func main() {
 
+	fmt.Printf("NOW %v\n", time.Now().UnixNano())
+
 	fails := 0
 	arr := []int{1, 2, 3, 4}
 	for i, val := range arr {
