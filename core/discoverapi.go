@@ -102,6 +102,8 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 				s.mm.Unlock()
 				return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v also %v", val.Identifier, in.Identifier, val.LastSeenTime+val.TimeToClean*1000000-time.Now().UnixNano())
 			}
+		} else {
+			in.MasterTime = time.Now().UnixNano()
 		}
 
 		//Refresh master lease and return
