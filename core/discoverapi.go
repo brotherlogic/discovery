@@ -103,6 +103,7 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 		in.MasterTime = time.Now().UnixNano()
 		s.masterMap[in.GetName()] = in
 		s.mm.Unlock()
+		s.portMap[in.Port] = in
 		return &pb.RegisterResponse{Service: in}, nil
 	}
 
