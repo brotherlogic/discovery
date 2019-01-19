@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"time"
 
 	"golang.org/x/net/context"
@@ -19,10 +20,11 @@ const (
 	port = "192.168.86.220:50055"
 )
 
+func repEntry(entry *pbdi.RegistryEntry) string {
+	return fmt.Sprintf("%v - %v", entry.Identifier, entry.Name)
+}
+
 func main() {
-
-	fmt.Printf("NOW %v\n", time.Now().UnixNano())
-
 	fails := 0
 	arr := []int{1, 2, 3, 4}
 	for i, val := range arr {
@@ -82,20 +84,32 @@ func main() {
 					log.Fatalf("Error building job: %v", err)
 				}
 				fmt.Printf("MASTERS\n-------\n")
+				masters := []string{}
 				for _, bit := range bits.GetServices().Services {
-					regtime := time.Unix(bit.GetLastSeenTime(), 0).Sub(time.Unix(bit.GetRegisterTime(), 0))
-					mastertime := time.Unix(bit.GetLastSeenTime(), 0).Sub(time.Unix(bit.GetMasterTime(), 0))
+					regtime := time.Unix(0, bit.GetLastSeenTime()).Sub(time.Unix(0, bit.GetRegisterTime()))
+					mastertime := time.Unix(0, bit.GetLastSeenTime()).Sub(time.Unix(0, bit.GetMasterTime()))
 					if bit.GetMaster() {
-						fmt.Printf("%v [%v - %v]\n", bit, mastertime, regtime)
+						masters = append(masters, fmt.Sprintf("%v [%v - %v]", repEntry(bit), mastertime, regtime))
 					}
 				}
+				sort.Strings(masters)
+				for _, str := range masters {
+					fmt.Printf("%v\n", str)
+				}
+
 				fmt.Printf("SLAVES\n-------\n")
+				slaves := []string{}
 				for _, bit := range bits.GetServices().Services {
-					regtime := time.Unix(bit.GetLastSeenTime(), 0).Sub(time.Unix(bit.GetRegisterTime(), 0))
+					regtime := time.Unix(0, bit.GetLastSeenTime()).Sub(time.Unix(0, bit.GetRegisterTime()))
 					if !bit.GetMaster() {
-						fmt.Printf("%v [%v]\n", bit, regtime)
+						slaves = append(slaves, fmt.Sprintf("%v [%v]", repEntry(bit), regtime))
 					}
 				}
+				sort.Strings(slaves)
+				for _, str := range slaves {
+					fmt.Printf("%v\n", str)
+				}
+
 			}
 		}
 	}
