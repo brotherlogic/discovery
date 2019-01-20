@@ -9,6 +9,13 @@ import (
 	pb "github.com/brotherlogic/discovery/proto"
 )
 
+func run(s *Server, entry *pb.RegistryEntry) {
+	resp, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
+	if err != nil || resp.Service.Port < 50056 || resp.Service.Port > 65535 {
+		log.Fatalf("Bad port %v %v", err, resp)
+	}
+}
+
 func benchmarkRegister(i, d int, b *testing.B) {
 	s := InitTestServer()
 
@@ -19,10 +26,7 @@ func benchmarkRegister(i, d int, b *testing.B) {
 	}
 
 	for n := 0; n < b.N; n++ {
-		resp, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: testdata[n%len(testdata)]})
-		if err != nil || resp.Service.Port < 50056 || resp.Service.Port > 65535 {
-			log.Fatalf("Bad port %v %v", err, resp)
-		}
+		run(&s, testdata[n%len(testdata)])
 	}
 }
 
@@ -38,6 +42,10 @@ func BenchmarkRegister100_5(b *testing.B) {
 	benchmarkRegister(100, 5, b)
 }
 
+func BenchmarkRegister1000_5(b *testing.B) {
+	benchmarkRegister(1000, 5, b)
+}
+
 func BenchmarkRegister1_10(b *testing.B) {
 	benchmarkRegister(1, 10, b)
 }
@@ -48,4 +56,7 @@ func BenchmarkRegister10_10(b *testing.B) {
 
 func BenchmarkRegister100_10(b *testing.B) {
 	benchmarkRegister(100, 10, b)
+}
+func BenchmarkRegister1000_10(b *testing.B) {
+	benchmarkRegister(1000, 10, b)
 }
