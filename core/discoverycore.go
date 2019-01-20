@@ -22,23 +22,24 @@ var externalPorts = map[string][]int32{"main": []int32{50052, 50053}}
 
 // Server the central server object
 type Server struct {
-	entries       []*pb.RegistryEntry
-	checkFile     string
-	external      string
-	lastGet       time.Time
-	masterMap     map[string]*pb.RegistryEntry
-	mm            *sync.Mutex
-	countM        *sync.Mutex
-	counts        map[string]int
-	longest       int64
-	countRegister int64
-	countDiscover int64
-	countList     int64
-	taken         []bool
-	extTaken      []bool
-	portMap       map[int32]*pb.RegistryEntry
-	portMapMutex  *sync.Mutex
-	portMemory    map[string]int32
+	entries         []*pb.RegistryEntry
+	checkFile       string
+	external        string
+	lastGet         time.Time
+	masterMap       map[string]*pb.RegistryEntry
+	mm              *sync.Mutex
+	countM          *sync.Mutex
+	counts          map[string]int
+	longest         int64
+	countRegister   int64
+	countDiscover   int64
+	countList       int64
+	taken           []bool
+	extTaken        []bool
+	portMap         map[int32]*pb.RegistryEntry
+	portMapMutex    *sync.Mutex
+	portMemory      map[string]int32
+	portMemoryMutex *sync.Mutex
 }
 
 type httpGetter interface {
@@ -82,6 +83,7 @@ func InitServer() Server {
 	s.portMap = make(map[int32]*pb.RegistryEntry)
 	s.portMapMutex = &sync.Mutex{}
 	s.portMemory = make(map[string]int32)
+	s.portMemoryMutex = &sync.Mutex{}
 	return s
 }
 
@@ -110,6 +112,8 @@ func conv(v1 uint32) int32 {
 }
 
 func (s *Server) hashPortNumber(identifier, job string) int32 {
+	s.portMemoryMutex.Lock()
+	defer s.portMemoryMutex.Unlock()
 	if val, ok := s.portMemory[identifier+job]; ok {
 		return val
 	}
