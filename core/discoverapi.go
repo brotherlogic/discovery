@@ -26,7 +26,6 @@ func (s *Server) updateCounts(in *pb.RegistryEntry) {
 	s.countM.Lock()
 	s.counts[in.GetName()]++
 	s.countM.Unlock()
-
 }
 
 func (s *Server) getPortNumber(in *pb.RegistryEntry) int32 {
@@ -48,6 +47,26 @@ func (s *Server) getPortNumber(in *pb.RegistryEntry) int32 {
 	return -1
 }
 
+func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
+	if in.Port == 0 {
+		if in.ExternalPort {
+			pn := s.getPortNumber(in)
+			if pn > 50053 {
+				return fmt.Errorf("External ports have been exhausted")
+			}
+			in.Port = pn
+		} else {
+			in.Port = s.hashPortNumber(in.Identifier, in.Name)
+		}
+	} else if !in.ExternalPort {
+		if s.hashPortNumber(in.Identifier, in.Name) != in.Port {
+			return fmt.Errorf("Unable to register %v under %v port is %v but it should be %v", in.Name, in.Identifier, in.Port, s.hashPortNumber(in.Identifier, in.Name))
+		}
+	}
+
+	return nil
+}
+
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	s.countRegister++
@@ -62,21 +81,12 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 	if in.ExternalPort {
 		in.Ip = s.getExternalIP(prodHTTPGetter{})
 	}
-	if in.Port == 0 {
-		if in.ExternalPort {
-			pn := s.getPortNumber(in)
-			if pn > 50053 {
-				return nil, fmt.Errorf("External ports have been exhausted")
-			}
-			in.Port = pn
-		} else {
-			in.Port = s.hashPortNumber(in.Identifier, in.Name)
-		}
-	} else if !in.ExternalPort {
-		if s.hashPortNumber(in.Identifier, in.Name) != in.Port {
-			return nil, fmt.Errorf("Unable to register %v under %v port is %v but it should be %v", in.Name, in.Identifier, in.Port, s.hashPortNumber(in.Identifier, in.Name))
-		}
+
+	err := s.setPortNumber(in)
+	if err != nil {
+		return nil, err
 	}
+
 	if in.RegisterTime == 0 {
 		in.RegisterTime = time.Now().UnixNano()
 	}

@@ -38,6 +38,7 @@ type Server struct {
 	extTaken      []bool
 	portMap       map[int32]*pb.RegistryEntry
 	portMapMutex  *sync.Mutex
+	portMemory    map[string]int32
 }
 
 type httpGetter interface {
@@ -80,6 +81,7 @@ func InitServer() Server {
 	s.extTaken = make([]bool, 2)
 	s.portMap = make(map[int32]*pb.RegistryEntry)
 	s.portMapMutex = &sync.Mutex{}
+	s.portMemory = make(map[string]int32)
 	return s
 }
 
@@ -108,10 +110,15 @@ func conv(v1 uint32) int32 {
 }
 
 func (s *Server) hashPortNumber(identifier, job string) int32 {
+	if val, ok := s.portMemory[identifier+job]; ok {
+		return val
+	}
 	//Gets a port number between 50056 and 65535
 	portRange := int32(65535 - 50056)
 	h := fnv.New32a()
 	h.Write([]byte(identifier + job))
 
-	return 50056 + conv(h.Sum32())%portRange
+	portNumber := 50056 + conv(h.Sum32())%portRange
+	s.portMemory[identifier+job] = portNumber
+	return portNumber
 }

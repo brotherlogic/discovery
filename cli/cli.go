@@ -21,7 +21,7 @@ const (
 )
 
 func repEntry(entry *pbdi.RegistryEntry) string {
-	return fmt.Sprintf("%v - %v", entry.Identifier, entry.Name)
+	return fmt.Sprintf("%v - %v", entry.Name, entry.Identifier)
 }
 
 func main() {
@@ -86,8 +86,8 @@ func main() {
 				fmt.Printf("MASTERS\n-------\n")
 				masters := []string{}
 				for _, bit := range bits.GetServices().Services {
-					regtime := time.Unix(0, bit.GetLastSeenTime()).Sub(time.Unix(0, bit.GetRegisterTime()))
-					mastertime := time.Unix(0, bit.GetLastSeenTime()).Sub(time.Unix(0, bit.GetMasterTime()))
+					regtime := time.Unix(0, bit.GetLastSeenTime()).Sub(time.Unix(0, bit.GetRegisterTime())).Truncate(time.Minute)
+					mastertime := time.Unix(0, bit.GetLastSeenTime()).Sub(time.Unix(0, bit.GetMasterTime())).Truncate(time.Minute)
 					if bit.GetMaster() {
 						masters = append(masters, fmt.Sprintf("%v [%v - %v]", repEntry(bit), mastertime, regtime))
 					}
@@ -97,17 +97,24 @@ func main() {
 					fmt.Printf("%v\n", str)
 				}
 
-				fmt.Printf("SLAVES\n-------\n")
-				slaves := []string{}
+				fmt.Printf("\nSLAVES\n-------\n")
+				slaves := make(map[string][]*pbdi.RegistryEntry)
 				for _, bit := range bits.GetServices().Services {
-					regtime := time.Unix(0, bit.GetLastSeenTime()).Sub(time.Unix(0, bit.GetRegisterTime()))
 					if !bit.GetMaster() {
-						slaves = append(slaves, fmt.Sprintf("%v [%v]", repEntry(bit), regtime))
+						slaves[bit.Name] = append(slaves[bit.Name], bit)
 					}
 				}
-				sort.Strings(slaves)
-				for _, str := range slaves {
-					fmt.Printf("%v\n", str)
+				keys := []string{}
+				for k := range slaves {
+					keys = append(keys, k)
+				}
+				sort.Strings(keys)
+				for _, key := range keys {
+					sort.SliceStable(slaves[key], func(i, j int) bool {
+						return slaves[key][i].Identifier < slaves[key][j].Identifier
+					})
+					regtime := time.Unix(0, slaves[key][0].GetLastSeenTime()).Sub(time.Unix(0, slaves[key][0].GetRegisterTime())).Truncate(time.Minute)
+					fmt.Printf("%v {%v} [%v]\n", repEntry(slaves[key][0]), len(slaves[key]), regtime)
 				}
 
 			}
