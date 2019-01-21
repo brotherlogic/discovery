@@ -46,6 +46,10 @@ func BenchmarkRegister1000_5(b *testing.B) {
 	benchmarkRegister(1000, 5, b)
 }
 
+func BenchmarkRegister5000_5(b *testing.B) {
+	benchmarkRegister(1000, 5, b)
+}
+
 func BenchmarkRegister1_10(b *testing.B) {
 	benchmarkRegister(1, 10, b)
 }
@@ -58,5 +62,9 @@ func BenchmarkRegister100_10(b *testing.B) {
 	benchmarkRegister(100, 10, b)
 }
 func BenchmarkRegister1000_10(b *testing.B) {
+	benchmarkRegister(1000, 10, b)
+}
+
+func BenchmarkRegister5000_10(b *testing.B) {
 	benchmarkRegister(1000, 10, b)
 }

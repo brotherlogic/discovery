@@ -129,21 +129,23 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 		return &pb.RegisterResponse{Service: in}, nil
 	}
 
-	//Clean the master if this is a match and we're registering as non-master
-	s.mm.Lock()
-	if val, ok := s.masterMap[in.GetName()]; ok {
-		if val.Identifier == in.Identifier {
-			delete(s.masterMap, in.GetName())
-		}
-		in.MasterTime = 0
-	}
-	s.mm.Unlock()
+	s.cleanMaster(in)
 
+	in.MasterTime = 0
 	in.LastSeenTime = time.Now().UnixNano()
 	s.portMapMutex.Lock()
 	defer s.portMapMutex.Unlock()
 	s.portMap[in.Port] = in
 	return &pb.RegisterResponse{Service: in}, nil
+}
+
+func (s *Server) cleanMaster(in *pb.RegistryEntry) {
+	s.mm.Lock()
+	defer s.mm.Unlock()
+	val, ok := s.masterMap[in.GetName()]
+	if ok && val.GetIdentifier() == in.GetIdentifier() {
+		delete(s.masterMap, in.GetName())
+	}
 }
 
 // Discover supports the Discover rpc end point
