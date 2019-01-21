@@ -123,9 +123,9 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 		}
 		s.masterMap[in.GetName()] = in
 		s.mm.Unlock()
-		s.portMapMutex.RLock()
+		s.portMapMutex.Lock()
 		s.portMap[in.Port] = in
-		s.portMapMutex.RUnlock()
+		s.portMapMutex.Unlock()
 		return &pb.RegisterResponse{Service: in}, nil
 	}
 
@@ -133,9 +133,9 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 
 	in.MasterTime = 0
 	in.LastSeenTime = time.Now().UnixNano()
-	s.portMapMutex.RLock()
+	s.portMapMutex.Lock()
 	s.portMap[in.Port] = in
-	s.portMapMutex.RUnlock()
+	s.portMapMutex.Unlock()
 	return &pb.RegisterResponse{Service: in}, nil
 }
 
