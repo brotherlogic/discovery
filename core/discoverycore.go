@@ -37,7 +37,7 @@ type Server struct {
 	taken           []bool
 	extTaken        []bool
 	portMap         map[int32]*pb.RegistryEntry
-	portMapMutex    *sync.Mutex
+	portMapMutex    *sync.RWMutex
 	portMemory      map[string]int32
 	portMemoryMutex *sync.Mutex
 }
@@ -81,7 +81,7 @@ func InitServer() Server {
 	s.taken = make([]bool, 65536-50056)
 	s.extTaken = make([]bool, 2)
 	s.portMap = make(map[int32]*pb.RegistryEntry)
-	s.portMapMutex = &sync.Mutex{}
+	s.portMapMutex = &sync.RWMutex{}
 	s.portMemory = make(map[string]int32)
 	s.portMemoryMutex = &sync.Mutex{}
 	return s
