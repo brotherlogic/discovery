@@ -29,22 +29,7 @@ func (s *Server) updateCounts(in *pb.RegistryEntry) {
 }
 
 func (s *Server) getPortNumber(in *pb.RegistryEntry) int32 {
-	startPort := 50056
-	if in.ExternalPort {
-		startPort = 50052
-	}
-
-	i := startPort - 50052
-	for i < len(s.taken) {
-		if !s.taken[i] {
-			s.taken[i] = true
-			return int32(startPort + i)
-		}
-
-		i++
-	}
-
-	return -1
+	return 50052
 }
 
 func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
