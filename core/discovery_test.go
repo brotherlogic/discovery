@@ -229,53 +229,6 @@ func TestRegisterMACAddressRefresh(t *testing.T) {
 
 }
 
-func TestRegisterMACAddressRefreshWithExternalPort(t *testing.T) {
-	s := InitTestServer()
-	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "Magic", ExternalPort: true, TimeToClean: 100}
-
-	r, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
-	if err != nil {
-		t.Errorf("Error registering service: %v", err)
-	}
-
-	r2, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: r.GetService()})
-	if err != nil {
-		t.Errorf("Error registering service: %v", err)
-	}
-
-	if r2.GetService().Port != r.GetService().Port {
-		t.Errorf("Same identifier has led to different ports: %v vs %v", r, r2)
-	}
-
-	entry3 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "MagicJohnson", ExternalPort: true, TimeToClean: 100}
-	r3, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry3})
-	if err != nil {
-		t.Errorf("Error registering service: %v", err)
-	}
-
-	if r3.GetService().Port == r2.GetService().Port {
-		t.Errorf("Different identified but same port: %v vs %v", r3, r2)
-	}
-}
-
-func TestRegisterForExternalPortTooManyTimes(t *testing.T) {
-	s := InitTestServer()
-	var entries = [...]*pb.RegistryEntry{
-		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing1", ExternalPort: true, TimeToClean: 100},
-		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing2", ExternalPort: true, TimeToClean: 100},
-		&pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing3", ExternalPort: true, TimeToClean: 100},
-	}
-
-	var err error
-	for _, entry := range entries {
-		_, err = s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
-	}
-
-	if err == nil {
-		t.Errorf("Over registering does not lead to failure")
-	}
-}
-
 func TestRegisterService(t *testing.T) {
 	s := InitTestServer()
 	entry := &pb.RegistryEntry{Ip: "10.0.4.5", Name: "Testing", TimeToClean: 100}

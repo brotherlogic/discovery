@@ -36,9 +36,6 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 	if in.Port == 0 {
 		if in.ExternalPort {
 			pn := s.getPortNumber(in)
-			if pn > 50053 {
-				return fmt.Errorf("External ports have been exhausted")
-			}
 			in.Port = pn
 		} else {
 			in.Port = s.hashPortNumber(in.Identifier, in.Name)
