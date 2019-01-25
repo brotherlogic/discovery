@@ -3,6 +3,7 @@ package discovery
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"testing"
@@ -654,5 +655,28 @@ func TestDoubleMasterRegisterNoClean(t *testing.T) {
 
 	if val.GetService().MasterTime != firstMasterTime {
 		t.Errorf("Master time has been reset %v vs %v", val.GetService().MasterTime, firstMasterTime)
+	}
+}
+
+func TestCompetingMasterRegister(t *testing.T) {
+	s := InitTestServer()
+
+	_, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "alsoblah", TimeToClean: 100, Master: true}})
+	if err != nil {
+		t.Fatalf("Unable to register as master: %v", err)
+	}
+
+	r, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "anotherblah", Master: true, TimeToClean: 100}})
+
+	log.Printf("ERROR %v", err)
+
+	if err == nil {
+		t.Errorf("Able to register as master: %v", r)
+	}
+
+	resp, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "blah"}})
+
+	if resp.GetService().Identifier != "alsoblah" {
+		t.Errorf("WRong master has been returned")
 	}
 }
