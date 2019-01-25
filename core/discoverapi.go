@@ -67,6 +67,35 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 	return nil
 }
 
+func (s *Server) setOrKeepMaster(in *pb.RegistryEntry) error {
+	seenMaster := false
+	s.mm.Lock()
+	if val, ok := s.masterMap[in.GetName()]; ok {
+		seenMaster = true
+		// Someone else is master if they have a lease and it has not expired yet
+		if val.Identifier != in.Identifier && val.LastSeenTime+val.TimeToClean*1000000 >= time.Now().UnixNano() {
+			s.mm.Unlock()
+			return fmt.Errorf("Unable to register as master - already exists(%v) -> %v also %v", val.Identifier, in.Identifier, val.LastSeenTime+val.TimeToClean*1000000-time.Now().UnixNano())
+		}
+	}
+
+	// If this is a new master - set the master time
+	if !seenMaster {
+		in.MasterTime = time.Now().UnixNano()
+	}
+	s.masterMap[in.GetName()] = in
+	s.mm.Unlock()
+	return nil
+}
+
+func (s *Server) clearMaster(in *pb.RegistryEntry) {
+	s.mm.Lock()
+	if val, ok := s.masterMap[in.GetName()]; ok && val.Identifier == in.Identifier {
+		delete(s.masterMap, in.GetName())
+	}
+	s.mm.Unlock()
+}
+
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	s.countRegister++
@@ -76,6 +105,26 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 	if in.GetTimeToClean() == 0 {
 		return &pb.RegisterResponse{}, fmt.Errorf("You must specify a clean time")
 	}
+
+	s.portMapMutex.RLock()
+	val, ok := s.portMap[in.Port]
+	s.portMapMutex.RUnlock()
+	if ok {
+		//If we have a port number - update the last seen time
+		if in.GetMaster() {
+			err := s.setOrKeepMaster(in)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			s.clearMaster(val)
+			val.MasterTime = 0
+			val.LastSeenTime = time.Now().UnixNano()
+			return &pb.RegisterResponse{Service: val}, nil
+		}
+	}
+
+	//We're now dealing with a new registration
 
 	// Set the port information up front
 	if in.ExternalPort {
@@ -93,59 +142,23 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 
 	s.updateCounts(in)
 
-	s.portMapMutex.RLock()
-	_, ok := s.portMap[in.Port]
-	s.portMapMutex.RUnlock()
-	if !ok {
-		//Not seen this server before or it was cleaned
-		in.RegisterTime = time.Now().UnixNano()
-	}
-
 	//Deal with request to be master
 	if in.GetMaster() {
-		seenMaster := false
-		s.mm.Lock()
-		if val, ok := s.masterMap[in.GetName()]; ok {
-			seenMaster = true
-			// Someone else is master if they have a lease and it has not expired yet
-			if val.Identifier != in.Identifier && val.LastSeenTime+val.TimeToClean*1000000 >= time.Now().UnixNano() {
-				s.mm.Unlock()
-				return nil, fmt.Errorf("Unable to register as master - already exists(%v) -> %v also %v", val.Identifier, in.Identifier, val.LastSeenTime+val.TimeToClean*1000000-time.Now().UnixNano())
-			}
-		} else {
-			in.MasterTime = time.Now().UnixNano()
+		err := s.setOrKeepMaster(in)
+		if err != nil {
+			return nil, err
 		}
-
-		//Refresh master lease and return
-		in.LastSeenTime = time.Now().UnixNano()
-		if !seenMaster {
-			in.MasterTime = time.Now().UnixNano()
-		}
-		s.masterMap[in.GetName()] = in
-		s.mm.Unlock()
-		s.portMapMutex.Lock()
-		s.portMap[in.Port] = in
-		s.portMapMutex.Unlock()
-		return &pb.RegisterResponse{Service: in}, nil
+	} else {
+		s.clearMaster(in)
+		in.MasterTime = 0
 	}
 
-	s.cleanMaster(in)
-
-	in.MasterTime = 0
+	// This is a new registration - update the port map
 	in.LastSeenTime = time.Now().UnixNano()
 	s.portMapMutex.Lock()
 	s.portMap[in.Port] = in
 	s.portMapMutex.Unlock()
 	return &pb.RegisterResponse{Service: in}, nil
-}
-
-func (s *Server) cleanMaster(in *pb.RegistryEntry) {
-	s.mm.Lock()
-	defer s.mm.Unlock()
-	val, ok := s.masterMap[in.GetName()]
-	if ok && val.GetIdentifier() == in.GetIdentifier() {
-		delete(s.masterMap, in.GetName())
-	}
 }
 
 // Discover supports the Discover rpc end point
