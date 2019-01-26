@@ -3,7 +3,6 @@ package discovery
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"testing"
@@ -667,8 +666,6 @@ func TestCompetingMasterRegister(t *testing.T) {
 	}
 
 	r, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "anotherblah", Master: true, TimeToClean: 100}})
-
-	log.Printf("ERROR %v", err)
 
 	if err == nil {
 		t.Errorf("Able to register as master: %v", r)

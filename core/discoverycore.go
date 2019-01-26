@@ -27,7 +27,7 @@ type Server struct {
 	external        string
 	lastGet         time.Time
 	masterMap       map[string]*pb.RegistryEntry
-	mm              *sync.Mutex
+	mm              *sync.RWMutex
 	countM          *sync.Mutex
 	counts          map[string]int
 	longest         int64
@@ -73,7 +73,7 @@ func (s *Server) getExternalIP(getter httpGetter) string {
 func InitServer() Server {
 	s := Server{}
 	s.entries = make([]*pb.RegistryEntry, 0)
-	s.mm = &sync.Mutex{}
+	s.mm = &sync.RWMutex{}
 	s.masterMap = make(map[string]*pb.RegistryEntry)
 	s.counts = make(map[string]int)
 	s.countM = &sync.Mutex{}

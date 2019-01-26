@@ -69,12 +69,13 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 
 func (s *Server) setOrKeepMaster(in *pb.RegistryEntry) error {
 	seenMaster := false
-	s.mm.Lock()
-	if val, ok := s.masterMap[in.GetName()]; ok {
+	s.mm.RLock()
+	val, ok := s.masterMap[in.GetName()]
+	s.mm.RUnlock()
+	if ok {
 		seenMaster = true
 		// Someone else is master if they have a lease and it has not expired yet
 		if val.Identifier != in.Identifier && val.LastSeenTime+val.TimeToClean*1000000 >= time.Now().UnixNano() {
-			s.mm.Unlock()
 			return fmt.Errorf("Unable to register as master - already exists(%v) -> %v also %v", val.Identifier, in.Identifier, val.LastSeenTime+val.TimeToClean*1000000-time.Now().UnixNano())
 		}
 	}
@@ -83,17 +84,21 @@ func (s *Server) setOrKeepMaster(in *pb.RegistryEntry) error {
 	if !seenMaster {
 		in.MasterTime = time.Now().UnixNano()
 	}
+	s.mm.Lock()
 	s.masterMap[in.GetName()] = in
 	s.mm.Unlock()
 	return nil
 }
 
 func (s *Server) clearMaster(in *pb.RegistryEntry) {
-	s.mm.Lock()
-	if val, ok := s.masterMap[in.GetName()]; ok && val.Identifier == in.Identifier {
+	s.mm.RLock()
+	val, ok := s.masterMap[in.GetName()]
+	s.mm.RUnlock()
+	if ok && val.Identifier == in.Identifier {
+		s.mm.Lock()
 		delete(s.masterMap, in.GetName())
+		s.mm.Unlock()
 	}
-	s.mm.Unlock()
 }
 
 // RegisterService supports the RegisterService rpc end point
@@ -179,9 +184,9 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 	}
 
 	// Return the master if it exists
-	s.mm.Lock()
+	s.mm.RLock()
 	val, ok := s.masterMap[in.GetName()]
-	s.mm.Unlock()
+	s.mm.RUnlock()
 	if ok && val.LastSeenTime+val.TimeToClean*1000000 > time.Now().UnixNano() {
 		return &pb.DiscoverResponse{Service: val}, nil
 	}
