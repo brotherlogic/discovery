@@ -28,33 +28,10 @@ func (s *Server) updateCounts(in *pb.RegistryEntry) {
 	s.countM.Unlock()
 }
 
-func (s *Server) getPortNumber(in *pb.RegistryEntry) int32 {
-	startPort := 50056
-	if in.ExternalPort {
-		startPort = 50052
-	}
-
-	i := startPort - 50052
-	for i < len(s.taken) {
-		if !s.taken[i] {
-			s.taken[i] = true
-			return int32(startPort + i)
-		}
-
-		i++
-	}
-
-	return -1
-}
-
 func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 	if in.Port == 0 {
 		if in.ExternalPort {
-			pn := s.getPortNumber(in)
-			if pn > 50053 {
-				return fmt.Errorf("External ports have been exhausted")
-			}
-			in.Port = pn
+			in.Port = 50053
 		} else {
 			in.Port = s.hashPortNumber(in.Identifier, in.Name)
 		}
