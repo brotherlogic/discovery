@@ -22,12 +22,6 @@ func (s *Server) ListAllServices(ctx context.Context, in *pb.ListRequest) (*pb.L
 	return &pb.ListResponse{Services: &pb.ServiceList{Services: entries}}, nil
 }
 
-func (s *Server) updateCounts(in *pb.RegistryEntry) {
-	s.countM.Lock()
-	s.counts[in.GetName()]++
-	s.countM.Unlock()
-}
-
 func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 	if in.Port == 0 {
 		if in.ExternalPort {
@@ -40,8 +34,7 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 	return nil
 }
 
-func (s *Server) getJob(in *pb.RegistryEntry) (*pb.RegistryEntry, *pb.RegistryEntry) {
-	// Setup the port info
+func (s *Server) setupPort(in *pb.RegistryEntry) {
 	if in.Port == 0 {
 		in.RegisterTime = time.Now().UnixNano()
 		if in.ExternalPort {
@@ -50,67 +43,87 @@ func (s *Server) getJob(in *pb.RegistryEntry) (*pb.RegistryEntry, *pb.RegistryEn
 
 		s.setPortNumber(in)
 	}
+}
 
+func (s *Server) getCurr(in *pb.RegistryEntry) *pb.RegistryEntry {
 	s.portMapMutex.RLock()
-	curr := s.portMap[in.Port]
-	s.portMapMutex.RUnlock()
+	defer s.portMapMutex.RUnlock()
+	return s.portMap[in.Port]
+}
 
+func (s *Server) getCMaster(in *pb.RegistryEntry) *pb.RegistryEntry {
 	s.mm.RLock()
-	cmaster := s.masterMap[in.GetName()]
-	s.mm.RUnlock()
+	defer s.mm.RUnlock()
+	return s.masterMap[in.GetName()]
+}
 
-	return curr, cmaster
+func (s *Server) getJob(in *pb.RegistryEntry) (*pb.RegistryEntry, *pb.RegistryEntry) {
+	// Setup the port info
+	s.setupPort(in)
+
+	return s.getCurr(in), s.getCMaster(in)
+}
+
+func (s *Server) addMaster(in *pb.RegistryEntry) {
+	//Register as master if there is none
+	in.MasterTime = time.Now().UnixNano()
+	s.mm.Lock()
+	s.masterMap[in.GetName()] = in
+	s.mm.Unlock()
+}
+
+func (s *Server) removeMaster(in *pb.RegistryEntry) {
+	// Remove if we're re-registering without master
+	s.mm.Lock()
+	delete(s.masterMap, in.GetName())
+	s.mm.Unlock()
+
+}
+
+func (s *Server) addToPortMap(in *pb.RegistryEntry) {
+	s.portMapMutex.Lock()
+	s.portMap[in.Port] = in
+	s.portMapMutex.Unlock()
 }
 
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	s.countRegister++
-	in := req.GetService()
 
 	//Reject the request with no time to clean
-	if in.GetTimeToClean() == 0 {
+	if req.GetService().GetTimeToClean() == 0 {
 		return &pb.RegisterResponse{}, fmt.Errorf("You must specify a clean time")
 	}
 
 	// Get the necessary details to proceed (port number, master of job)
-	curr, master := s.getJob(in)
+	curr, master := s.getJob(req.GetService())
 
 	//Reject if this is a master request
-	if in.GetMaster() {
-		if master != nil && master.GetIdentifier() != in.GetIdentifier() {
+	if req.GetService().GetMaster() {
+		if master != nil && master.GetIdentifier() != req.GetService().GetIdentifier() {
 			return nil, fmt.Errorf("Unable to register as master - already exists on %v", master.GetIdentifier())
 		}
 
-		//Register as master if there is none
 		if master == nil {
-			in.MasterTime = time.Now().UnixNano()
-			s.mm.Lock()
-			s.masterMap[in.GetName()] = in
-			s.mm.Unlock()
+			s.addMaster(req.GetService())
 		}
-	} else if master != nil && master.GetIdentifier() == in.GetIdentifier() {
-		// Remove if we're re-registering without master
-		s.mm.Lock()
-		delete(s.masterMap, in.GetName())
-		s.mm.Unlock()
+
+	} else if master != nil && master.GetIdentifier() == req.GetService().GetIdentifier() {
+		s.removeMaster(req.GetService())
 	}
 
-	if !in.GetMaster() {
-		in.MasterTime = 0
+	if !req.GetService().GetMaster() {
+		req.GetService().MasterTime = 0
 	}
 
 	//Place this in the port map
 	if curr == nil {
-		s.portMapMutex.Lock()
-		s.portMap[in.Port] = in
-		s.portMapMutex.Unlock()
+		s.addToPortMap(req.GetService())
 	}
 
-	s.updateCounts(in)
-
 	// This is a new registration - update the port map
-	in.LastSeenTime = time.Now().UnixNano()
-	return &pb.RegisterResponse{Service: in}, nil
+	req.GetService().LastSeenTime = time.Now().UnixNano()
+	return &pb.RegisterResponse{Service: req.GetService()}, nil
 }
 
 // Discover supports the Discover rpc end point
@@ -120,10 +133,9 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 
 	// Check if we've been asked for something specific
 	if in.GetIdentifier() != "" && in.GetName() != "" {
-		port := s.hashPortNumber(in.GetIdentifier(), in.GetName())
-		s.portMapMutex.RLock()
-		defer s.portMapMutex.RUnlock()
-		if val, ok := s.portMap[port]; ok {
+		in.Port = s.hashPortNumber(in.GetIdentifier(), in.GetName())
+		val := s.getCurr(in)
+		if val != nil {
 			return &pb.DiscoverResponse{Service: val}, nil
 		}
 
@@ -131,10 +143,8 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 	}
 
 	// Return the master if it exists
-	s.mm.RLock()
-	val, ok := s.masterMap[in.GetName()]
-	s.mm.RUnlock()
-	if ok && val.LastSeenTime+val.TimeToClean*1000000 > time.Now().UnixNano() {
+	val := s.getCMaster(in)
+	if val != nil && val.LastSeenTime+val.TimeToClean*1000000 > time.Now().UnixNano() {
 		return &pb.DiscoverResponse{Service: val}, nil
 	}
 
@@ -143,16 +153,5 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 
 //State gets the state of the server
 func (s *Server) State(ctx context.Context, in *pb.StateRequest) (*pb.StateResponse, error) {
-	s.countM.Lock()
-	longest := ""
-	longestCount := 0
-	for name, number := range s.counts {
-		if number > longestCount {
-			longestCount = number
-			longest = name
-		}
-	}
-
-	s.countM.Unlock()
-	return &pb.StateResponse{MostFrequent: longest, Frequency: int32(longestCount), LongestCall: s.longest, Count: fmt.Sprintf("D %v, R %v, L %v", s.countDiscover, s.countRegister, s.countList)}, nil
+	return &pb.StateResponse{}, nil
 }

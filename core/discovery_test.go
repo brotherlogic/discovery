@@ -13,18 +13,6 @@ import (
 	pb "github.com/brotherlogic/discovery/proto"
 )
 
-func TestGetState(t *testing.T) {
-	s := InitTestServer()
-	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "Blah", TimeToClean: 100}})
-	state, err := s.State(context.Background(), &pb.StateRequest{})
-	if err != nil {
-		t.Fatalf("Error getting state: %v", err)
-	}
-	if state.Frequency != 1 {
-		t.Errorf("HMmm: %v", state.Frequency)
-	}
-}
-
 func TestGetExternalIP(t *testing.T) {
 	s := InitTestServer()
 	externalIP := s.getExternalIP(prodHTTPGetter{})
@@ -86,6 +74,11 @@ func TestServerDiscover(t *testing.T) {
 		t.Fatalf("Server discover has passed: %v", val)
 	}
 
+}
+
+func TestState(t *testing.T) {
+	s := InitTestServer()
+	s.State(context.Background(), &pb.StateRequest{})
 }
 
 func TestDoubleRegister(t *testing.T) {
