@@ -88,16 +88,6 @@ func TestServerDiscover(t *testing.T) {
 
 }
 
-func TestRegisterPort(t *testing.T) {
-	s := InitTestServer()
-	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1", Port: 12345, TimeToClean: 100}
-	resp, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
-
-	if err == nil {
-		t.Fatalf("Managed to register under a bad port: %v", resp)
-	}
-}
-
 func TestDoubleRegister(t *testing.T) {
 	s := InitTestServer()
 	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1", TimeToClean: 100}
@@ -478,7 +468,7 @@ func TestFailHeartbeatExternal(t *testing.T) {
 	entry2.Master = true
 	v2, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry2})
 	if err == nil {
-		t.Errorf("Succesful promote to master: %v", v2)
+		t.Errorf("Succesful promote to master: %v (%v)", v2, v)
 	}
 }
 

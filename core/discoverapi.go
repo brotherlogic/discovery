@@ -35,47 +35,31 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 		} else {
 			in.Port = s.hashPortNumber(in.Identifier, in.Name)
 		}
-	} else if !in.ExternalPort {
-		if s.hashPortNumber(in.Identifier, in.Name) != in.Port {
-			return fmt.Errorf("Unable to register %v under %v port is %v but it should be %v", in.Name, in.Identifier, in.Port, s.hashPortNumber(in.Identifier, in.Name))
-		}
 	}
 
 	return nil
 }
 
-func (s *Server) setOrKeepMaster(in *pb.RegistryEntry) error {
-	seenMaster := false
-	s.mm.RLock()
-	val, ok := s.masterMap[in.GetName()]
-	s.mm.RUnlock()
-	if ok {
-		seenMaster = true
-		// Someone else is master if they have a lease and it has not expired yet
-		if val.Identifier != in.Identifier && val.LastSeenTime+val.TimeToClean*1000000 >= time.Now().UnixNano() {
-			return fmt.Errorf("Unable to register as master - already exists(%v) -> %v also %v", val.Identifier, in.Identifier, val.LastSeenTime+val.TimeToClean*1000000-time.Now().UnixNano())
+func (s *Server) getJob(in *pb.RegistryEntry) (*pb.RegistryEntry, *pb.RegistryEntry) {
+	// Setup the port info
+	if in.Port == 0 {
+		in.RegisterTime = time.Now().UnixNano()
+		if in.ExternalPort {
+			in.Ip = s.getExternalIP(prodHTTPGetter{})
 		}
+
+		s.setPortNumber(in)
 	}
 
-	// If this is a new master - set the master time
-	if !seenMaster {
-		in.MasterTime = time.Now().UnixNano()
-	}
-	s.mm.Lock()
-	s.masterMap[in.GetName()] = in
-	s.mm.Unlock()
-	return nil
-}
+	s.portMapMutex.RLock()
+	curr := s.portMap[in.Port]
+	s.portMapMutex.RUnlock()
 
-func (s *Server) clearMaster(in *pb.RegistryEntry) {
 	s.mm.RLock()
-	val, ok := s.masterMap[in.GetName()]
+	cmaster := s.masterMap[in.GetName()]
 	s.mm.RUnlock()
-	if ok && val.Identifier == in.Identifier {
-		s.mm.Lock()
-		delete(s.masterMap, in.GetName())
-		s.mm.Unlock()
-	}
+
+	return curr, cmaster
 }
 
 // RegisterService supports the RegisterService rpc end point
@@ -88,58 +72,44 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 		return &pb.RegisterResponse{}, fmt.Errorf("You must specify a clean time")
 	}
 
-	s.portMapMutex.RLock()
-	val, ok := s.portMap[in.Port]
-	s.portMapMutex.RUnlock()
-	if ok {
-		//If we have a port number - update the last seen time
-		if in.GetMaster() {
-			err := s.setOrKeepMaster(in)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			s.clearMaster(val)
-			val.MasterTime = 0
-			val.LastSeenTime = time.Now().UnixNano()
-			return &pb.RegisterResponse{Service: val}, nil
+	// Get the necessary details to proceed (port number, master of job)
+	curr, master := s.getJob(in)
+
+	//Reject if this is a master request
+	if in.GetMaster() {
+		if master != nil && master.GetIdentifier() != in.GetIdentifier() {
+			return nil, fmt.Errorf("Unable to register as master - already exists on %v", master.GetIdentifier())
 		}
+
+		//Register as master if there is none
+		if master == nil {
+			in.MasterTime = time.Now().UnixNano()
+			s.mm.Lock()
+			s.masterMap[in.GetName()] = in
+			s.mm.Unlock()
+		}
+	} else if master != nil && master.GetIdentifier() == in.GetIdentifier() {
+		// Remove if we're re-registering without master
+		s.mm.Lock()
+		delete(s.masterMap, in.GetName())
+		s.mm.Unlock()
 	}
 
-	//We're now dealing with a new registration
-
-	// Set the port information up front
-	if in.ExternalPort {
-		in.Ip = s.getExternalIP(prodHTTPGetter{})
+	if !in.GetMaster() {
+		in.MasterTime = 0
 	}
 
-	err := s.setPortNumber(in)
-	if err != nil {
-		return nil, err
-	}
-
-	if in.RegisterTime == 0 {
-		in.RegisterTime = time.Now().UnixNano()
+	//Place this in the port map
+	if curr == nil {
+		s.portMapMutex.Lock()
+		s.portMap[in.Port] = in
+		s.portMapMutex.Unlock()
 	}
 
 	s.updateCounts(in)
 
-	//Deal with request to be master
-	if in.GetMaster() {
-		err := s.setOrKeepMaster(in)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		s.clearMaster(in)
-		in.MasterTime = 0
-	}
-
 	// This is a new registration - update the port map
 	in.LastSeenTime = time.Now().UnixNano()
-	s.portMapMutex.Lock()
-	s.portMap[in.Port] = in
-	s.portMapMutex.Unlock()
 	return &pb.RegisterResponse{Service: in}, nil
 }
 
