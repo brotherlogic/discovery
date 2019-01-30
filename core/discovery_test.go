@@ -605,3 +605,22 @@ func TestCompetingMasterRegister(t *testing.T) {
 		t.Errorf("WRong master has been returned")
 	}
 }
+
+func TestKeepMasterTime(t *testing.T) {
+	s := InitTestServer()
+
+	r1, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "alsoblah", TimeToClean: 100, Master: true}})
+	if err != nil {
+		t.Fatalf("Unable to register as master: %v", err)
+	}
+
+	r2, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "alsoblah", Master: true, TimeToClean: 100}})
+
+	if err != nil {
+		t.Errorf("Able to register as master: %v", err)
+	}
+
+	if r1.GetService().MasterTime != r2.GetService().MasterTime {
+		t.Errorf("Mismatch of master time: (%v) %v -> %v", r2.GetService().MasterTime-r1.GetService().MasterTime, r1.GetService().MasterTime, r2.GetService().MasterTime)
+	}
+}
