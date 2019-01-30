@@ -153,16 +153,5 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 
 //State gets the state of the server
 func (s *Server) State(ctx context.Context, in *pb.StateRequest) (*pb.StateResponse, error) {
-	s.countM.Lock()
-	longest := ""
-	longestCount := 0
-	for name, number := range s.counts {
-		if number > longestCount {
-			longestCount = number
-			longest = name
-		}
-	}
-
-	s.countM.Unlock()
-	return &pb.StateResponse{MostFrequent: longest, Frequency: int32(longestCount), LongestCall: s.longest, Count: fmt.Sprintf("D %v, R %v, L %v", s.countDiscover, s.countRegister, s.countList)}, nil
+	return &pb.StateResponse{}, nil
 }

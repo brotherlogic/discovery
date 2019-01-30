@@ -76,6 +76,11 @@ func TestServerDiscover(t *testing.T) {
 
 }
 
+func TestState(t *testing.T) {
+	s := InitTestServer()
+	s.State(context.Background(), &pb.StateRequest{})
+}
+
 func TestDoubleRegister(t *testing.T) {
 	s := InitTestServer()
 	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1", TimeToClean: 100}
