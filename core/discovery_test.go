@@ -97,7 +97,7 @@ func TestDoubleRegister(t *testing.T) {
 		t.Fatalf("Error registering service: %v", err)
 	}
 
-	if res.GetService().GetRegisterTime() == res2.GetService().GetRegisterTime() {
+	if res.GetService().GetRegisterTime() != res2.GetService().GetRegisterTime() {
 		t.Errorf("Two things are the same: %v and %v", res, res2)
 	}
 }
@@ -457,10 +457,9 @@ func TestFailHeartbeatExternal(t *testing.T) {
 	if err != nil || v.GetService().GetIdentifier() != "ShouldBeMaster" {
 		t.Fatalf("Master is incorrect: %v", v)
 	}
-
 	entry2.Master = true
 	v2, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry2})
-	if err == nil {
+	if err != nil {
 		t.Errorf("Succesful promote to master: %v (%v)", v2, v)
 	}
 }
@@ -603,5 +602,24 @@ func TestCompetingMasterRegister(t *testing.T) {
 
 	if resp.GetService().Identifier != "alsoblah" {
 		t.Errorf("WRong master has been returned")
+	}
+}
+
+func TestKeepMasterTime(t *testing.T) {
+	s := InitTestServer()
+
+	r1, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "alsoblah", TimeToClean: 100, Master: true}})
+	if err != nil {
+		t.Fatalf("Unable to register as master: %v", err)
+	}
+
+	r2, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "alsoblah", Master: true, TimeToClean: 100}})
+
+	if err != nil {
+		t.Errorf("Able to register as master: %v", err)
+	}
+
+	if r1.GetService().MasterTime != r2.GetService().MasterTime {
+		t.Errorf("Mismatch of master time: (%v) %v -> %v", r2.GetService().MasterTime-r1.GetService().MasterTime, r1.GetService().MasterTime, r2.GetService().MasterTime)
 	}
 }

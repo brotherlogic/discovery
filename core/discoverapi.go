@@ -97,6 +97,9 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 
 	// Get the necessary details to proceed (port number, master of job)
 	curr, master := s.getJob(req.GetService())
+	if curr != nil {
+		req.Service = curr
+	}
 
 	//Reject if this is a master request
 	if req.GetService().GetMaster() {
