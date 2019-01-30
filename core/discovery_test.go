@@ -3,6 +3,7 @@ package discovery
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"testing"
@@ -621,5 +622,50 @@ func TestKeepMasterTime(t *testing.T) {
 
 	if r1.GetService().MasterTime != r2.GetService().MasterTime {
 		t.Errorf("Mismatch of master time: (%v) %v -> %v", r2.GetService().MasterTime-r1.GetService().MasterTime, r1.GetService().MasterTime, r2.GetService().MasterTime)
+	}
+}
+
+func TestKeepMasterPromote(t *testing.T) {
+	s := InitTestServer()
+
+	r1, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "alsoblah", TimeToClean: 101}})
+	if err != nil {
+		t.Fatalf("Unable to register as master: %v", err)
+	}
+	if r1.GetService().Master {
+		t.Fatalf("We've been marked master: %v", r1.GetService())
+	}
+
+	log.Printf("Promoting to master")
+	r2, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "alsoblah", Master: true, TimeToClean: 102}})
+
+	if err != nil {
+		t.Errorf("Able to register as master: %v", err)
+	}
+
+	if !r2.GetService().Master {
+		t.Fatalf("Service has been dmarked master: %v", r2.GetService())
+	}
+
+	r3, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "blah"}})
+	if err != nil {
+		t.Fatalf("Error in discover: %v", err)
+	}
+
+	if !r3.GetService().Master {
+		t.Fatalf("Discover has not returned master")
+	}
+
+	r4, err := s.ListAllServices(context.Background(), &pb.ListRequest{})
+	if err != nil {
+		t.Fatalf("Error in list: %v", err)
+	}
+
+	if len(r4.GetServices().GetServices()) != 1 {
+		t.Fatalf("Missing service: %v", r4)
+	}
+
+	if !r4.GetServices().GetServices()[0].Master {
+		t.Fatalf("Not set as master: %v", r4.GetServices().GetServices()[0])
 	}
 }
