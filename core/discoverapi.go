@@ -98,12 +98,16 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 	// Get the necessary details to proceed (port number, master of job)
 	curr, master := s.getJob(req.GetService())
 	if curr != nil {
+		if req.Service.Master {
+			curr.Master = true
+		}
 		req.Service = curr
 	}
 
 	//Reject if this is a master request
 	if req.GetService().GetMaster() {
 		if master != nil && master.GetIdentifier() != req.GetService().GetIdentifier() {
+			req.Service.Master = false
 			return nil, fmt.Errorf("Unable to register as master - already exists on %v", master.GetIdentifier())
 		}
 
