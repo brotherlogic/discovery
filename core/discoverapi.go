@@ -14,10 +14,10 @@ import (
 func (s *Server) ListAllServices(ctx context.Context, in *pb.ListRequest) (*pb.ListResponse, error) {
 	s.countList++
 	entries := []*pb.RegistryEntry{}
-	s.portMapMutex.RLock()
-	defer s.portMapMutex.RUnlock()
 	for _, val := range s.portMap {
-		entries = append(entries, val)
+		if val != nil {
+			entries = append(entries, val)
+		}
 	}
 	return &pb.ListResponse{Services: &pb.ServiceList{Services: entries}}, nil
 }
@@ -46,9 +46,7 @@ func (s *Server) setupPort(in *pb.RegistryEntry) {
 }
 
 func (s *Server) getCurr(in *pb.RegistryEntry) *pb.RegistryEntry {
-	s.portMapMutex.RLock()
-	defer s.portMapMutex.RUnlock()
-	return s.portMap[in.Port]
+	return s.portMap[in.Port-50052]
 }
 
 func (s *Server) getCMaster(in *pb.RegistryEntry) *pb.RegistryEntry {
@@ -81,9 +79,7 @@ func (s *Server) removeMaster(in *pb.RegistryEntry) {
 }
 
 func (s *Server) addToPortMap(in *pb.RegistryEntry) {
-	s.portMapMutex.Lock()
-	s.portMap[in.Port] = in
-	s.portMapMutex.Unlock()
+	s.portMap[in.Port-50052] = in
 }
 
 // RegisterService supports the RegisterService rpc end point

@@ -36,8 +36,7 @@ type Server struct {
 	countList       int64
 	taken           []bool
 	extTaken        []bool
-	portMap         map[int32]*pb.RegistryEntry
-	portMapMutex    *sync.RWMutex
+	portMap         []*pb.RegistryEntry
 	portMemory      map[string]int32
 	portMemoryMutex *sync.Mutex
 }
@@ -78,27 +77,26 @@ func InitServer() Server {
 	s.counts = make(map[string]int)
 	s.countM = &sync.Mutex{}
 	s.longest = -1
-	s.taken = make([]bool, 65536-50056)
+	s.taken = make([]bool, 65536-50052)
 	s.extTaken = make([]bool, 2)
-	s.portMap = make(map[int32]*pb.RegistryEntry)
-	s.portMapMutex = &sync.RWMutex{}
+	s.portMap = make([]*pb.RegistryEntry, 65536-50052)
 	s.portMemory = make(map[string]int32)
 	s.portMemoryMutex = &sync.Mutex{}
 	return s
 }
 
 func (s *Server) cleanEntries(t time.Time) {
-	s.portMapMutex.Lock()
-	defer s.portMapMutex.Unlock()
-	for key, entry := range s.portMap {
-		//Clean if we haven't seen this entry in the time to clean window
-		if t.UnixNano()-entry.GetLastSeenTime() > entry.GetTimeToClean()*1000000 {
-			if entry.GetMaster() {
-				s.mm.Lock()
-				delete(s.masterMap, entry.GetName())
-				s.mm.Unlock()
+	for i, entry := range s.portMap {
+		if entry != nil {
+			//Clean if we haven't seen this entry in the time to clean window
+			if t.UnixNano()-entry.GetLastSeenTime() > entry.GetTimeToClean()*1000000 {
+				if entry.GetMaster() {
+					s.mm.Lock()
+					delete(s.masterMap, entry.GetName())
+					s.mm.Unlock()
+				}
+				s.portMap[i] = nil
 			}
-			delete(s.portMap, key)
 		}
 	}
 }
