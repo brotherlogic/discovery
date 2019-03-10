@@ -91,24 +91,23 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 		return &pb.RegisterResponse{}, fmt.Errorf("You must specify a clean time")
 	}
 
-	// Get the necessary details to proceed (port number, master of job)
 	curr, master := s.getJob(req.GetService())
-	if curr != nil {
-		if req.Service.Master {
-			curr.Master = true
-		}
-		req.Service = curr
-	}
 
 	//Reject if this is a master request
 	if req.GetService().GetMaster() {
-		if master != nil && master.GetIdentifier() != req.GetService().GetIdentifier() {
+		if master != nil && master.GetIdentifier() != req.GetService().GetIdentifier() && !master.WeakMaster {
 			req.Service.Master = false
 			return nil, fmt.Errorf("Unable to register as master - already exists on %v", master.GetIdentifier())
 		}
 
-		if master == nil {
-			s.addMaster(req.GetService())
+		if curr == nil {
+			curr = req.GetService()
+			s.addToPortMap(curr)
+		}
+
+		if master == nil || master.WeakMaster {
+			curr.Master = true
+			s.addMaster(curr)
 		}
 
 	} else if master != nil && master.GetIdentifier() == req.GetService().GetIdentifier() {
@@ -121,12 +120,13 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 
 	//Place this in the port map
 	if curr == nil {
-		s.addToPortMap(req.GetService())
+		curr = req.GetService()
+		s.addToPortMap(curr)
 	}
 
 	// This is a new registration - update the port map
-	req.GetService().LastSeenTime = time.Now().UnixNano()
-	return &pb.RegisterResponse{Service: req.GetService()}, nil
+	curr.LastSeenTime = time.Now().UnixNano()
+	return &pb.RegisterResponse{Service: curr}, nil
 }
 
 // Discover supports the Discover rpc end point
@@ -151,7 +151,7 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 		return &pb.DiscoverResponse{Service: val}, nil
 	}
 
-	return &pb.DiscoverResponse{}, errors.New("Cannot find master for " + in.GetName() + " on server (maybe): " + in.GetIdentifier())
+	return &pb.DiscoverResponse{}, errors.New("Cannot find master for " + in.GetName() + " on server " + in.GetIdentifier())
 }
 
 //State gets the state of the server
