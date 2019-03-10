@@ -147,7 +147,7 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 
 	// Return the master if it exists
 	val := s.getCMaster(in)
-	if val != nil && val.LastSeenTime+val.TimeToClean*1000000 > time.Now().UnixNano() {
+	if val != nil && val.LastSeenTime+val.TimeToClean*1000000 > time.Now().UnixNano() && !val.WeakMaster {
 		return &pb.DiscoverResponse{Service: val}, nil
 	}
 
