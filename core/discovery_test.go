@@ -3,7 +3,6 @@ package discovery
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"testing"
@@ -460,7 +459,7 @@ func TestFailHeartbeatExternal(t *testing.T) {
 	}
 	entry2.Master = true
 	v2, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry2})
-	if err != nil {
+	if err == nil {
 		t.Errorf("Succesful promote to master: %v (%v)", v2, v)
 	}
 }
@@ -636,7 +635,6 @@ func TestKeepMasterPromote(t *testing.T) {
 		t.Fatalf("We've been marked master: %v", r1.GetService())
 	}
 
-	log.Printf("Promoting to master")
 	r2, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "alsoblah", Master: true, TimeToClean: 102}})
 
 	if err != nil {

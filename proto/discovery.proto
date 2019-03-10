@@ -20,6 +20,7 @@ message RegistryEntry {
   
   // Boolean to show we're master/slave
   bool master = 6;
+  bool weak_master = 12;
   
   // The time at which this binary was registered
   int64 register_time = 7;
