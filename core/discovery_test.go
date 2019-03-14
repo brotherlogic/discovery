@@ -3,6 +3,7 @@ package discovery
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"testing"
@@ -48,7 +49,7 @@ func TestGetExternalIPFail(t *testing.T) {
 
 func TestServerDiscoverWeakMaster(t *testing.T) {
 	s := InitTestServer()
-	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1", TimeToClean: 100, Master: true, WeakMaster: true}
+	entry := &pb.RegistryEntry{Ip: "10.0.1.17", Identifier: "Server1", Name: "Job1", TimeToClean: 100}
 
 	_, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry})
 
@@ -360,14 +361,16 @@ func TestBecomeMaster(t *testing.T) {
 	}
 
 	entry1.Master = true
-	_, err = s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry1})
+	resp, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry1})
 	if err != nil {
 		t.Fatalf("Unable to re-register as master: %v", err)
 	}
 
+	log.Printf("RESPONSE = %v", resp)
+
 	v, err = s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Testing"}})
 	if err != nil || v.GetService().GetIp() != "10.0.4.5" {
-		t.Fatalf("Master is incorrect: %v", v)
+		t.Fatalf("Master is incorrect: %v (%v)", v, err)
 	}
 
 	entry1.Master = false
@@ -604,10 +607,11 @@ func TestDoubleMasterRegisterNoClean(t *testing.T) {
 func TestCompetingMasterRegister(t *testing.T) {
 	s := InitTestServer()
 
-	_, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "alsoblah", TimeToClean: 100, Master: true}})
+	r2, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "alsoblah", TimeToClean: 100, Master: true}})
 	if err != nil {
 		t.Fatalf("Unable to register as master: %v", err)
 	}
+	log.Printf("R2!: %v", r2)
 
 	r, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "anotherblah", Master: true, TimeToClean: 100}})
 

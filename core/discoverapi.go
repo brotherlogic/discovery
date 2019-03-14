@@ -105,9 +105,12 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 			s.addToPortMap(curr)
 		}
 
+		// Do the master promote
 		if master == nil || master.WeakMaster {
 			curr.Master = true
+			curr.WeakMaster = false
 			s.addMaster(curr)
+			master = curr
 		}
 
 	} else if master != nil && master.GetIdentifier() == req.GetService().GetIdentifier() {
@@ -122,6 +125,12 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 	if curr == nil {
 		curr = req.GetService()
 		s.addToPortMap(curr)
+	}
+
+	// Apply the weak lease
+	if master == nil {
+		curr.WeakMaster = true
+		s.addMaster(curr)
 	}
 
 	// This is a new registration - update the port map
