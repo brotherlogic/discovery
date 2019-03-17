@@ -88,7 +88,7 @@ func main() {
 				for _, bit := range bits.GetServices().Services {
 					regtime := time.Unix(0, bit.GetLastSeenTime()).Sub(time.Unix(0, bit.GetRegisterTime())).Truncate(time.Minute)
 					mastertime := time.Unix(0, bit.GetLastSeenTime()).Sub(time.Unix(0, bit.GetMasterTime())).Truncate(time.Minute)
-					if bit.GetMaster() {
+					if bit.GetMaster() && !bit.GetWeakMaster() {
 						masters = append(masters, fmt.Sprintf("%v [%v - %v]", repEntry(bit), mastertime, regtime))
 					}
 				}

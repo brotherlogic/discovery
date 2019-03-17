@@ -62,12 +62,14 @@ func (s *Server) getJob(in *pb.RegistryEntry) (*pb.RegistryEntry, *pb.RegistryEn
 	return s.getCurr(in), s.getCMaster(in)
 }
 
-func (s *Server) addMaster(in *pb.RegistryEntry) {
+func (s *Server) addMaster(in *pb.RegistryEntry) *pb.RegistryEntry {
 	//Register as master if there is none
 	in.MasterTime = time.Now().UnixNano()
 	s.mm.Lock()
 	s.masterMap[in.GetName()] = in
 	s.mm.Unlock()
+
+	return in
 }
 
 func (s *Server) removeMaster(in *pb.RegistryEntry) {
@@ -109,8 +111,7 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 		if master == nil || master.WeakMaster {
 			curr.Master = true
 			curr.WeakMaster = false
-			s.addMaster(curr)
-			master = curr
+			master = s.addMaster(curr)
 		}
 
 	} else if master != nil && master.GetIdentifier() == req.GetService().GetIdentifier() {
@@ -130,11 +131,17 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 	// Apply the weak lease
 	if master == nil {
 		curr.WeakMaster = true
-		s.addMaster(curr)
+		master = s.addMaster(curr)
 	}
 
 	// This is a new registration - update the port map
 	curr.LastSeenTime = time.Now().UnixNano()
+
+	// Short cut panic
+	if master == nil && curr.Master && !curr.WeakMaster {
+		panic("Bad master situation")
+	}
+
 	return &pb.RegisterResponse{Service: curr}, nil
 }
 
