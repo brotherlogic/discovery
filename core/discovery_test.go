@@ -718,7 +718,7 @@ func TestRemoveWeakMaster(t *testing.T) {
 		t.Fatalf("Service has been dmarked master: %v", r2.GetService())
 	}
 
-	r4, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "blah", Identifier: "notmaster"}})
+	r4, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "notmaster", TimeToClean: 101}})
 	if err != nil {
 		t.Fatalf("Error in discover: %v", err)
 	}
