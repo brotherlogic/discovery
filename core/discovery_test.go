@@ -688,3 +688,42 @@ func TestKeepMasterPromote(t *testing.T) {
 		t.Fatalf("Not set as master: %v", r4.GetServices().GetServices()[0])
 	}
 }
+
+func TestRemoveWeakMaster(t *testing.T) {
+	s := InitTestServer()
+
+	r1, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "master", TimeToClean: 101}})
+	if err != nil {
+		t.Fatalf("Unable to register as master: %v", err)
+	}
+	if r1.GetService().Master || !r1.GetService().WeakMaster {
+		t.Fatalf("We've been marked master: %v", r1.GetService())
+	}
+
+	r2, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "notmaster", TimeToClean: 101}})
+	if err != nil {
+		t.Fatalf("Unable to register as master: %v", err)
+	}
+	if r2.GetService().Master || !r2.GetService().WeakMaster {
+		t.Fatalf("We've been marked master: %v", r1.GetService())
+	}
+
+	r3, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "master", Master: true, TimeToClean: 102}})
+
+	if err != nil {
+		t.Errorf("Unable to register as master: %v", err)
+	}
+
+	if !r3.GetService().Master {
+		t.Fatalf("Service has been dmarked master: %v", r2.GetService())
+	}
+
+	r4, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "blah", Identifier: "notmaster", TimeToClean: 101}})
+	if err != nil {
+		t.Fatalf("Error in discover: %v", err)
+	}
+
+	if r4.GetService().Master || r4.GetService().WeakMaster {
+		t.Fatalf("Bad master return: %v", r4.GetService())
+	}
+}
