@@ -71,6 +71,22 @@ func main() {
 
 			fmt.Printf("STATE: %v\n", state1)
 			fmt.Printf("STATE: %v\n", state2)
+		case "blist":
+			if err := buildFlags.Parse(os.Args[2:]); err == nil {
+				conn, _ := grpc.Dial(port, grpc.WithInsecure())
+				defer conn.Close()
+
+				registry := pbdi.NewDiscoveryServiceClient(conn)
+				ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+				defer cancel()
+				bits, err := registry.ListAllServices(ctx, &pbdi.ListRequest{}, grpc.FailFast(false))
+				if err != nil {
+					log.Fatalf("Error building job: %v", err)
+				}
+				for _, bit := range bits.GetServices().Services {
+					fmt.Printf("%v\n", bit)
+				}
+			}
 		case "list":
 			if err := buildFlags.Parse(os.Args[2:]); err == nil {
 				conn, _ := grpc.Dial(port, grpc.WithInsecure())

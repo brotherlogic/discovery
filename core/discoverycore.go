@@ -109,18 +109,23 @@ func conv(v1 uint32) int32 {
 	return v2
 }
 
+const (
+	//SEP eperates out for hashing port number
+	SEP = ";"
+)
+
 func (s *Server) hashPortNumber(identifier, job string) int32 {
 	s.portMemoryMutex.Lock()
 	defer s.portMemoryMutex.Unlock()
-	if val, ok := s.portMemory[identifier+job]; ok {
+	if val, ok := s.portMemory[identifier+SEP+job]; ok {
 		return val
 	}
 	//Gets a port number between 50056 and 65535
 	portRange := int32(65535 - 50056)
 	h := fnv.New32a()
-	h.Write([]byte(identifier + job))
+	h.Write([]byte(identifier + SEP + job))
 
 	portNumber := 50056 + conv(h.Sum32())%portRange
-	s.portMemory[identifier+job] = portNumber
+	s.portMemory[identifier+SEP+job] = portNumber
 	return portNumber
 }
