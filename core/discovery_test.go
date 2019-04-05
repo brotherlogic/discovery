@@ -727,3 +727,64 @@ func TestRemoveWeakMaster(t *testing.T) {
 		t.Fatalf("Bad master return: %v", r4.GetService())
 	}
 }
+
+func TestHasClash(t *testing.T) {
+	s := InitTestServer()
+
+	services := []string{
+		"alerter",
+		"backup",
+		"beerserver",
+		"buildserver",
+		"cdprocessor",
+		"datacollector",
+		"dataviewer",
+		"dropboxsync",
+		"executor",
+		"filecopier",
+		"githubcard",
+		"gobuildmaster",
+		"gobuildslave",
+		"keystore",
+		"location",
+		"monitor",
+		"printer",
+		"proxy",
+		"recordalerting",
+		"recordcollection",
+		"recordgetter",
+		"recordmover",
+		"recordprinter",
+		"recordprocess",
+		"recordsales",
+		"recordsorganiser",
+		"recordwants",
+		"reminders",
+		"solver",
+		"tracer",
+		"versionserver",
+		"wantslist",
+	}
+	idents := []string{
+		"tasklist",
+		"framethree",
+		"stationone",
+		"runner",
+		"printer",
+		"stack1", "stack2", "stack3", "stack4",
+	}
+
+	space := make(map[int32]int)
+
+	for _, service := range services {
+		for _, ident := range idents {
+			space[s.hashPortNumber(ident, service)]++
+		}
+	}
+
+	for key, val := range space {
+		if val > 1 {
+			t.Errorf("Hash Clash: %v [%v]", key, val)
+		}
+	}
+}
