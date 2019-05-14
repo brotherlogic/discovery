@@ -751,6 +751,7 @@ func TestHasClash(t *testing.T) {
 		"printer",
 		"proxy",
 		"recordalerting",
+		"recordbackup",
 		"recordcollection",
 		"recordgetter",
 		"recordmover",
