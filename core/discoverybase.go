@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc"
 
 	pb "github.com/brotherlogic/discovery/proto"
-	pbm "github.com/brotherlogic/monitor/monitorproto"
+	pbm "github.com/brotherlogic/monitor/proto"
 )
 
 func (s *Server) recordLog(logDetail string) {
