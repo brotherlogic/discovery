@@ -27,7 +27,7 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 		if in.ExternalPort {
 			in.Port = 50053
 		} else {
-			in.Port = s.hashPortNumber(in.Identifier, in.Name)
+			in.Port = s.hashPortNumber(in.Identifier, in.Name, SEP)
 		}
 	}
 
@@ -146,7 +146,7 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 
 	// Check if we've been asked for something specific
 	if in.GetIdentifier() != "" && in.GetName() != "" {
-		in.Port = s.hashPortNumber(in.GetIdentifier(), in.GetName())
+		in.Port = s.hashPortNumber(in.GetIdentifier(), in.GetName(), SEP)
 		val := s.getCurr(in)
 		if val != nil {
 			return &pb.DiscoverResponse{Service: val}, nil
