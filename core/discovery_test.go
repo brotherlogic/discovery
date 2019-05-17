@@ -729,6 +729,12 @@ func TestRemoveWeakMaster(t *testing.T) {
 }
 
 func TestHasClash(t *testing.T) {
+	if findClash(SEP) {
+		t.Errorf("Hash Clash")
+	}
+}
+
+func findClash(sep string) bool {
 	s := InitTestServer()
 
 	services := []string{
@@ -754,6 +760,7 @@ func TestHasClash(t *testing.T) {
 		"recordbackup",
 		"recordcollection",
 		"recordgetter",
+		"recordmatcher",
 		"recordmover",
 		"recordprinter",
 		"recordprocess",
@@ -767,6 +774,7 @@ func TestHasClash(t *testing.T) {
 		"wantslist",
 	}
 	idents := []string{
+		"natframe",
 		"tasklist",
 		"framethree",
 		"stationone",
@@ -779,13 +787,31 @@ func TestHasClash(t *testing.T) {
 
 	for _, service := range services {
 		for _, ident := range idents {
-			space[s.hashPortNumber(ident, service)]++
+			space[s.hashPortNumber(ident, service, sep)]++
 		}
 	}
 
-	for key, val := range space {
+	for _, val := range space {
 		if val > 1 {
-			t.Errorf("Hash Clash: %v [%v]", key, val)
+			return true
+		}
+	}
+
+	return false
+}
+
+func TestFind(t *testing.T) {
+	options := ":,./abcdefghijklmnopqrstuvwxyz"
+
+	for count := 1; count < 10; count++ {
+		for _, c := range options {
+			str := ""
+			for v := 0; v < count; v++ {
+				str += string(c)
+			}
+			if !findClash(str) {
+				log.Printf("FOUND %v", str)
+			}
 		}
 	}
 }
