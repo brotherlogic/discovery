@@ -86,3 +86,17 @@ service DiscoveryService {
   rpc ListAllServices (ListRequest) returns (ListResponse) {}
   rpc State (StateRequest) returns (StateResponse) {}
 }
+
+message GetRequest {
+  string job = 1;
+  string server = 2;
+}
+
+message GetResponse {
+  repeated RegistryEntry services = 1;
+}
+
+service DiscoveryServiceV2 {
+  rpc Register(RegisterRequest) returns (RegisterResponse) {}
+  rpc Get(GetRequest) returns (GetResponse) {}
+}
