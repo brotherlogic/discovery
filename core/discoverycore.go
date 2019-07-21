@@ -39,6 +39,7 @@ type Server struct {
 	portMap         []*pb.RegistryEntry
 	portMemory      map[string]int32
 	portMemoryMutex *sync.Mutex
+	countV2Register int64
 }
 
 type httpGetter interface {
