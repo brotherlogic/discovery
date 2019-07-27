@@ -40,6 +40,8 @@ type Server struct {
 	portMemory      map[string]int32
 	portMemoryMutex *sync.Mutex
 	countV2Register int64
+	masterv2Mutex   *sync.Mutex
+	masterv2        map[string]*pb.RegistryEntry
 }
 
 type httpGetter interface {
@@ -83,6 +85,8 @@ func InitServer() Server {
 	s.portMap = make([]*pb.RegistryEntry, 65536-50052)
 	s.portMemory = make(map[string]int32)
 	s.portMemoryMutex = &sync.Mutex{}
+	s.masterv2 = make(map[string]*pb.RegistryEntry)
+	s.masterv2Mutex = &sync.Mutex{}
 	return s
 }
 
