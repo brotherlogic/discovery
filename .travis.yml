@@ -20,4 +20,4 @@ script:
 - fgt golint core
 - fgt golint cli
 - fgt golint integration_tests
-- $HOME/gopath/bin/goveralls -service=travis-ci -ignore core/discoverybase.go -package github.com/brotherlogic/discovery/core
+- $HOME/gopath/bin/goveralls -service=travis-ci -ignore core/discoverybase.go,core/discoveryv2.go -package github.com/brotherlogic/discovery/core

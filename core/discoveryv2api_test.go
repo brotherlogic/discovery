@@ -7,6 +7,15 @@ import (
 	pb "github.com/brotherlogic/discovery/proto"
 )
 
+type testElector struct {
+	lastElect string
+}
+
+func (p *testElector) elect(ctx context.Context, entry *pb.RegistryEntry) error {
+	p.lastElect = entry.Name
+	return nil
+}
+
 func TestPlainRegisterRun(t *testing.T) {
 	s := InitTestServer()
 
@@ -89,21 +98,6 @@ func TestGetAllV2(t *testing.T) {
 	}
 }
 
-func TestGetMasterFail(t *testing.T) {
-	s := InitTestServer()
-
-	_, err := s.Register(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
-
-	if err != nil {
-		t.Errorf("Unable to register %v", err)
-	}
-
-	respg, err := s.Get(context.Background(), &pb.GetRequest{Job: "test_job"})
-	if err == nil {
-		t.Fatalf("Got %v", respg)
-	}
-}
-
 func TestGetMaster(t *testing.T) {
 	s := InitTestServer()
 
@@ -124,4 +118,41 @@ func TestGetMaster(t *testing.T) {
 	if len(respg.Services) != 1 {
 		t.Errorf("Service has been returned")
 	}
+}
+
+func TestPassMasterElect(t *testing.T) {
+	s := InitTestServer()
+	te := &testElector{}
+	s.elector = te
+
+	_, err := s.Register(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+	if err != nil {
+		t.Errorf("Error registering serveR: %v", err)
+	}
+
+	// Force a master elect
+	s.Get(context.Background(), &pb.GetRequest{Job: "test_job"})
+
+	if te.lastElect != "test_job" {
+		t.Errorf("No Election took place")
+	}
+}
+
+func TestFailMasterElect(t *testing.T) {
+	s := InitTestServer()
+	te := &testElector{}
+	s.elector = te
+
+	_, err := s.Register(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+	if err != nil {
+		t.Errorf("Error registering serveR: %v", err)
+	}
+
+	// Force a master elect
+	s.Get(context.Background(), &pb.GetRequest{Job: "test_jobssss"})
+
+	if te.lastElect != "" {
+		t.Errorf("An election took place: %v", te.lastElect)
+	}
+
 }

@@ -343,6 +343,7 @@ func TestFailedDiscover(t *testing.T) {
 
 func InitTestServer() Server {
 	s := InitServer()
+	s.elector = &testElector{}
 	return s
 }
 

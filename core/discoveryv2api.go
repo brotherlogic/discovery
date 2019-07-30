@@ -27,6 +27,19 @@ func (s *Server) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.Reg
 	return &pb.RegisterResponse{Service: req.GetService()}, nil
 }
 
+// Elects a master
+func (s *Server) masterElect(ctx context.Context, jobName string) (*pb.RegistryEntry, error) {
+	for _, job := range s.portMap {
+		if job != nil && job.Name == jobName {
+			if s.elector.elect(ctx, job) == nil {
+				return job, nil
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("No masters available")
+}
+
 func (s *Server) getMaster(ctx context.Context, job string) (*pb.GetResponse, error) {
 	s.masterv2Mutex.Lock()
 	defer s.masterv2Mutex.Unlock()
@@ -35,7 +48,11 @@ func (s *Server) getMaster(ctx context.Context, job string) (*pb.GetResponse, er
 		return &pb.GetResponse{Services: []*pb.RegistryEntry{val}}, nil
 	}
 
-	return nil, fmt.Errorf("Master elect not implemented yet")
+	entry, err := s.masterElect(ctx, job)
+	if err != nil {
+		return &pb.GetResponse{Services: []*pb.RegistryEntry{entry}}, nil
+	}
+	return nil, err
 }
 
 // Get an entry from the registry
