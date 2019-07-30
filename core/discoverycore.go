@@ -42,6 +42,7 @@ type Server struct {
 	countV2Register int64
 	masterv2Mutex   *sync.Mutex
 	masterv2        map[string]*pb.RegistryEntry
+	elector         elector
 }
 
 type httpGetter interface {
