@@ -117,7 +117,7 @@ func conv(v1 uint32) int32 {
 
 const (
 	//SEP eperates out for hashing port number
-	SEP = "ww"
+	SEP = "kkkkkkkkkkkkkkkkkk"
 )
 
 func (s *Server) hashPortNumber(identifier, job string, sep string) int32 {

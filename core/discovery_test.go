@@ -749,14 +749,19 @@ func findClash(sep string) bool {
 		"dropboxsync",
 		"executor",
 		"filecopier",
+		"frametracker",
 		"githubcard",
+		"githubreceiver",
 		"gobuildmaster",
 		"gobuildslave",
 		"keystore",
+		"keystorebackup",
 		"location",
 		"monitor",
+		"networkspeed",
 		"printer",
 		"proxy",
+		"pullrequester",
 		"recordalerting",
 		"recordbackup",
 		"recordcollection",
@@ -781,6 +786,7 @@ func findClash(sep string) bool {
 		"stationone",
 		"runner",
 		"printer",
+		"smallscreen",
 		"stack1", "stack2", "stack3", "stack4",
 	}
 
@@ -804,7 +810,7 @@ func findClash(sep string) bool {
 func TestFind(t *testing.T) {
 	options := ":,./abcdefghijklmnopqrstuvwxyz"
 
-	for count := 1; count < 10; count++ {
+	for count := 1; count < 20; count++ {
 		for _, c := range options {
 			str := ""
 			for v := 0; v < count; v++ {
