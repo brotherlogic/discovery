@@ -1,4 +1,4 @@
-package discovery
+package main
 
 import (
 	"context"
@@ -19,7 +19,7 @@ func (p *testElector) elect(ctx context.Context, entry *pb.RegistryEntry) error 
 func TestPlainRegisterRun(t *testing.T) {
 	s := InitTestServer()
 
-	resp, err := s.Register(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
 
 	if err != nil {
 		t.Errorf("Unable to register %v", err)
@@ -42,7 +42,7 @@ func TestPlainRegisterRun(t *testing.T) {
 func TestPlainRegisterRunWithBadGet(t *testing.T) {
 	s := InitTestServer()
 
-	resp, err := s.Register(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
 
 	if err != nil {
 		t.Errorf("Unable to register %v", err)
@@ -61,7 +61,7 @@ func TestPlainRegisterRunWithBadGet(t *testing.T) {
 func TestDoubleRegisterV2(t *testing.T) {
 	s := InitTestServer()
 
-	resp, err := s.Register(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
 
 	if err != nil {
 		t.Errorf("Unable to register %v", err)
@@ -71,7 +71,7 @@ func TestDoubleRegisterV2(t *testing.T) {
 		t.Errorf("Port number not assigned")
 	}
 
-	resp, err = s.Register(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+	resp, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
 
 	if err == nil {
 		t.Errorf("No error on re-register %v", resp)
@@ -82,7 +82,7 @@ func TestDoubleRegisterV2(t *testing.T) {
 func TestGetAllV2(t *testing.T) {
 	s := InitTestServer()
 
-	_, err := s.Register(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+	_, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
 
 	if err != nil {
 		t.Errorf("Unable to register %v", err)
@@ -101,7 +101,7 @@ func TestGetAllV2(t *testing.T) {
 func TestGetMaster(t *testing.T) {
 	s := InitTestServer()
 
-	resp, err := s.Register(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
 
 	if err != nil {
 		t.Errorf("Unable to register %v", err)
@@ -125,7 +125,7 @@ func TestPassMasterElect(t *testing.T) {
 	te := &testElector{}
 	s.elector = te
 
-	_, err := s.Register(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+	_, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
 	if err != nil {
 		t.Errorf("Error registering serveR: %v", err)
 	}
@@ -143,7 +143,7 @@ func TestFailMasterElect(t *testing.T) {
 	te := &testElector{}
 	s.elector = te
 
-	_, err := s.Register(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+	_, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
 	if err != nil {
 		t.Errorf("Error registering serveR: %v", err)
 	}

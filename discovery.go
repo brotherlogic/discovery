@@ -1,18 +1,272 @@
 package main
 
 import (
+	"context"
+	"flag"
+	"hash/fnv"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"strconv"
+	"strings"
+	"sync"
 	"time"
 
-	discovery "github.com/brotherlogic/discovery/core"
+	"github.com/brotherlogic/goserver"
+	"google.golang.org/grpc"
+
+	pb "github.com/brotherlogic/discovery/proto"
+	pbg "github.com/brotherlogic/goserver/proto"
 )
 
 const (
-	port = ":50055"
+	port = 50055
 )
 
-func main() {
-	discovery.Serve(port)
-	for true {
-		time.Sleep(time.Minute)
+const (
+	strikeCount = 3
+)
+
+var externalPorts = map[string][]int32{"main": []int32{50052, 50053}}
+
+// Server the central server object
+type Server struct {
+	*goserver.GoServer
+	entries         []*pb.RegistryEntry
+	checkFile       string
+	external        string
+	lastGet         time.Time
+	masterMap       map[string]*pb.RegistryEntry
+	mm              *sync.RWMutex
+	countM          *sync.Mutex
+	counts          map[string]int
+	longest         int64
+	countRegister   int64
+	countDiscover   int64
+	countList       int64
+	taken           []bool
+	extTaken        []bool
+	portMap         []*pb.RegistryEntry
+	portMemory      map[string]int32
+	portMemoryMutex *sync.Mutex
+	countV2Register int64
+	masterv2Mutex   *sync.Mutex
+	masterv2        map[string]*pb.RegistryEntry
+	elector         elector
+}
+
+type httpGetter interface {
+	Get(url string) (*http.Response, error)
+}
+
+type prodHTTPGetter struct{}
+
+func (httpGetter prodHTTPGetter) Get(url string) (*http.Response, error) {
+	return http.Get(url)
+}
+
+func (s *Server) setExternalIP(getter httpGetter) {
+	resp, err := getter.Get("http://myexternalip.com/raw")
+	if err == nil {
+		defer resp.Body.Close()
+		body, _ := ioutil.ReadAll(resp.Body)
+		s.external = strings.TrimSpace(string(body))
 	}
+}
+
+// GetExternalIP gets the external IP
+func (s *Server) getExternalIP(getter httpGetter) string {
+	if s.external == "" || time.Now().Sub(s.lastGet) > time.Hour {
+		s.lastGet = time.Now()
+		go s.setExternalIP(&prodHTTPGetter{})
+	}
+	return s.external
+}
+
+// InitServer builds a server item ready for useo
+func InitServer() *Server {
+	s := &Server{}
+	s.GoServer = &goserver.GoServer{}
+	s.entries = make([]*pb.RegistryEntry, 0)
+	s.mm = &sync.RWMutex{}
+	s.masterMap = make(map[string]*pb.RegistryEntry)
+	s.counts = make(map[string]int)
+	s.countM = &sync.Mutex{}
+	s.longest = -1
+	s.taken = make([]bool, 65536-50052)
+	s.extTaken = make([]bool, 2)
+	s.portMap = make([]*pb.RegistryEntry, 65536-50052)
+	s.portMemory = make(map[string]int32)
+	s.portMemoryMutex = &sync.Mutex{}
+	s.masterv2 = make(map[string]*pb.RegistryEntry)
+	s.masterv2Mutex = &sync.Mutex{}
+	return s
+}
+
+func (s *Server) cleanEntries(t time.Time) {
+	for i, entry := range s.portMap {
+		if entry != nil {
+			//Clean if we haven't seen this entry in the time to clean window
+			if t.UnixNano()-entry.GetLastSeenTime() > entry.GetTimeToClean()*1000000 {
+				if entry.GetMaster() {
+					s.mm.Lock()
+					delete(s.masterMap, entry.GetName())
+					s.mm.Unlock()
+				}
+				s.portMap[i] = nil
+			}
+		}
+	}
+}
+
+// DoRegister does RPC registration
+func (s *Server) DoRegister(server *grpc.Server) {
+	pb.RegisterDiscoveryServiceServer(server, s)
+}
+
+func main() {
+	var quiet = flag.Bool("quiet", false, "Show all output")
+	flag.Parse()
+
+	//Turn off logging
+	if *quiet {
+		log.SetFlags(0)
+		log.SetOutput(ioutil.Discard)
+	}
+	server := InitServer()
+	server.setExternalIP(prodHTTPGetter{})
+	server.PrepServerNoRegister(port)
+	server.Register = server
+
+	server.RegisterServer("discover", false)
+	server.Serve()
+}
+
+func conv(v1 uint32) int32 {
+	v2 := int32(v1)
+	if v2 < 0 {
+		return -v2
+	}
+	return v2
+}
+
+const (
+	//SEP eperates out for hashing port number
+	SEP = "ww"
+)
+
+func (s *Server) hashPortNumber(identifier, job string, sep string) int32 {
+	s.portMemoryMutex.Lock()
+	defer s.portMemoryMutex.Unlock()
+	if val, ok := s.portMemory[identifier+SEP+job]; ok {
+		return val
+	}
+	//Gets a port number between 50056 and 65535
+	portRange := int32(65535 - 50056)
+	h := fnv.New32a()
+	h.Write([]byte(identifier + sep + job))
+
+	portNumber := 50056 + conv(h.Sum32())%portRange
+	s.portMemory[identifier+SEP+job] = portNumber
+	return portNumber
+}
+
+type elector interface {
+	elect(ctx context.Context, entry *pb.RegistryEntry) error
+}
+
+type prodElector struct {
+}
+
+func (p *prodElector) elect(ctx context.Context, entry *pb.RegistryEntry) error {
+	conn, err := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	server := pbg.NewGoserverServiceClient(conn)
+	_, err = server.Mote(ctx, &pbg.MoteRequest{Master: true})
+
+	return err
+}
+
+// Mote promotes/demotes this server
+func (s *Server) Mote(ctx context.Context, master bool) error {
+	return nil
+}
+
+func (s *Server) getCurr(in *pb.RegistryEntry) *pb.RegistryEntry {
+	return s.portMap[in.Port-50052]
+}
+
+func (s *Server) getCMaster(in *pb.RegistryEntry) *pb.RegistryEntry {
+	s.mm.RLock()
+	defer s.mm.RUnlock()
+	return s.masterMap[in.GetName()]
+}
+
+func (s *Server) getJob(in *pb.RegistryEntry) (*pb.RegistryEntry, *pb.RegistryEntry) {
+	// Setup the port info
+	s.setupPort(in)
+
+	return s.getCurr(in), s.getCMaster(in)
+}
+
+func (s *Server) addMaster(in *pb.RegistryEntry) {
+	//Register as master if there is none
+	in.MasterTime = time.Now().UnixNano()
+	s.mm.Lock()
+	s.masterMap[in.GetName()] = in
+	s.mm.Unlock()
+}
+
+func (s *Server) removeMaster(in *pb.RegistryEntry) {
+	// Remove if we're re-registering without master
+	s.mm.Lock()
+	delete(s.masterMap, in.GetName())
+	s.mm.Unlock()
+
+}
+
+func (s *Server) addToPortMap(in *pb.RegistryEntry) {
+	s.portMap[in.Port-50052] = in
+}
+
+func (s *Server) setupPort(in *pb.RegistryEntry) {
+	if in.Port == 0 {
+		in.RegisterTime = time.Now().UnixNano()
+		if in.ExternalPort {
+			in.Ip = s.getExternalIP(prodHTTPGetter{})
+		}
+
+		s.setPortNumber(in)
+	}
+}
+
+func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
+	if in.Port == 0 {
+		if in.ExternalPort {
+			in.Port = 50053
+		} else {
+			in.Port = s.hashPortNumber(in.Identifier, in.Name, SEP)
+		}
+	}
+
+	return nil
+}
+
+// GetState gets the state of the server
+func (s *Server) GetState() []*pbg.State {
+	return []*pbg.State{}
+}
+
+// ReportHealth alerts if we're not healthy
+func (s *Server) ReportHealth() bool {
+	return true
+}
+
+// Shutdown the server
+func (s *Server) Shutdown(ctx context.Context) error {
+	return nil
 }
