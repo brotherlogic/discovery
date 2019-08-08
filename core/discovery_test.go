@@ -810,7 +810,7 @@ func findClash(sep string) bool {
 func TestFind(t *testing.T) {
 	options := ":,./abcdefghijklmnopqrstuvwxyz"
 
-	for count := 1; count < 10; count++ {
+	for count := 1; count < 20; count++ {
 		for _, c := range options {
 			str := ""
 			for v := 0; v < count; v++ {
