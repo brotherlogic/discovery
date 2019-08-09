@@ -1,4 +1,4 @@
-package discovery
+package main
 
 import (
 	"fmt"
@@ -17,7 +17,7 @@ func benchmarkMasterRegister(i, d int, b *testing.B) {
 	}
 
 	for n := 0; n < b.N; n++ {
-		run(&s, testdata[n%len(testdata)])
+		run(s, testdata[n%len(testdata)])
 	}
 }
 

@@ -104,6 +104,6 @@ message GetResponse {
 }
 
 service DiscoveryServiceV2 {
-  rpc Register(RegisterRequest) returns (RegisterResponse) {}
+  rpc RegisterV2(RegisterRequest) returns (RegisterResponse) {}
   rpc Get(GetRequest) returns (GetResponse) {}
 }

@@ -1,4 +1,4 @@
-package discovery
+package main
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 )
 
 // Register a server
-func (s *Server) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
+func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	s.countV2Register++
 
 	curr, _ := s.getJob(req.GetService())
