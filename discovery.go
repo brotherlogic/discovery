@@ -124,6 +124,11 @@ func (s *Server) DoRegister(server *grpc.Server) {
 	pb.RegisterDiscoveryServiceServer(server, s)
 }
 
+func (s *Server) clean(ctx context.Context) error {
+	s.cleanEntries(time.Now())
+	return nil
+}
+
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	flag.Parse()
@@ -139,6 +144,9 @@ func main() {
 	server.Register = server
 
 	server.RegisterServer("discover", false)
+
+	server.RegisterRepeatingTaskNonMaster(server.clean, "clean", time.Second)
+
 	server.Serve()
 }
 
