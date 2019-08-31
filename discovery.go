@@ -54,7 +54,7 @@ type Server struct {
 	masterv2Mutex   *sync.Mutex
 	masterv2        map[string]*pb.RegistryEntry
 	elector         elector
-	version         map[string]int32
+	version         sync.Map
 }
 
 type httpGetter interface {
@@ -102,7 +102,6 @@ func InitServer() *Server {
 	s.portMemoryMutex = &sync.Mutex{}
 	s.masterv2 = make(map[string]*pb.RegistryEntry)
 	s.masterv2Mutex = &sync.Mutex{}
-	s.version = make(map[string]int32)
 	return s
 }
 
