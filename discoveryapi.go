@@ -30,6 +30,7 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 		return &pb.RegisterResponse{}, fmt.Errorf("You must specify a clean time")
 	}
 
+	s.version[req.GetService().GetName()] = pb.RegistryEntry_Version_value[req.GetService().GetVersion().String()]
 	curr, master := s.getJob(req.GetService())
 
 	//Reject if this is a master request

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"hash/fnv"
 	"io/ioutil"
 	"log"
@@ -53,6 +54,7 @@ type Server struct {
 	masterv2Mutex   *sync.Mutex
 	masterv2        map[string]*pb.RegistryEntry
 	elector         elector
+	version         map[string]int32
 }
 
 type httpGetter interface {
@@ -100,6 +102,7 @@ func InitServer() *Server {
 	s.portMemoryMutex = &sync.Mutex{}
 	s.masterv2 = make(map[string]*pb.RegistryEntry)
 	s.masterv2Mutex = &sync.Mutex{}
+	s.version = make(map[string]int32)
 	return s
 }
 
@@ -266,7 +269,9 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
-	return []*pbg.State{}
+	return []*pbg.State{
+		&pbg.State{Key: "version", Text: fmt.Sprintf("%v", s.version)},
+	}
 }
 
 // ReportHealth alerts if we're not healthy
