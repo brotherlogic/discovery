@@ -39,6 +39,29 @@ func TestPlainRegisterRun(t *testing.T) {
 	}
 }
 
+func TestRedirectV2(t *testing.T) {
+	s := InitTestServer()
+
+	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+
+	if err != nil {
+		t.Errorf("Unable to register %v", err)
+	}
+
+	if resp.Service.Port == 0 {
+		t.Errorf("Port number not assigned")
+	}
+
+	respg, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+	if err != nil {
+		t.Errorf("Unable to get %v", err)
+	}
+
+	if respg.Service.Name != "test_job" {
+		t.Errorf("Service not returned")
+	}
+}
+
 func TestPlainRegisterRunWithBadGet(t *testing.T) {
 	s := InitTestServer()
 
