@@ -81,6 +81,12 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 
 // Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.DiscoverResponse, error) {
+	if val, ok := s.version.Load(req.GetRequest().GetName()); ok {
+		if val.(int32) == 1 {
+			resp, err := s.Get(ctx, &pb.GetRequest{Job: req.GetRequest().GetName(), Server: req.GetRequest().GetIdentifier()})
+			return &pb.DiscoverResponse{Service: resp.GetServices()[0]}, err
+		}
+	}
 	s.countDiscover++
 	in := req.GetRequest()
 

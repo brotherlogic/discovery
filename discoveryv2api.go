@@ -14,6 +14,8 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 	curr, _ := s.getJob(req.GetService())
 
+	s.version.Store(req.GetService().GetName(), int32(1))
+
 	// Fail a re-register
 	if curr != nil {
 		return nil, fmt.Errorf("Already registered")
@@ -57,6 +59,13 @@ func (s *Server) getMaster(ctx context.Context, job string) (*pb.GetResponse, er
 
 // Get an entry from the registry
 func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
+	if val, ok := s.version.Load(req.GetJob()); ok {
+		if val.(int32) == 0 {
+			resp, err := s.Discover(ctx, &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: req.GetJob(), Identifier: req.GetServer()}})
+			return &pb.GetResponse{Services: []*pb.RegistryEntry{resp.GetService()}}, err
+		}
+	}
+
 	if len(req.Server) == 0 && len(req.Job) != 0 {
 		return s.getMaster(ctx, req.Job)
 	}
