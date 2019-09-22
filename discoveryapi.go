@@ -7,6 +7,7 @@ import (
 	"time"
 
 	pb "github.com/brotherlogic/discovery/proto"
+	"google.golang.org/grpc/peer"
 )
 
 // ListAllServices returns a list of all the services
@@ -81,6 +82,18 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 
 // Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.DiscoverResponse, error) {
+
+	//Reject requests without caller
+	if req.Caller == "" {
+		peer, ok := peer.FromContext(ctx)
+		if ok {
+			fmt.Printf("No Caller: %+v", peer)
+		} else {
+			fmt.Printf("No Caller: %+v", ctx)
+		}
+		return nil, fmt.Errorf("Must specify caller")
+	}
+
 	if val, ok := s.version.Load(req.GetRequest().GetName()); ok {
 		if val.(int32) == 1 {
 			resp, err := s.Get(ctx, &pb.GetRequest{Job: req.GetRequest().GetName(), Server: req.GetRequest().GetIdentifier()})
