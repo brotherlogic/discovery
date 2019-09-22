@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	port = "192.168.86.220:50055"
+	port = "192.168.86.45:50055"
 )
 
 func repEntry(entry *pbdi.RegistryEntry) string {

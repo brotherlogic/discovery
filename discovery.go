@@ -39,8 +39,10 @@ type Server struct {
 	lastGet         time.Time
 	masterMap       map[string]*pb.RegistryEntry
 	mm              *sync.RWMutex
-	countM          *sync.Mutex
-	counts          map[string]int
+	callerCountM    *sync.Mutex
+	callerCount     map[string]int
+	reqCountM       *sync.Mutex
+	reqCount        map[string]int
 	longest         int64
 	countRegister   int64
 	countDiscover   int64
@@ -92,8 +94,10 @@ func InitServer() *Server {
 	s.entries = make([]*pb.RegistryEntry, 0)
 	s.mm = &sync.RWMutex{}
 	s.masterMap = make(map[string]*pb.RegistryEntry)
-	s.counts = make(map[string]int)
-	s.countM = &sync.Mutex{}
+	s.callerCount = make(map[string]int)
+	s.callerCountM = &sync.Mutex{}
+	s.reqCount = make(map[string]int)
+	s.reqCountM = &sync.Mutex{}
 	s.longest = -1
 	s.taken = make([]bool, 65536-50052)
 	s.extTaken = make([]bool, 2)
@@ -268,7 +272,32 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
+	topC := 0
+	topCaller := ""
+	topR := 0
+	topRequest := ""
+
+	s.callerCountM.Lock()
+	s.reqCountM.Lock()
+	defer s.callerCountM.Unlock()
+	defer s.reqCountM.Unlock()
+	for key, value := range s.callerCount {
+		if value > topC {
+			topC = value
+			topCaller = key
+		}
+	}
+
+	for key, value := range s.reqCount {
+		if value > topR {
+			topR = value
+			topRequest = key
+		}
+	}
+
 	return []*pbg.State{
+		&pbg.State{Key: "top_caller", Text: topCaller},
+		&pbg.State{Key: "top_requests", Text: topRequest},
 		&pbg.State{Key: "version", Text: fmt.Sprintf("%v", s.version)},
 	}
 }
