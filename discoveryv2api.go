@@ -61,7 +61,7 @@ func (s *Server) getMaster(ctx context.Context, job string) (*pb.GetResponse, er
 func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
 	if val, ok := s.version.Load(req.GetJob()); ok {
 		if val.(int32) == 0 {
-			resp, err := s.Discover(ctx, &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: req.GetJob(), Identifier: req.GetServer()}})
+			resp, err := s.Discover(ctx, &pb.DiscoverRequest{Caller: "v2", Request: &pb.RegistryEntry{Name: req.GetJob(), Identifier: req.GetServer()}})
 			return &pb.GetResponse{Services: []*pb.RegistryEntry{resp.GetService()}}, err
 		}
 	}

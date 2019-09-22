@@ -57,7 +57,7 @@ func TestServerDiscoverWeakMaster(t *testing.T) {
 		t.Fatalf("Error registering service: %v", err)
 	}
 
-	_, err = s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Job1", TimeToClean: 100}})
+	_, err = s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "Job1", TimeToClean: 100}})
 	if err == nil {
 		t.Errorf("Master discover has succeeded: %v", err)
 	}
@@ -73,12 +73,12 @@ func TestServerDiscover(t *testing.T) {
 		t.Fatalf("Error registering service: %v", err)
 	}
 
-	val, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Job1", TimeToClean: 100}})
+	val, err := s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "Job1", TimeToClean: 100}})
 	if err == nil {
 		t.Errorf("Master discover has succeeded: %v", err)
 	}
 
-	val, err = s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Job1", Identifier: "Server1", TimeToClean: 100}})
+	val, err = s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "Job1", Identifier: "Server1", TimeToClean: 100}})
 	if err != nil {
 		t.Fatalf("Server discover has failed: %v", err)
 	}
@@ -87,7 +87,7 @@ func TestServerDiscover(t *testing.T) {
 		t.Errorf("Response has come back wrong: %v", val)
 	}
 
-	val, err = s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Job2", Identifier: "Server2", TimeToClean: 100}})
+	val, err = s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "Job2", Identifier: "Server2", TimeToClean: 100}})
 	if err == nil {
 		t.Fatalf("Server discover has passed: %v", val)
 	}
@@ -126,7 +126,7 @@ func TestStartAsSlave(t *testing.T) {
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry1})
 
 	// Shouldn't be able to find
-	entry, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Job1"}})
+	entry, err := s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "Job1"}})
 	if err == nil {
 		t.Fatalf("Haven't failed to discover: %v", entry)
 	}
@@ -134,7 +134,7 @@ func TestStartAsSlave(t *testing.T) {
 	entry1.Master = true
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry1})
 
-	entry, err = s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Job1"}})
+	entry, err = s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "Job1"}})
 	if err != nil {
 		t.Fatalf("Failed to discover: %v", err)
 	}
@@ -322,7 +322,7 @@ func TestSearchWithIdentifier(t *testing.T) {
 	}
 
 	entry := &pb.RegistryEntry{Name: "Testing", Identifier: "servertwo"}
-	r, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: entry})
+	r, err := s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: entry})
 	if err != nil {
 		t.Errorf("Cannot discover %v", err)
 	}
@@ -335,7 +335,7 @@ func TestFailedDiscover(t *testing.T) {
 	s := InitTestServer()
 
 	entry := &pb.RegistryEntry{Name: "Testing"}
-	_, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: entry})
+	_, err := s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: entry})
 	if err == nil {
 		t.Errorf("Disoovering non existing service did not fail: %v", err)
 	}
@@ -356,7 +356,7 @@ func TestBecomeMaster(t *testing.T) {
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry1})
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry2})
 
-	v, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Testing"}})
+	v, err := s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "Testing"}})
 	if err == nil {
 		t.Fatalf("Successful discover with non master: %v", v)
 	}
@@ -369,7 +369,7 @@ func TestBecomeMaster(t *testing.T) {
 
 	log.Printf("RESPONSE = %v", resp)
 
-	v, err = s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Testing"}})
+	v, err = s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "Testing"}})
 	if err != nil || v.GetService().GetIp() != "10.0.4.5" {
 		t.Fatalf("Master is incorrect: %v (%v)", v, err)
 	}
@@ -384,7 +384,7 @@ func TestBecomeMaster(t *testing.T) {
 		t.Fatalf("Master time not reset: %v", entry1Back)
 	}
 
-	v, err = s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Testing"}})
+	v, err = s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "Testing"}})
 	if err == nil {
 		t.Fatalf("Master is being returned: %v", v)
 	}
@@ -410,7 +410,7 @@ func TestFailHeartbeat(t *testing.T) {
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry1})
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry2})
 
-	v, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Testing"}})
+	v, err := s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "Testing"}})
 	if err == nil {
 		t.Fatalf("Successful discover with non master: %v", v)
 	}
@@ -421,7 +421,7 @@ func TestFailHeartbeat(t *testing.T) {
 		t.Fatalf("Unable to re-register as master: %v", err)
 	}
 
-	v, err = s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Testing"}})
+	v, err = s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "Testing"}})
 	if err != nil || v.GetService().GetIp() != "10.0.4.5" {
 		t.Fatalf("Master is incorrect: %v", v)
 	}
@@ -463,7 +463,7 @@ func TestFailHeartbeatExternal(t *testing.T) {
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry1})
 	s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry2})
 
-	v, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Testing"}})
+	v, err := s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "Testing"}})
 	if err == nil {
 		t.Fatalf("Successful discover with non master: %v", v)
 	}
@@ -474,7 +474,7 @@ func TestFailHeartbeatExternal(t *testing.T) {
 		t.Fatalf("Unable to re-register as master: %v", err)
 	}
 
-	v, err = s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "Testing"}})
+	v, err = s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "Testing"}})
 	if err != nil || v.GetService().GetIdentifier() != "ShouldBeMaster" {
 		t.Fatalf("Master is incorrect: %v", v)
 	}
@@ -547,7 +547,7 @@ func TestDoubleMasterRegister(t *testing.T) {
 
 	firstMasterTime := resp.GetService().MasterTime
 
-	val, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "blah"}})
+	val, err := s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "blah"}})
 	if err != nil || val.GetService().Identifier != "alsoblah" {
 		t.Fatalf("Bad master discover: %v, %v", val, err)
 	}
@@ -560,7 +560,7 @@ func TestDoubleMasterRegister(t *testing.T) {
 		t.Fatalf("Error in re-registering as master: %v", err)
 	}
 
-	val, err = s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "blah"}})
+	val, err = s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "blah"}})
 	if err != nil || val.GetService().Identifier != "alsoblah" || !val.GetService().Master {
 		t.Fatalf("Bad master discover: %v, %v", val, err)
 	}
@@ -584,7 +584,7 @@ func TestDoubleMasterRegisterNoClean(t *testing.T) {
 
 	firstMasterTime := resp.GetService().MasterTime
 
-	val, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "blah"}})
+	val, err := s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "blah"}})
 	if err != nil || val.GetService().Identifier != "alsoblah" {
 		t.Fatalf("Bad master discover: %v, %v", val, err)
 	}
@@ -595,11 +595,10 @@ func TestDoubleMasterRegisterNoClean(t *testing.T) {
 		t.Fatalf("Error in re-registering as master: %v", err)
 	}
 
-	val, err = s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "blah"}})
+	val, err = s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "blah"}})
 	if err != nil || val.GetService().Identifier != "alsoblah" || !val.GetService().Master {
 		t.Fatalf("Bad master discover: %v, %v", val, err)
 	}
-
 	if val.GetService().MasterTime != firstMasterTime {
 		t.Errorf("Master time has been reset %v vs %v", val.GetService().MasterTime, firstMasterTime)
 	}
@@ -620,7 +619,7 @@ func TestCompetingMasterRegister(t *testing.T) {
 		t.Errorf("Able to register as master: %v", r)
 	}
 
-	resp, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "blah"}})
+	resp, err := s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "blah"}})
 
 	if resp.GetService().Identifier != "alsoblah" {
 		t.Errorf("WRong master has been returned")
@@ -667,7 +666,7 @@ func TestKeepMasterPromote(t *testing.T) {
 		t.Fatalf("Service has been dmarked master: %v", r2.GetService())
 	}
 
-	r3, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "blah"}})
+	r3, err := s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "blah"}})
 	if err != nil {
 		t.Fatalf("Error in discover: %v", err)
 	}

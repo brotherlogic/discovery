@@ -52,7 +52,7 @@ func TestRedirectV2(t *testing.T) {
 		t.Errorf("Port number not assigned")
 	}
 
-	respg, err := s.Discover(context.Background(), &pb.DiscoverRequest{Request: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+	respg, err := s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
 	if err != nil {
 		t.Errorf("Unable to get %v", err)
 	}
