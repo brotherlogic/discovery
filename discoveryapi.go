@@ -90,6 +90,13 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 	s.countDiscover++
 	in := req.GetRequest()
 
+	s.callerCountM.Lock()
+	s.reqCountM.Lock()
+	s.callerCount[req.Caller]++
+	s.reqCount[in.GetName()]++
+	s.reqCountM.Unlock()
+	s.callerCountM.Unlock()
+
 	// Check if we've been asked for something specific
 	if in.GetIdentifier() != "" && in.GetName() != "" {
 		in.Port = s.hashPortNumber(in.GetIdentifier(), in.GetName(), SEP)
