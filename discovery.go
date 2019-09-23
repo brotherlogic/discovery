@@ -128,6 +128,7 @@ func (s *Server) cleanEntries(t time.Time) {
 // DoRegister does RPC registration
 func (s *Server) DoRegister(server *grpc.Server) {
 	pb.RegisterDiscoveryServiceServer(server, s)
+	pb.RegisterDiscoveryServiceV2Server(server, s)
 }
 
 func (s *Server) clean(ctx context.Context) error {
