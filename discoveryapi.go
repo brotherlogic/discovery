@@ -85,12 +85,8 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 
 	//Reject requests without caller
 	if req.Caller == "" {
-		peer, ok := peer.FromContext(ctx)
-		if ok {
-			fmt.Printf("No Caller: %+v", peer)
-		} else {
-			fmt.Printf("No Caller: %+v", ctx)
-		}
+		peer, _ := peer.FromContext(ctx)
+		s.peerFail = fmt.Sprintf("%+v", peer)
 		return nil, fmt.Errorf("Must specify caller")
 	}
 
