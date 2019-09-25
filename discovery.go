@@ -57,6 +57,7 @@ type Server struct {
 	masterv2        map[string]*pb.RegistryEntry
 	elector         elector
 	version         sync.Map
+	peerFail        string
 }
 
 type httpGetter interface {
@@ -297,6 +298,7 @@ func (s *Server) GetState() []*pbg.State {
 	}
 
 	return []*pbg.State{
+		&pbg.State{Key: "peer_fail", Text: s.peerFail},
 		&pbg.State{Key: "top_caller", Text: topCaller},
 		&pbg.State{Key: "top_requests", Text: fmt.Sprintf("%v (%v)", topRequest, topR)},
 		&pbg.State{Key: "version", Text: fmt.Sprintf("%v", s.version)},
