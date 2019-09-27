@@ -298,8 +298,8 @@ func (s *Server) GetState() []*pbg.State {
 	}
 
 	return []*pbg.State{
-		&pbg.State{Key: "peer_fail", Text: s.peerFail},
 		&pbg.State{Key: "top_caller", Text: topCaller},
+		&pbg.State{Key: "peer_fail", Text: s.peerFail},
 		&pbg.State{Key: "top_requests", Text: fmt.Sprintf("%v (%v)", topRequest, topR)},
 		&pbg.State{Key: "version", Text: fmt.Sprintf("%v", s.version)},
 	}
