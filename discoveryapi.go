@@ -26,6 +26,9 @@ func (s *Server) ListAllServices(ctx context.Context, in *pb.ListRequest) (*pb.L
 func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	s.countRegister++
 
+	pr, _ := peer.FromContext(ctx)
+	s.registerPeer = fmt.Sprintf("%+v", pr)
+
 	//Reject the request with no time to clean
 	if req.GetService().GetTimeToClean() == 0 {
 		return &pb.RegisterResponse{}, fmt.Errorf("You must specify a clean time")
@@ -83,10 +86,13 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 // Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.DiscoverResponse, error) {
 
+	pr, _ := peer.FromContext(ctx)
+	s.discoverPeer = fmt.Sprintf("%+v", pr)
+
 	//Reject requests without caller
 	if req.Caller == "" {
-		peer, _ := peer.FromContext(ctx)
-		s.peerFail = fmt.Sprintf("%+v", peer)
+		pr, _ := peer.FromContext(ctx)
+		s.peerFail = fmt.Sprintf("%+v", pr)
 		return nil, fmt.Errorf("Must specify caller")
 	}
 
