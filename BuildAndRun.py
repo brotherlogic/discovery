@@ -1,6 +1,8 @@
 import os
 import subprocess
 
+which mail
+
 name = "discovery"
 
 current_hash = ""
