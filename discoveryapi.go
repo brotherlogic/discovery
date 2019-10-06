@@ -2,12 +2,13 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
 	pb "github.com/brotherlogic/discovery/proto"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
+	"google.golang.org/grpc/status"
 )
 
 // ListAllServices returns a list of all the services
@@ -129,7 +130,7 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 		return &pb.DiscoverResponse{Service: val}, nil
 	}
 
-	return &pb.DiscoverResponse{}, errors.New("Cannot find master for " + in.GetName() + " on server " + in.GetIdentifier())
+	return &pb.DiscoverResponse{}, status.Error(codes.Unavailable, fmt.Sprintf("Cannot find master for "+in.GetName()+" on server "+in.GetIdentifier()))
 }
 
 //State gets the state of the server
