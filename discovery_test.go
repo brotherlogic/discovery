@@ -236,13 +236,9 @@ func TestRegisterMACAddressRefresh(t *testing.T) {
 	}
 
 	entry3 := &pb.RegistryEntry{Ip: "10.0.1.17", Name: "Testing", Identifier: "MagicJohnson", TimeToClean: 100}
-	r3, err := s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry3})
+	_, err = s.RegisterService(context.Background(), &pb.RegisterRequest{Service: entry3})
 	if err != nil {
 		t.Errorf("Error registering service: %v", err)
-	}
-
-	if r3.GetService().Port == r2.GetService().Port {
-		t.Errorf("Different identified but same port: %v vs %v", r3, r2)
 	}
 
 }
@@ -790,22 +786,11 @@ func findClash(sep string) bool {
 		"versionserver",
 		"wantslist",
 	}
-	idents := []string{
-		"natframe",
-		"tasklist",
-		"framethree",
-		"stationone",
-		"runner",
-		"printer",
-		"stack1", "stack2", "stack3", "stack4",
-	}
 
 	space := make(map[int32]int)
 
 	for _, service := range services {
-		for _, ident := range idents {
-			space[s.hashPortNumber(ident, service, sep)]++
-		}
+		space[s.hashPortNumber("server", service, sep)]++
 	}
 
 	for _, val := range space {
@@ -828,6 +813,7 @@ func TestFind(t *testing.T) {
 			}
 			if !findClash(str) {
 				log.Printf("FOUND %v", str)
+				break
 			}
 		}
 	}
