@@ -104,7 +104,7 @@ func InitServer() *Server {
 	s.longest = -1
 	s.taken = make([]bool, 65536-50052)
 	s.extTaken = make([]bool, 2)
-	s.portMap = make([]*pb.RegistryEntry, 65536-50052)
+	s.portMap = make([]*pb.RegistryEntry, 0)
 	s.portMemory = make(map[string]int32)
 	s.portMemoryMutex = &sync.Mutex{}
 	s.masterv2 = make(map[string]*pb.RegistryEntry)
@@ -113,19 +113,20 @@ func InitServer() *Server {
 }
 
 func (s *Server) cleanEntries(t time.Time) {
-	for i, entry := range s.portMap {
-		if entry != nil {
-			//Clean if we haven't seen this entry in the time to clean window
-			if t.UnixNano()-entry.GetLastSeenTime() > entry.GetTimeToClean()*1000000 {
-				if entry.GetMaster() {
-					s.mm.Lock()
-					delete(s.masterMap, entry.GetName())
-					s.mm.Unlock()
-				}
-				s.portMap[i] = nil
+	nPortMap := []*pb.RegistryEntry{}
+	for _, entry := range s.portMap {
+		//Clean if we haven't seen this entry in the time to clean window
+		if t.UnixNano()-entry.GetLastSeenTime() > entry.GetTimeToClean()*1000000 {
+			if entry.GetMaster() {
+				s.mm.Lock()
+				delete(s.masterMap, entry.GetName())
+				s.mm.Unlock()
 			}
+		} else {
+			nPortMap = append(nPortMap, entry)
 		}
 	}
+	s.portMap = nPortMap
 }
 
 // DoRegister does RPC registration
@@ -176,16 +177,16 @@ const (
 func (s *Server) hashPortNumber(identifier, job string, sep string) int32 {
 	s.portMemoryMutex.Lock()
 	defer s.portMemoryMutex.Unlock()
-	if val, ok := s.portMemory[identifier+SEP+job]; ok {
+	if val, ok := s.portMemory[job]; ok {
 		return val
 	}
 	//Gets a port number between 50056 and 65535
 	portRange := int32(65535 - 50056)
 	h := fnv.New32a()
-	h.Write([]byte(identifier + sep + job))
+	h.Write([]byte(job))
 
 	portNumber := 50056 + conv(h.Sum32())%portRange
-	s.portMemory[identifier+SEP+job] = portNumber
+	s.portMemory[job] = portNumber
 	return portNumber
 }
 
@@ -215,7 +216,12 @@ func (s *Server) Mote(ctx context.Context, master bool) error {
 }
 
 func (s *Server) getCurr(in *pb.RegistryEntry) *pb.RegistryEntry {
-	return s.portMap[in.Port-50052]
+	for _, val := range s.portMap {
+		if val.Identifier == in.Identifier && val.Name == in.Name {
+			return val
+		}
+	}
+	return nil
 }
 
 func (s *Server) getCMaster(in *pb.RegistryEntry) *pb.RegistryEntry {
@@ -248,7 +254,7 @@ func (s *Server) removeMaster(in *pb.RegistryEntry) {
 }
 
 func (s *Server) addToPortMap(in *pb.RegistryEntry) {
-	s.portMap[in.Port-50052] = in
+	s.portMap = append(s.portMap, in)
 }
 
 func (s *Server) setupPort(in *pb.RegistryEntry) {
