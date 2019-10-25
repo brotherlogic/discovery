@@ -103,6 +103,12 @@ message GetResponse {
   repeated RegistryEntry services = 1;
 }
 
+message UnregisterRequest{
+  RegistryEntry service = 1;
+}
+
+message UnregisterResponse {}
+
 service DiscoveryServiceV2 {
   rpc RegisterV2(RegisterRequest) returns (RegisterResponse) {}
   rpc Get(GetRequest) returns (GetResponse) {}

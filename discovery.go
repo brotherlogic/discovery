@@ -257,6 +257,18 @@ func (s *Server) addToPortMap(in *pb.RegistryEntry) {
 	s.portMap = append(s.portMap, in)
 }
 
+func (s *Server) removeFromPortMap(in *pb.RegistryEntry) {
+	newPortMap := make([]*pb.RegistryEntry, 0)
+
+	for _, entry := range s.portMap {
+		if entry.Identifier != in.Identifier || (len(in.Name) > 0 && in.Name != entry.Name) {
+			newPortMap = append(newPortMap, entry)
+		}
+	}
+
+	s.portMap = newPortMap
+}
+
 func (s *Server) setupPort(in *pb.RegistryEntry) {
 	if in.Port == 0 {
 		in.RegisterTime = time.Now().UnixNano()

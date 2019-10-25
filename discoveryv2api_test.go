@@ -179,3 +179,104 @@ func TestFailMasterElect(t *testing.T) {
 	}
 
 }
+
+func TestPlainUnregisterRun(t *testing.T) {
+	s := InitTestServer()
+
+	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+
+	if err != nil {
+		t.Errorf("Unable to register %v", err)
+	}
+
+	if resp.Service.Port == 0 {
+		t.Errorf("Port number not assigned")
+	}
+
+	respg, err := s.Get(context.Background(), &pb.GetRequest{Job: "test_job", Server: "test_server"})
+	if err != nil {
+		t.Errorf("Unable to get %v", err)
+	}
+
+	if len(respg.Services) != 1 {
+		t.Errorf("Service not returned")
+	}
+
+	_, err = s.Unregister(context.Background(), &pb.UnregisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+	if err != nil {
+		t.Fatalf("Error unregistering")
+	}
+
+	respg, err = s.Get(context.Background(), &pb.GetRequest{Job: "test_job", Server: "test_server"})
+	if err == nil {
+		t.Fatalf("Get succeeded: %v", respg)
+	}
+
+}
+
+func TestPlainUnregisterRunWithOnlyIdentifier(t *testing.T) {
+	s := InitTestServer()
+
+	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+
+	if err != nil {
+		t.Errorf("Unable to register %v", err)
+	}
+
+	if resp.Service.Port == 0 {
+		t.Errorf("Port number not assigned")
+	}
+
+	respg, err := s.Get(context.Background(), &pb.GetRequest{Job: "test_job", Server: "test_server"})
+	if err != nil {
+		t.Errorf("Unable to get %v", err)
+	}
+
+	if len(respg.Services) != 1 {
+		t.Errorf("Service not returned")
+	}
+
+	_, err = s.Unregister(context.Background(), &pb.UnregisterRequest{Service: &pb.RegistryEntry{Identifier: "test_server"}})
+	if err != nil {
+		t.Fatalf("Error unregistering")
+	}
+
+	respg, err = s.Get(context.Background(), &pb.GetRequest{Job: "test_job", Server: "test_server"})
+	if err == nil {
+		t.Errorf("Get succeeded: %v", respg)
+	}
+
+}
+
+func TestPlainUnregisterRunWithBadCall(t *testing.T) {
+	s := InitTestServer()
+
+	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+
+	if err != nil {
+		t.Errorf("Unable to register %v", err)
+	}
+
+	if resp.Service.Port == 0 {
+		t.Errorf("Port number not assigned")
+	}
+
+	respg, err := s.Get(context.Background(), &pb.GetRequest{Job: "test_job", Server: "test_server"})
+	if err != nil {
+		t.Errorf("Unable to get %v", err)
+	}
+
+	if len(respg.Services) != 1 {
+		t.Errorf("Service not returned")
+	}
+
+	_, err = s.Unregister(context.Background(), &pb.UnregisterRequest{Service: &pb.RegistryEntry{Name: "test_job2", Identifier: "test_server"}})
+	if err != nil {
+		t.Fatalf("Error unregistering")
+	}
+
+	_, err = s.Get(context.Background(), &pb.GetRequest{Job: "test_job", Server: "test_server"})
+	if err != nil {
+		t.Fatalf("Should have succeeded: %v", err)
+	}
+}

@@ -90,3 +90,9 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 	}
 	return resp, nil
 }
+
+//Unregister a service from the listing
+func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb.UnregisterResponse, error) {
+	s.removeFromPortMap(req.GetService())
+	return &pb.UnregisterResponse{}, nil
+}
