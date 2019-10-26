@@ -112,4 +112,5 @@ message UnregisterResponse {}
 service DiscoveryServiceV2 {
   rpc RegisterV2(RegisterRequest) returns (RegisterResponse) {}
   rpc Get(GetRequest) returns (GetResponse) {}
+  rpc Unregister(UnregisterRequest) returns (UnregisterResponse) {}
 }
