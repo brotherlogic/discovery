@@ -317,7 +317,10 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 
+	s.mm.RLock()
+	defer s.mm.RUnlock()
 	return []*pbg.State{
+		&pbg.State{Key: "master_map", Text: fmt.Sprintf("%v", s.masterMap)},
 		&pbg.State{Key: "discover_peer", Text: s.discoverPeer},
 		&pbg.State{Key: "register_peer", Text: s.registerPeer},
 		&pbg.State{Key: "top_caller", Text: topCaller},

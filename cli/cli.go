@@ -12,12 +12,9 @@ import (
 	"google.golang.org/grpc"
 
 	pbdi "github.com/brotherlogic/discovery/proto"
+	"github.com/brotherlogic/goserver/utils"
 
 	_ "google.golang.org/grpc/encoding/gzip"
-)
-
-const (
-	port = "192.168.86.45:50055"
 )
 
 func repEntry(entry *pbdi.RegistryEntry) string {
@@ -40,7 +37,7 @@ func main() {
 	} else {
 		switch os.Args[1] {
 		case "state":
-			conn, _ := grpc.Dial(port, grpc.WithInsecure())
+			conn, _ := grpc.Dial(utils.Discover, grpc.WithInsecure())
 			defer conn.Close()
 
 			registry := pbdi.NewDiscoveryServiceClient(conn)
@@ -52,7 +49,7 @@ func main() {
 			}
 			fmt.Printf("STATE: %v\n", state)
 		case "statechange":
-			conn, _ := grpc.Dial(port, grpc.WithInsecure())
+			conn, _ := grpc.Dial(utils.Discover, grpc.WithInsecure())
 			defer conn.Close()
 
 			registry := pbdi.NewDiscoveryServiceClient(conn)
@@ -73,7 +70,7 @@ func main() {
 			fmt.Printf("STATE: %v\n", state2)
 		case "blist":
 			if err := buildFlags.Parse(os.Args[2:]); err == nil {
-				conn, _ := grpc.Dial(port, grpc.WithInsecure())
+				conn, _ := grpc.Dial(utils.Discover, grpc.WithInsecure())
 				defer conn.Close()
 
 				registry := pbdi.NewDiscoveryServiceClient(conn)
@@ -89,7 +86,7 @@ func main() {
 			}
 		case "list":
 			if err := buildFlags.Parse(os.Args[2:]); err == nil {
-				conn, _ := grpc.Dial(port, grpc.WithInsecure())
+				conn, _ := grpc.Dial(utils.Discover, grpc.WithInsecure())
 				defer conn.Close()
 
 				registry := pbdi.NewDiscoveryServiceClient(conn)
