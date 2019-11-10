@@ -143,24 +143,6 @@ func TestGetMaster(t *testing.T) {
 	}
 }
 
-func TestPassMasterElect(t *testing.T) {
-	s := InitTestServer()
-	te := &testElector{}
-	s.elector = te
-
-	_, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
-	if err != nil {
-		t.Errorf("Error registering serveR: %v", err)
-	}
-
-	// Force a master elect
-	s.Get(context.Background(), &pb.GetRequest{Job: "test_job"})
-
-	if te.lastElect != "test_job" {
-		t.Errorf("No Election took place")
-	}
-}
-
 func TestFailMasterElect(t *testing.T) {
 	s := InitTestServer()
 	te := &testElector{}
