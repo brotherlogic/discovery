@@ -29,16 +29,16 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 	return &pb.RegisterResponse{Service: req.GetService()}, nil
 }
 
-func (s *Server) getMaster(ctx context.Context, job string) (*pb.GetResponse, error) {
-	s.masterv2Mutex.Lock()
-	defer s.masterv2Mutex.Unlock()
-
-	if val, ok := s.masterv2[job]; ok {
-		return &pb.GetResponse{Services: []*pb.RegistryEntry{val}}, nil
-	}
-
-	return nil, fmt.Errorf("No master found")
-}
+//func (s *Server) getMaster(ctx context.Context, job string) *pb.RegistryEntry {
+//	s.masterv2Mutex.Lock()
+//	defer s.masterv2Mutex.Unlock()
+//
+//	if val, ok := s.masterv2[job]; ok {
+//		return val
+//	}
+//
+//	return nil
+//}
 
 // Get an entry from the registry
 func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
@@ -47,10 +47,6 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 			resp, err := s.Discover(ctx, &pb.DiscoverRequest{Caller: "v2", Request: &pb.RegistryEntry{Name: req.GetJob(), Identifier: req.GetServer()}})
 			return &pb.GetResponse{Services: []*pb.RegistryEntry{resp.GetService()}}, err
 		}
-	}
-
-	if len(req.Server) == 0 && len(req.Job) != 0 {
-		return s.getMaster(ctx, req.Job)
 	}
 
 	if len(req.Job) != 0 {
@@ -66,6 +62,7 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 	}
 
 	resp := &pb.GetResponse{Services: []*pb.RegistryEntry{}}
+
 	for _, job := range s.portMap {
 		if job != nil {
 			resp.Services = append(resp.Services, job)

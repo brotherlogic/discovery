@@ -121,28 +121,6 @@ func TestGetAllV2(t *testing.T) {
 	}
 }
 
-func TestGetMaster(t *testing.T) {
-	s := InitTestServer()
-
-	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
-
-	if err != nil {
-		t.Errorf("Unable to register %v", err)
-	}
-
-	// Push this into the master map
-	s.masterv2["test_job"] = resp.Service
-
-	respg, err := s.Get(context.Background(), &pb.GetRequest{Job: "test_job"})
-	if err != nil {
-		t.Errorf("Unable to get %v", err)
-	}
-
-	if len(respg.Services) != 1 {
-		t.Errorf("Service has been returned")
-	}
-}
-
 func TestFailMasterElect(t *testing.T) {
 	s := InitTestServer()
 	te := &testElector{}
