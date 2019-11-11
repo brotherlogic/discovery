@@ -18,6 +18,19 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 	// Fail a re-register
 	if curr != nil {
+
+		// Perform master election if needed
+		if req.GetService().GetMaster() {
+			m, t := s.getCMaster(req.GetService())
+			if m != nil && time.Now().Sub(t) < time.Minute {
+				return nil, fmt.Errorf("Cannot become master until %v", t.Add(time.Minute))
+			}
+
+			curr.Master = true
+			s.addMaster(curr)
+			return &pb.RegisterResponse{Service: curr}, nil
+		}
+
 		return nil, fmt.Errorf("Already registered")
 	}
 
@@ -28,17 +41,6 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 	req.GetService().LastSeenTime = time.Now().UnixNano()
 	return &pb.RegisterResponse{Service: req.GetService()}, nil
 }
-
-//func (s *Server) getMaster(ctx context.Context, job string) *pb.RegistryEntry {
-//	s.masterv2Mutex.Lock()
-//	defer s.masterv2Mutex.Unlock()
-//
-//	if val, ok := s.masterv2[job]; ok {
-//		return val
-//	}
-//
-//	return nil
-//}
 
 // Get an entry from the registry
 func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
@@ -75,7 +77,7 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb.UnregisterResponse, error) {
 	s.removeFromPortMap(req.GetService())
 
-	master := s.getCMaster(req.GetService())
+	master, _ := s.getCMaster(req.GetService())
 	if master.GetIdentifier() == req.GetService().GetIdentifier() {
 		s.removeMaster(req.GetService())
 	}
