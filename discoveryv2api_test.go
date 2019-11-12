@@ -39,6 +39,53 @@ func TestPlainRegisterRun(t *testing.T) {
 	}
 }
 
+func TestMasterElect(t *testing.T) {
+	s := InitTestServer()
+
+	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+
+	if err != nil {
+		t.Errorf("Unable to register %v", err)
+	}
+
+	if resp.Service.Port == 0 {
+		t.Errorf("Port number not assigned")
+	}
+
+	respg, err := s.Get(context.Background(), &pb.GetRequest{Job: "test_job", Server: "test_server"})
+	if err != nil {
+		t.Errorf("Unable to get %v", err)
+	}
+
+	if len(respg.Services) != 1 {
+		t.Errorf("Service not returned")
+	}
+
+	resp, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Master: true}})
+	if err != nil {
+		t.Errorf("Unable to register")
+	}
+
+	respg, err = s.Get(context.Background(), &pb.GetRequest{Job: "test_job", Server: "test_server"})
+	if err != nil {
+		t.Errorf("Unable to get %v", err)
+	}
+
+	if len(respg.Services) != 1 || !respg.Services[0].Master {
+		t.Errorf("Service not returned or master is wrong: %v", respg.Services)
+	}
+
+	resp, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server2"}})
+	if err != nil {
+		t.Errorf("Error on reg")
+	}
+
+	resp, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server2", Master: true}})
+	if err == nil {
+		t.Errorf("Quick master reg did not fail: %v", resp)
+	}
+}
+
 func TestRedirectV2(t *testing.T) {
 	s := InitTestServer()
 

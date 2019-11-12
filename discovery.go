@@ -38,6 +38,7 @@ type Server struct {
 	external        string
 	lastGet         time.Time
 	masterMap       map[string]*pb.RegistryEntry
+	masterTime      map[string]time.Time
 	mm              *sync.RWMutex
 	callerCountM    *sync.Mutex
 	callerCount     map[string]int
@@ -97,6 +98,7 @@ func InitServer() *Server {
 	s.entries = make([]*pb.RegistryEntry, 0)
 	s.mm = &sync.RWMutex{}
 	s.masterMap = make(map[string]*pb.RegistryEntry)
+	s.masterTime = make(map[string]time.Time)
 	s.callerCount = make(map[string]int)
 	s.callerCountM = &sync.Mutex{}
 	s.reqCount = make(map[string]int)
@@ -120,6 +122,7 @@ func (s *Server) cleanEntries(t time.Time) {
 			if entry.GetMaster() {
 				s.mm.Lock()
 				delete(s.masterMap, entry.GetName())
+				delete(s.masterTime, entry.GetName())
 				s.mm.Unlock()
 			}
 		} else {
@@ -224,17 +227,18 @@ func (s *Server) getCurr(in *pb.RegistryEntry) *pb.RegistryEntry {
 	return nil
 }
 
-func (s *Server) getCMaster(in *pb.RegistryEntry) *pb.RegistryEntry {
+func (s *Server) getCMaster(in *pb.RegistryEntry) (*pb.RegistryEntry, time.Time) {
 	s.mm.RLock()
 	defer s.mm.RUnlock()
-	return s.masterMap[in.GetName()]
+	return s.masterMap[in.GetName()], s.masterTime[in.GetName()]
 }
 
 func (s *Server) getJob(in *pb.RegistryEntry) (*pb.RegistryEntry, *pb.RegistryEntry) {
 	// Setup the port info
 	s.setupPort(in)
 
-	return s.getCurr(in), s.getCMaster(in)
+	m, _ := s.getCMaster(in)
+	return s.getCurr(in), m
 }
 
 func (s *Server) addMaster(in *pb.RegistryEntry) {
@@ -242,6 +246,7 @@ func (s *Server) addMaster(in *pb.RegistryEntry) {
 	in.MasterTime = time.Now().UnixNano()
 	s.mm.Lock()
 	s.masterMap[in.GetName()] = in
+	s.masterTime[in.GetName()] = time.Now()
 	s.mm.Unlock()
 }
 
@@ -249,6 +254,7 @@ func (s *Server) removeMaster(in *pb.RegistryEntry) {
 	// Remove if we're re-registering without master
 	s.mm.Lock()
 	delete(s.masterMap, in.GetName())
+	delete(s.masterTime, in.GetName())
 	s.mm.Unlock()
 
 }
