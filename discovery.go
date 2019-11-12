@@ -118,7 +118,8 @@ func (s *Server) cleanEntries(t time.Time) {
 	nPortMap := []*pb.RegistryEntry{}
 	for _, entry := range s.portMap {
 		//Clean if we haven't seen this entry in the time to clean window
-		if t.UnixNano()-entry.GetLastSeenTime() > entry.GetTimeToClean()*1000000 {
+		// Don't clean V2 entries
+		if t.UnixNano()-entry.GetLastSeenTime() > entry.GetTimeToClean()*1000000 && entry.Version == pb.RegistryEntry_V1 {
 			if entry.GetMaster() {
 				s.mm.Lock()
 				delete(s.masterMap, entry.GetName())
