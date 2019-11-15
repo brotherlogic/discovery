@@ -64,6 +64,7 @@ message StateRequest {
 message RegisterRequest {
   RegistryEntry service = 1;
   string caller = 2;
+  bool master_elect = 3;
 }
 
 message RegisterResponse {

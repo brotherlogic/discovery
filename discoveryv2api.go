@@ -20,7 +20,7 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 	if curr != nil {
 
 		// Perform master election if needed
-		if req.GetService().GetMaster() {
+		if req.GetMasterElect() {
 			m, t := s.getCMaster(req.GetService())
 			if m != nil && time.Now().Sub(t) < time.Minute {
 				return nil, fmt.Errorf("Cannot become master until %v", t.Add(time.Minute))
