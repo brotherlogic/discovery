@@ -159,6 +159,7 @@ func main() {
 	server.Register = server
 
 	server.RegisterServer("discovery", false)
+	server.Registry.IgnoresMaster = true
 
 	server.RegisterRepeatingTaskNonMaster(server.clean, "clean", time.Second)
 
