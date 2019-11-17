@@ -16,6 +16,10 @@ func (p *testElector) elect(ctx context.Context, entry *pb.RegistryEntry) error 
 	return nil
 }
 
+func (p *testElector) unelect(ctx context.Context, entry *pb.RegistryEntry) error {
+	return nil
+}
+
 func TestPlainRegisterRun(t *testing.T) {
 	s := InitTestServer()
 

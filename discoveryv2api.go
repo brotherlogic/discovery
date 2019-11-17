@@ -26,6 +26,8 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 				return nil, fmt.Errorf("Cannot become master until %v", t.Add(time.Minute))
 			}
 
+			s.elector.unelect(ctx, m)
+
 			curr.Master = true
 			s.addMaster(curr)
 			return &pb.RegisterResponse{Service: curr}, nil

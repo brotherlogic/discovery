@@ -197,6 +197,7 @@ func (s *Server) hashPortNumber(identifier, job string, sep string) int32 {
 
 type elector interface {
 	elect(ctx context.Context, entry *pb.RegistryEntry) error
+	unelect(ctx context.Context, entry *pb.RegistryEntry) error
 }
 
 type prodElector struct {
@@ -211,6 +212,18 @@ func (p *prodElector) elect(ctx context.Context, entry *pb.RegistryEntry) error 
 
 	server := pbg.NewGoserverServiceClient(conn)
 	_, err = server.Mote(ctx, &pbg.MoteRequest{Master: true})
+
+	return err
+}
+func (p *prodElector) unelect(ctx context.Context, entry *pb.RegistryEntry) error {
+	conn, err := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	server := pbg.NewGoserverServiceClient(conn)
+	_, err = server.Mote(ctx, &pbg.MoteRequest{Master: false})
 
 	return err
 }
