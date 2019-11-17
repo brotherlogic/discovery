@@ -100,7 +100,10 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 	if val, ok := s.version.Load(req.GetRequest().GetName()); ok {
 		if val.(int32) == 1 {
 			resp, err := s.Get(ctx, &pb.GetRequest{Job: req.GetRequest().GetName(), Server: req.GetRequest().GetIdentifier()})
-			return &pb.DiscoverResponse{Service: resp.GetServices()[0]}, err
+			if len(resp.GetServices()) > 0 {
+				return &pb.DiscoverResponse{Service: resp.GetServices()[0]}, err
+			}
+			return &pb.DiscoverResponse{}, err
 		}
 	}
 	s.countDiscover++
