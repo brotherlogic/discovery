@@ -97,3 +97,14 @@ func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb
 
 	return &pb.UnregisterResponse{}, nil
 }
+
+//Lock in prep for master elect
+func (s *Server) Lock(ctx context.Context, req *pb.LockRequest) (*pb.LockResponse, error) {
+	if val, ok := s.locks[req.GetJob()]; ok {
+		if time.Now().Sub(time.Unix(0, val)) < time.Minute {
+			return nil, fmt.Errorf("Unable to acquire master lock")
+		}
+	}
+	s.locks[req.GetJob()] = req.GetLockKey()
+	return &pb.LockResponse{}, nil
+}

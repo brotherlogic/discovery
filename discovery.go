@@ -63,6 +63,7 @@ type Server struct {
 	discoverPeer    string
 	registerPeer    string
 	friendTime      time.Duration
+	locks           map[string]int64
 }
 
 type httpGetter interface {
@@ -114,6 +115,7 @@ func InitServer() *Server {
 	s.masterv2 = make(map[string]*pb.RegistryEntry)
 	s.masterv2Mutex = &sync.Mutex{}
 	s.friends = make([]string, 0)
+	s.locks = make(map[string]int64)
 	return s
 }
 
@@ -359,6 +361,7 @@ func (s *Server) GetState() []*pbg.State {
 	s.mm.RLock()
 	defer s.mm.RUnlock()
 	return []*pbg.State{
+		&pbg.State{Key: "locks", Text: fmt.Sprintf("%v", s.locks)},
 		&pbg.State{Key: "ftime", TimeDuration: s.friendTime.Nanoseconds()},
 		&pbg.State{Key: "friends", Text: fmt.Sprintf("%v", s.friends)},
 		&pbg.State{Key: "master_map", Text: fmt.Sprintf("%v", s.masterMap)},
