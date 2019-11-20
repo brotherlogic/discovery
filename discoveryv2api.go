@@ -26,6 +26,12 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 		// Perform master election if needed
 		if req.GetMasterElect() {
+			// Auto elect a fanout master register
+			if req.GetFanout() {
+				s.addMaster(curr)
+				return &pb.RegisterResponse{Service: curr}, nil
+			}
+
 			m, t := s.getCMaster(req.GetService())
 			if m != nil && time.Now().Sub(t) < time.Minute {
 				return nil, fmt.Errorf("Cannot become master until %v", t.Add(time.Minute))
@@ -33,8 +39,14 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 			s.elector.unelect(ctx, m)
 
+			err := s.acquireMasterLock(ctx, curr.GetName(), time.Now().UnixNano())
+			if err != nil {
+				return nil, fmt.Errorf("Unable to acquire lock to become master")
+			}
+
 			curr.Master = true
 			s.addMaster(curr)
+			s.fanoutRegister(ctx, req)
 			return &pb.RegisterResponse{Service: curr}, nil
 		}
 

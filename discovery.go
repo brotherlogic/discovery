@@ -64,6 +64,7 @@ type Server struct {
 	registerPeer    string
 	friendTime      time.Duration
 	locks           map[string]int64
+	failAcquire     bool
 }
 
 type httpGetter interface {
@@ -393,6 +394,24 @@ func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 			client.RegisterV2(ctx, req)
 		}
 	}
+}
+
+func (s *Server) acquireMasterLock(ctx context.Context, job string, lk int64) error {
+	if s.failAcquire {
+		return fmt.Errorf("Built to fail")
+	}
+	for _, f := range s.friends {
+		conn, err := grpc.Dial(f, grpc.WithInsecure())
+		if err == nil {
+			defer conn.Close()
+			client := pb.NewDiscoveryServiceV2Client(conn)
+			_, err = client.Lock(ctx, &pb.LockRequest{Job: job, LockKey: lk})
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func main() {
