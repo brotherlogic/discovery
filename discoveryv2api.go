@@ -12,6 +12,11 @@ import (
 func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	s.countV2Register++
 
+	// Fail register until we're ready to serve
+	if s.friendTime <= 0 {
+		return nil, fmt.Errorf("Discover is not yet ready to perform registration")
+	}
+
 	curr, _ := s.getJob(req.GetService())
 
 	s.version.Store(req.GetService().GetName(), int32(1))
