@@ -62,6 +62,7 @@ type Server struct {
 	peerFail        string
 	discoverPeer    string
 	registerPeer    string
+	friendTime      time.Duration
 }
 
 type httpGetter interface {
@@ -294,6 +295,9 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 }
 
 func (s *Server) findFriend(host int) {
+	if s.Registry.Ip == fmt.Sprintf("192.168.86.%v", host) {
+		return
+	}
 	conn, err := grpc.Dial(fmt.Sprintf("192.168.86.%v:50055", host), grpc.WithInsecure())
 	if err == nil {
 		defer conn.Close()
@@ -335,6 +339,7 @@ func (s *Server) GetState() []*pbg.State {
 	s.mm.RLock()
 	defer s.mm.RUnlock()
 	return []*pbg.State{
+		&pbg.State{Key: "ftime", TimeDuration: s.friendTime.Nanoseconds()},
 		&pbg.State{Key: "friends", Text: fmt.Sprintf("%v", s.friends)},
 		&pbg.State{Key: "master_map", Text: fmt.Sprintf("%v", s.masterMap)},
 		&pbg.State{Key: "discover_peer", Text: s.discoverPeer},
@@ -375,10 +380,12 @@ func main() {
 
 	server.RegisterRepeatingTaskNonMaster(server.clean, "clean", time.Second)
 	go func() {
+		t := time.Now()
 		time.Sleep(time.Second)
 		for i := 1; i <= 255; i++ {
 			server.findFriend(i)
 		}
+		server.friendTime = time.Now().Sub(t)
 	}()
 	server.Serve()
 }
