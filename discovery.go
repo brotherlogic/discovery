@@ -317,7 +317,7 @@ func (s *Server) findFriend(host int) {
 }
 
 func (s *Server) readFriend(host string) {
-	conn, err := grpc.Dial(fmt.Sprintf("192.168.86.%v:50055", host), grpc.WithInsecure())
+	conn, err := grpc.Dial(host, grpc.WithInsecure())
 	if err == nil {
 		defer conn.Close()
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
