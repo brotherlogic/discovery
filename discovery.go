@@ -33,7 +33,7 @@ var externalPorts = map[string][]int32{"main": []int32{50052, 50053}}
 // Server the central server object
 type Server struct {
 	*goserver.GoServer
-	friends         []*pb.RegistryEntry
+	friends         []string
 	entries         []*pb.RegistryEntry
 	checkFile       string
 	external        string
@@ -112,7 +112,7 @@ func InitServer() *Server {
 	s.portMemoryMutex = &sync.Mutex{}
 	s.masterv2 = make(map[string]*pb.RegistryEntry)
 	s.masterv2Mutex = &sync.Mutex{}
-	s.friends = make([]*pb.RegistryEntry, 0)
+	s.friends = make([]string, 0)
 	return s
 }
 
@@ -144,28 +144,6 @@ func (s *Server) DoRegister(server *grpc.Server) {
 func (s *Server) clean(ctx context.Context) error {
 	s.cleanEntries(time.Now())
 	return nil
-}
-
-func main() {
-	var quiet = flag.Bool("quiet", false, "Show all output")
-	flag.Parse()
-
-	//Turn off logging
-	if *quiet {
-		log.SetFlags(0)
-		log.SetOutput(ioutil.Discard)
-	}
-	server := InitServer()
-	server.setExternalIP(prodHTTPGetter{})
-	server.PrepServerNoRegister(port)
-	server.Register = server
-
-	server.RegisterServer("discovery", false)
-	server.Registry.IgnoresMaster = true
-
-	server.RegisterRepeatingTaskNonMaster(server.clean, "clean", time.Second)
-
-	server.Serve()
 }
 
 func conv(v1 uint32) int32 {
@@ -315,6 +293,20 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 	return nil
 }
 
+func (s *Server) findFriend(host int) {
+	conn, err := grpc.Dial(fmt.Sprintf("192.168.86.%v:50055", host), grpc.WithInsecure())
+	if err == nil {
+		defer conn.Close()
+		client := pbg.NewGoserverServiceClient(conn)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		_, err := client.IsAlive(ctx, &pbg.Alive{})
+		if err == nil {
+			s.friends = append(s.friends, fmt.Sprintf("192.168.86.%v:50055", host))
+		}
+	}
+}
+
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
 	topC := 0
@@ -362,4 +354,30 @@ func (s *Server) ReportHealth() bool {
 // Shutdown the server
 func (s *Server) Shutdown(ctx context.Context) error {
 	return nil
+}
+
+func main() {
+	var quiet = flag.Bool("quiet", false, "Show all output")
+	flag.Parse()
+
+	//Turn off logging
+	if *quiet {
+		log.SetFlags(0)
+		log.SetOutput(ioutil.Discard)
+	}
+	server := InitServer()
+	server.setExternalIP(prodHTTPGetter{})
+	server.PrepServerNoRegister(port)
+	server.Register = server
+
+	server.RegisterServer("discovery", false)
+	server.Registry.IgnoresMaster = true
+
+	server.RegisterRepeatingTaskNonMaster(server.clean, "clean", time.Second)
+
+	for i := 1; i <= 255; i++ {
+		server.findFriend(i)
+	}
+
+	server.Serve()
 }
