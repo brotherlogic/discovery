@@ -33,6 +33,7 @@ var externalPorts = map[string][]int32{"main": []int32{50052, 50053}}
 // Server the central server object
 type Server struct {
 	*goserver.GoServer
+	friends         []*pb.RegistryEntry
 	entries         []*pb.RegistryEntry
 	checkFile       string
 	external        string
@@ -111,6 +112,7 @@ func InitServer() *Server {
 	s.portMemoryMutex = &sync.Mutex{}
 	s.masterv2 = make(map[string]*pb.RegistryEntry)
 	s.masterv2Mutex = &sync.Mutex{}
+	s.friends = make([]*pb.RegistryEntry, 0)
 	return s
 }
 
@@ -341,6 +343,7 @@ func (s *Server) GetState() []*pbg.State {
 	s.mm.RLock()
 	defer s.mm.RUnlock()
 	return []*pbg.State{
+		&pbg.State{Key: "friends", Text: fmt.Sprintf("%v", s.friends)},
 		&pbg.State{Key: "master_map", Text: fmt.Sprintf("%v", s.masterMap)},
 		&pbg.State{Key: "discover_peer", Text: s.discoverPeer},
 		&pbg.State{Key: "register_peer", Text: s.registerPeer},
