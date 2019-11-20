@@ -374,10 +374,11 @@ func main() {
 	server.Registry.IgnoresMaster = true
 
 	server.RegisterRepeatingTaskNonMaster(server.clean, "clean", time.Second)
-
-	for i := 1; i <= 255; i++ {
-		server.findFriend(i)
-	}
-
+	go func() {
+		time.Sleep(time.Second)
+		for i := 1; i <= 255; i++ {
+			server.findFriend(i)
+		}
+	}()
 	server.Serve()
 }
