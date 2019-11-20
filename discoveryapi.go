@@ -133,6 +133,11 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 		return &pb.DiscoverResponse{Service: val}, nil
 	}
 
+	if val != nil && val.LastSeenTime+val.TimeToClean*1000000 < time.Now().UnixNano() {
+		s.removeMaster(val)
+		return &pb.DiscoverResponse{}, status.Error(codes.Unavailable, fmt.Sprintf("Removed old master for %v", in.GetIdentifier()))
+	}
+
 	return &pb.DiscoverResponse{}, status.Error(codes.Unavailable, fmt.Sprintf("Cannot find master for "+in.GetName()+" on server "+in.GetIdentifier()+" got %v -> %v from %v and %v,%v", val, time.Now().UnixNano()-val.GetLastSeenTime() > val.GetTimeToClean()*1000000, time.Now().UnixNano(), val.GetLastSeenTime(), val.GetTimeToClean()*1000000))
 }
 
