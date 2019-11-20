@@ -72,6 +72,7 @@ func main() {
 			var host = buildFlags.String("host", utils.Discover, "dicsover host")
 			var server = buildFlags.String("server", "192.168.86.32", "dicsover host")
 			var name = buildFlags.String("name", "blah", "dicsover host")
+			var master = buildFlags.Bool("master", false, "master")
 			if err := buildFlags.Parse(os.Args[2:]); err == nil {
 				conn, err := grpc.Dial(*host, grpc.WithInsecure())
 				if err == nil {
@@ -79,7 +80,7 @@ func main() {
 					client := pbdi.NewDiscoveryServiceV2Client(conn)
 					ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 					defer cancel()
-					_, err := client.RegisterV2(ctx, &pbdi.RegisterRequest{Service: &pbdi.RegistryEntry{Name: *name, Identifier: *server, Version: pbdi.RegistryEntry_V3}})
+					_, err := client.RegisterV2(ctx, &pbdi.RegisterRequest{Service: &pbdi.RegistryEntry{Name: *name, Identifier: *server, Version: pbdi.RegistryEntry_V3}, MasterElect: *master})
 					fmt.Printf("Registered: %v\n", err)
 				}
 			}
