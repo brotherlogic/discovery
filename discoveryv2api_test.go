@@ -20,6 +20,17 @@ func (p *testElector) unelect(ctx context.Context, entry *pb.RegistryEntry) erro
 	return nil
 }
 
+func TestPlainRegisterFail(t *testing.T) {
+	s := InitTestServer()
+	s.friendTime = 0
+
+	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+
+	if err == nil {
+		t.Errorf("Register did not fail: %v", resp)
+	}
+}
+
 func TestPlainRegisterRun(t *testing.T) {
 	s := InitTestServer()
 

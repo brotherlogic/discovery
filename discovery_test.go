@@ -14,6 +14,13 @@ import (
 	pb "github.com/brotherlogic/discovery/proto"
 )
 
+func InitTestServer() *Server {
+	s := InitServer()
+	s.elector = &testElector{}
+	s.friendTime = time.Minute
+	return s
+}
+
 func TestGetExternalIP(t *testing.T) {
 	s := InitTestServer()
 	externalIP := s.getExternalIP(prodHTTPGetter{})
@@ -352,12 +359,6 @@ func TestFailedDiscover(t *testing.T) {
 	if err == nil {
 		t.Errorf("Disoovering non existing service did not fail: %v", err)
 	}
-}
-
-func InitTestServer() *Server {
-	s := InitServer()
-	s.elector = &testElector{}
-	return s
 }
 
 func TestBecomeMaster(t *testing.T) {
