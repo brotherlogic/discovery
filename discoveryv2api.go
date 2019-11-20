@@ -41,6 +41,12 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 	// This is a new registration - update the port map
 	req.GetService().LastSeenTime = time.Now().UnixNano()
+
+	if req.GetService().GetVersion() == pb.RegistryEntry_V3 && !req.Fanout {
+		req.Fanout = true
+		s.fanoutRegister(ctx, req)
+	}
+
 	return &pb.RegisterResponse{Service: req.GetService()}, nil
 }
 
