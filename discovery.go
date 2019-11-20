@@ -306,7 +306,27 @@ func (s *Server) findFriend(host int) {
 		defer cancel()
 		_, err := client.IsAlive(ctx, &pbg.Alive{})
 		if err == nil {
-			s.friends = append(s.friends, fmt.Sprintf("192.168.86.%v:50055", host))
+			hostStr := fmt.Sprintf("192.168.86.%v:50055", host)
+			s.friends = append(s.friends, hostStr)
+			s.readFriend(hostStr)
+		}
+	}
+}
+
+func (s *Server) readFriend(host string) {
+	conn, err := grpc.Dial(fmt.Sprintf("192.168.86.%v:50055", host), grpc.WithInsecure())
+	if err == nil {
+		defer conn.Close()
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		defer cancel()
+		client := pb.NewDiscoveryServiceV2Client(conn)
+		regs, err := client.Get(ctx, &pb.GetRequest{})
+		if err == nil {
+			for _, entry := range regs.GetServices() {
+				if entry.GetVersion() != pb.RegistryEntry_V1 {
+					s.RegisterV2(ctx, &pb.RegisterRequest{Fanout: true, Service: entry})
+				}
+			}
 		}
 	}
 }
