@@ -68,9 +68,25 @@ func main() {
 
 			fmt.Printf("STATE: %v\n", state1)
 			fmt.Printf("STATE: %v\n", state2)
-		case "blist":
+		case "reg":
+			var host = buildFlags.String("host", utils.Discover, "dicsover host")
+			var server = buildFlags.String("server", "192.168.86.32", "dicsover host")
+			var name = buildFlags.String("name", "blah", "dicsover host")
 			if err := buildFlags.Parse(os.Args[2:]); err == nil {
-				conn, _ := grpc.Dial(utils.Discover, grpc.WithInsecure())
+				conn, err := grpc.Dial(*host, grpc.WithInsecure())
+				if err == nil {
+					defer conn.Close()
+					client := pbdi.NewDiscoveryServiceV2Client(conn)
+					ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+					defer cancel()
+					_, err := client.RegisterV2(ctx, &pbdi.RegisterRequest{Service: &pbdi.RegistryEntry{Name: *name, Identifier: *server, Version: pbdi.RegistryEntry_V3}})
+					fmt.Printf("Registered: %v\n", err)
+				}
+			}
+		case "blist":
+			var host = buildFlags.String("host", utils.Discover, "dicsover host")
+			if err := buildFlags.Parse(os.Args[2:]); err == nil {
+				conn, _ := grpc.Dial(*host, grpc.WithInsecure())
 				defer conn.Close()
 
 				registry := pbdi.NewDiscoveryServiceClient(conn)
@@ -85,6 +101,7 @@ func main() {
 				}
 			}
 		case "list":
+
 			if err := buildFlags.Parse(os.Args[2:]); err == nil {
 				conn, _ := grpc.Dial(utils.Discover, grpc.WithInsecure())
 				defer conn.Close()
