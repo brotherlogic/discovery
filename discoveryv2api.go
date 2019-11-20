@@ -13,7 +13,7 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 	s.countV2Register++
 
 	// Fail register until we're ready to serve
-	if s.friendTime <= 0 {
+	if s.friendTime <= 0 && !req.GetFanout() {
 		return nil, fmt.Errorf("Discover is not yet ready to perform registration")
 	}
 
