@@ -29,3 +29,44 @@ func TestRegisterV3(t *testing.T) {
 		t.Errorf("Service not returned")
 	}
 }
+
+func TestRegisterV3WithAcquireFail(t *testing.T) {
+	s := InitTestServer()
+
+	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V3}})
+
+	if err != nil {
+		t.Errorf("Unable to register %v", err)
+	}
+
+	if resp.Service.Port == 0 {
+		t.Errorf("Port number not assigned")
+	}
+
+	s.failAcquire = true
+
+	resp, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V3}, MasterElect: true})
+	if err == nil {
+		t.Errorf("Register with lock fail succeeded: %v", resp)
+	}
+}
+
+func TestMasterv3(t *testing.T) {
+	s := InitTestServer()
+
+	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V3}})
+
+	if err != nil {
+		t.Errorf("Unable to register %v", err)
+	}
+
+	if resp.Service.Port == 0 {
+		t.Errorf("Port number not assigned")
+	}
+
+	_, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}, MasterElect: true, Fanout: true})
+
+	if err != nil {
+		t.Errorf("Reg failed: %v", err)
+	}
+}
