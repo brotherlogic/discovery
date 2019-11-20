@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"testing"
+	"time"
 
 	pb "github.com/brotherlogic/discovery/proto"
 )
@@ -324,5 +325,20 @@ func TestPlainUnregisterRunWithBadCall(t *testing.T) {
 	_, err = s.Get(context.Background(), &pb.GetRequest{Job: "test_job", Server: "test_server"})
 	if err != nil {
 		t.Fatalf("Should have succeeded: %v", err)
+	}
+}
+
+func TestLockLocks(t *testing.T) {
+	s := InitTestServer()
+
+	_, err := s.Lock(context.Background(), &pb.LockRequest{Job: "hello", LockKey: time.Now().UnixNano()})
+
+	if err != nil {
+		t.Fatalf("Unable to lock")
+	}
+
+	_, err = s.Lock(context.Background(), &pb.LockRequest{Job: "hello", LockKey: time.Now().UnixNano()})
+	if err == nil {
+		t.Errorf("Lock did fail")
 	}
 }

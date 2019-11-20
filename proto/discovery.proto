@@ -112,7 +112,16 @@ message UnregisterRequest{
 
 message UnregisterResponse {}
 
+message LockRequest{
+  string job = 1;
+  int64 lock_key = 2;
+}
+
+message LockResponse{
+}
+
 service DiscoveryServiceV2 {
+  rpc Lock(LockRequest) returns (LockResponse) {}
   rpc RegisterV2(RegisterRequest) returns (RegisterResponse) {}
   rpc Get(GetRequest) returns (GetResponse) {}
   rpc Unregister(UnregisterRequest) returns (UnregisterResponse) {}
