@@ -294,6 +294,9 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 }
 
 func (s *Server) findFriend(host int) {
+	if s.Registry.Ip == fmt.Sprintf("192.168.86.%v", host) {
+		return
+	}
 	conn, err := grpc.Dial(fmt.Sprintf("192.168.86.%v:50055", host), grpc.WithInsecure())
 	if err == nil {
 		defer conn.Close()
