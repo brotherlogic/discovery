@@ -361,6 +361,17 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	return nil
 }
 
+func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
+	for _, f := range s.friends {
+		conn, err := grpc.Dial(f, grpc.WithInsecure())
+		if err == nil {
+			defer conn.Close()
+			client := pb.NewDiscoveryServiceV2Client(conn)
+			client.RegisterV2(ctx, req)
+		}
+	}
+}
+
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	flag.Parse()
