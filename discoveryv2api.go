@@ -29,6 +29,7 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 			// Auto elect a fanout master register
 			if req.GetFanout() {
 				s.addMaster(curr)
+				curr.Master = true
 				return &pb.RegisterResponse{Service: curr}, nil
 			}
 

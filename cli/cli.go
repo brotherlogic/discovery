@@ -80,8 +80,8 @@ func main() {
 					client := pbdi.NewDiscoveryServiceV2Client(conn)
 					ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 					defer cancel()
-					_, err := client.RegisterV2(ctx, &pbdi.RegisterRequest{Service: &pbdi.RegistryEntry{Name: *name, Identifier: *server, Version: pbdi.RegistryEntry_V3}, MasterElect: *master})
-					fmt.Printf("Registered: %v\n", err)
+					a, err := client.RegisterV2(ctx, &pbdi.RegisterRequest{Service: &pbdi.RegistryEntry{Name: *name, Identifier: *server, Version: pbdi.RegistryEntry_V3}, MasterElect: *master})
+					fmt.Printf("Registered: %v -> %v\n", err, a)
 				}
 			}
 		case "blist":
