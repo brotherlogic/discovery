@@ -181,10 +181,10 @@ func TestDoubleRegisterV2(t *testing.T) {
 		t.Errorf("Port number not assigned")
 	}
 
-	resp, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+	_, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
 
-	if err == nil {
-		t.Errorf("No error on re-register %v", resp)
+	if err != nil {
+		t.Errorf("Error on re-register %v", err)
 	}
 
 }
