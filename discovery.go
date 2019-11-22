@@ -395,6 +395,27 @@ func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 		}
 	}
 }
+func (s *Server) fanoutMaster(ctx context.Context, req *pb.MasterRequest) {
+	for _, f := range s.friends {
+		conn, err := grpc.Dial(f, grpc.WithInsecure())
+		if err == nil {
+			defer conn.Close()
+			client := pb.NewDiscoveryServiceV2Client(conn)
+			client.MasterElect(ctx, req)
+		}
+	}
+}
+
+func (s *Server) fanoutUnregister(ctx context.Context, req *pb.UnregisterRequest) {
+	for _, f := range s.friends {
+		conn, err := grpc.Dial(f, grpc.WithInsecure())
+		if err == nil {
+			defer conn.Close()
+			client := pb.NewDiscoveryServiceV2Client(conn)
+			client.Unregister(ctx, req)
+		}
+	}
+}
 
 func (s *Server) acquireMasterLock(ctx context.Context, job string, lk int64) error {
 	if s.failAcquire {

@@ -80,8 +80,13 @@ func main() {
 					client := pbdi.NewDiscoveryServiceV2Client(conn)
 					ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 					defer cancel()
-					a, err := client.RegisterV2(ctx, &pbdi.RegisterRequest{Service: &pbdi.RegistryEntry{Name: *name, Identifier: *server, Version: pbdi.RegistryEntry_V3}, MasterElect: *master})
-					fmt.Printf("Registered: %v -> %v\n", err, a)
+					if *master {
+						a, err := client.MasterElect(ctx, &pbdi.MasterRequest{Service: &pbdi.RegistryEntry{Name: *name, Identifier: *server, Version: pbdi.RegistryEntry_V3}, MasterElect: true})
+						fmt.Printf("Registered: %v -> %v\n", err, a)
+					} else {
+						a, err := client.RegisterV2(ctx, &pbdi.RegisterRequest{Service: &pbdi.RegistryEntry{Name: *name, Identifier: *server, Version: pbdi.RegistryEntry_V3}})
+						fmt.Printf("Registered: %v -> %v\n", err, a)
+					}
 				}
 			}
 		case "blist":
@@ -91,7 +96,7 @@ func main() {
 				defer conn.Close()
 
 				registry := pbdi.NewDiscoveryServiceClient(conn)
-				ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+				ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 				defer cancel()
 				bits, err := registry.ListAllServices(ctx, &pbdi.ListRequest{}, grpc.FailFast(false))
 				if err != nil {

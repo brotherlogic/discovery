@@ -45,9 +45,9 @@ func TestRegisterV3WithAcquireFail(t *testing.T) {
 
 	s.failAcquire = true
 
-	resp, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V3}, MasterElect: true})
+	resp2, err := s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V3}, MasterElect: true})
 	if err == nil {
-		t.Errorf("Register with lock fail succeeded: %v", resp)
+		t.Errorf("Register with lock fail succeeded: %v", resp2)
 	}
 }
 
@@ -64,9 +64,37 @@ func TestMasterv3(t *testing.T) {
 		t.Errorf("Port number not assigned")
 	}
 
-	_, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}, MasterElect: true, Fanout: true})
+	_, err = s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}, MasterElect: true})
 
 	if err != nil {
 		t.Errorf("Reg failed: %v", err)
 	}
+}
+
+func TestMasterv3LockFail(t *testing.T) {
+	s := InitTestServer()
+
+	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V3}})
+
+	if err != nil {
+		t.Errorf("Unable to register %v", err)
+	}
+
+	if resp.Service.Port == 0 {
+		t.Errorf("Port number not assigned")
+	}
+
+	_, err = s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}, MasterElect: true, Fanout: true, LockKey: int64(5)})
+
+	if err == nil {
+		t.Errorf("Should have failed")
+	}
+
+	s.locks["test_job"] = int64(5)
+	_, err = s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}, MasterElect: true, Fanout: true, LockKey: int64(5)})
+
+	if err != nil {
+		t.Errorf("Should not have failed: %v", err)
+	}
+
 }
