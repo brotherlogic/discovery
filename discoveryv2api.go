@@ -6,6 +6,8 @@ import (
 	"time"
 
 	pb "github.com/brotherlogic/discovery/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (s *Server) MasterElect(ctx context.Context, req *pb.MasterRequest) (*pb.MasterResponse, error) {
@@ -91,7 +93,7 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 			}
 		}
 
-		return nil, fmt.Errorf("%v not found on %v", req.Job, req.Server)
+		return nil, status.Errorf(codes.NotFound, "%v not found on %v", req.Job, req.Server)
 	}
 
 	resp := &pb.GetResponse{Services: []*pb.RegistryEntry{}}
