@@ -54,10 +54,9 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 	s.version.Store(req.GetService().GetName(), int32(1))
 
-	// Fail a re-register
+	// Fast path on a re-register
 	if curr != nil {
-
-		return nil, fmt.Errorf("Already registered")
+		return &pb.RegisterResponse{Service: curr}, nil
 	}
 
 	//Place this in the port map
