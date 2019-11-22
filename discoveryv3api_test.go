@@ -45,9 +45,9 @@ func TestRegisterV3WithAcquireFail(t *testing.T) {
 
 	s.failAcquire = true
 
-	resp, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V3}, MasterElect: true})
+	resp2, err := s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V3}, MasterElect: true})
 	if err == nil {
-		t.Errorf("Register with lock fail succeeded: %v", resp)
+		t.Errorf("Register with lock fail succeeded: %v", resp2)
 	}
 }
 
@@ -64,7 +64,7 @@ func TestMasterv3(t *testing.T) {
 		t.Errorf("Port number not assigned")
 	}
 
-	_, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}, MasterElect: true, Fanout: true})
+	_, err = s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}, MasterElect: true})
 
 	if err != nil {
 		t.Errorf("Reg failed: %v", err)

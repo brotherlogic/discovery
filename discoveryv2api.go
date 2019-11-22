@@ -8,6 +8,39 @@ import (
 	pb "github.com/brotherlogic/discovery/proto"
 )
 
+func (s *Server) MasterElect(ctx context.Context, req *pb.MasterRequest) (*pb.MasterResponse, error) {
+	curr, _ := s.getJob(req.GetService())
+
+	if req.GetFanout() {
+		if val, ok := s.locks[req.GetService().GetName()]; !ok || val != req.GetLockKey() {
+			return nil, fmt.Errorf("Lock was not acquired here")
+		}
+		s.addMaster(curr)
+		curr.Master = true
+		return &pb.MasterResponse{Service: curr}, nil
+	}
+
+	m, t := s.getCMaster(req.GetService())
+	if m != nil && time.Now().Sub(t) < time.Minute {
+		return nil, fmt.Errorf("Cannot become master until %v", t.Add(time.Minute))
+	}
+
+	s.elector.unelect(ctx, m)
+
+	key := time.Now().UnixNano()
+	err := s.acquireMasterLock(ctx, curr.GetName(), key)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to acquire lock to become master")
+	}
+
+	curr.Master = true
+	s.addMaster(curr)
+	req.Fanout = true
+	req.LockKey = key
+	s.fanoutMaster(ctx, req)
+	return &pb.MasterResponse{Service: curr}, nil
+}
+
 // Register a server
 func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	s.countV2Register++
@@ -23,33 +56,6 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 	// Fail a re-register
 	if curr != nil {
-
-		// Perform master election if needed
-		if req.GetMasterElect() {
-			// Auto elect a fanout master register
-			if req.GetFanout() {
-				s.addMaster(curr)
-				curr.Master = true
-				return &pb.RegisterResponse{Service: curr}, nil
-			}
-
-			m, t := s.getCMaster(req.GetService())
-			if m != nil && time.Now().Sub(t) < time.Minute {
-				return nil, fmt.Errorf("Cannot become master until %v", t.Add(time.Minute))
-			}
-
-			s.elector.unelect(ctx, m)
-
-			err := s.acquireMasterLock(ctx, curr.GetName(), time.Now().UnixNano())
-			if err != nil {
-				return nil, fmt.Errorf("Unable to acquire lock to become master")
-			}
-
-			curr.Master = true
-			s.addMaster(curr)
-			s.fanoutRegister(ctx, req)
-			return &pb.RegisterResponse{Service: curr}, nil
-		}
 
 		return nil, fmt.Errorf("Already registered")
 	}
@@ -106,6 +112,11 @@ func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb
 	master, _ := s.getCMaster(req.GetService())
 	if master.GetIdentifier() == req.GetService().GetIdentifier() {
 		s.removeMaster(req.GetService())
+	}
+
+	if !req.Fanout {
+		req.Fanout = true
+		s.fanoutUnregister(ctx, req)
 	}
 
 	return &pb.UnregisterResponse{}, nil

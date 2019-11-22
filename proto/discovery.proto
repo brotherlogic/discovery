@@ -65,7 +65,7 @@ message StateRequest {
 message RegisterRequest {
   RegistryEntry service = 1;
   string caller = 2;
-  bool master_elect = 3;
+
   bool fanout = 4;
 }
 
@@ -108,6 +108,7 @@ message GetResponse {
 
 message UnregisterRequest{
   RegistryEntry service = 1;
+  bool fanout = 2;
 }
 
 message UnregisterResponse {}
@@ -120,9 +121,24 @@ message LockRequest{
 message LockResponse{
 }
 
+
+message MasterRequest {
+  RegistryEntry service = 1;
+  int64 lock_key = 2;
+  bool master_elect = 3;
+  bool fanout = 4;
+}
+
+message MasterResponse {
+  RegistryEntry service = 1;
+}
+
+
+
 service DiscoveryServiceV2 {
   rpc Lock(LockRequest) returns (LockResponse) {}
   rpc RegisterV2(RegisterRequest) returns (RegisterResponse) {}
   rpc Get(GetRequest) returns (GetResponse) {}
   rpc Unregister(UnregisterRequest) returns (UnregisterResponse) {}
+  rpc MasterElect(MasterRequest) returns (MasterResponse) {}
 }

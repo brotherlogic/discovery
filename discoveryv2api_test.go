@@ -77,7 +77,7 @@ func TestMasterElect(t *testing.T) {
 		t.Errorf("Service not returned")
 	}
 
-	resp, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}, MasterElect: true})
+	_, err = s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}, MasterElect: true})
 	if err != nil {
 		t.Errorf("Unable to register")
 	}
@@ -96,9 +96,9 @@ func TestMasterElect(t *testing.T) {
 		t.Errorf("Error on reg")
 	}
 
-	resp, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server2"}, MasterElect: true})
+	resp2, err := s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server2"}, MasterElect: true})
 	if err == nil {
-		t.Errorf("Quick master reg did not fail: %v", resp)
+		t.Errorf("Quick master reg did not fail: %v", resp2)
 	}
 }
 

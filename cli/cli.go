@@ -91,7 +91,7 @@ func main() {
 				defer conn.Close()
 
 				registry := pbdi.NewDiscoveryServiceClient(conn)
-				ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+				ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 				defer cancel()
 				bits, err := registry.ListAllServices(ctx, &pbdi.ListRequest{}, grpc.FailFast(false))
 				if err != nil {
