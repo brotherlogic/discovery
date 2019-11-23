@@ -117,6 +117,7 @@ func InitServer() *Server {
 	s.masterv2Mutex = &sync.Mutex{}
 	s.friends = make([]string, 0)
 	s.locks = make(map[string]int64)
+	s.elector = &prodElector{}
 	return s
 }
 
@@ -200,6 +201,9 @@ func (p *prodElector) elect(ctx context.Context, entry *pb.RegistryEntry) error 
 	return err
 }
 func (p *prodElector) unelect(ctx context.Context, entry *pb.RegistryEntry) error {
+	if entry == nil {
+		return nil
+	}
 	conn, err := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
 	if err != nil {
 		return err

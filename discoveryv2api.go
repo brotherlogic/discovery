@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	pb "github.com/brotherlogic/discovery/proto"
@@ -12,6 +13,8 @@ import (
 
 func (s *Server) MasterElect(ctx context.Context, req *pb.MasterRequest) (*pb.MasterResponse, error) {
 	curr, _ := s.getJob(req.GetService())
+
+	log.Printf("HERE: %v", req)
 
 	if req.GetFanout() {
 		if val, ok := s.locks[req.GetService().GetName()]; !ok || val != req.GetLockKey() {
@@ -27,7 +30,9 @@ func (s *Server) MasterElect(ctx context.Context, req *pb.MasterRequest) (*pb.Ma
 		return nil, fmt.Errorf("Cannot become master until %v", t.Add(time.Minute))
 	}
 
+	log.Printf("UNELECT: %v -> %v", s.elector, m)
 	s.elector.unelect(ctx, m)
+	log.Printf("Unelected")
 
 	key := time.Now().UnixNano()
 	err := s.acquireMasterLock(ctx, curr.GetName(), key)
@@ -87,7 +92,7 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 	if len(req.Job) != 0 {
 		for _, job := range s.portMap {
 			if job != nil {
-				if job.Identifier == req.Server && job.Name == req.Job {
+				if (len(req.GetServer()) == 0 || job.Identifier == req.Server) && job.Name == req.Job {
 					return &pb.GetResponse{Services: []*pb.RegistryEntry{job}}, nil
 				}
 			}
@@ -125,6 +130,7 @@ func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb
 
 //Lock in prep for master elect
 func (s *Server) Lock(ctx context.Context, req *pb.LockRequest) (*pb.LockResponse, error) {
+	log.Printf("LOCK = %v", s.locks)
 	if val, ok := s.locks[req.GetJob()]; ok {
 		if time.Now().Sub(time.Unix(0, val)) < time.Minute || req.GetLockKey() < val {
 			return nil, fmt.Errorf("Unable to acquire master lock: %v or %v", time.Now().Sub(time.Unix(0, val)), req.GetLockKey()-val)

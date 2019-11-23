@@ -89,6 +89,25 @@ func main() {
 					}
 				}
 			}
+		case "get":
+			var host = buildFlags.String("host", utils.Discover, "dicsover host")
+			var name = buildFlags.String("name", "", "name")
+			if err := buildFlags.Parse(os.Args[2:]); err == nil {
+				conn, _ := grpc.Dial(*host, grpc.WithInsecure())
+				defer conn.Close()
+
+				registry := pbdi.NewDiscoveryServiceV2Client(conn)
+				ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+				defer cancel()
+				resp, err := registry.Get(ctx, &pbdi.GetRequest{Job: *name})
+				if err != nil {
+					fmt.Printf("Get error: %v", err)
+				} else {
+					for _, service := range resp.GetServices() {
+						fmt.Printf("%v\n", service)
+					}
+				}
+			}
 		case "blist":
 			var host = buildFlags.String("host", utils.Discover, "dicsover host")
 			if err := buildFlags.Parse(os.Args[2:]); err == nil {
@@ -107,7 +126,6 @@ func main() {
 				}
 			}
 		case "list":
-
 			if err := buildFlags.Parse(os.Args[2:]); err == nil {
 				conn, _ := grpc.Dial(utils.Discover, grpc.WithInsecure())
 				defer conn.Close()
