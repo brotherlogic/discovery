@@ -87,7 +87,7 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 	if len(req.Job) != 0 {
 		for _, job := range s.portMap {
 			if job != nil {
-				if job.Identifier == req.Server && job.Name == req.Job {
+				if (len(req.GetServer()) == 0 || job.Identifier == req.Server) && job.Name == req.Job {
 					return &pb.GetResponse{Services: []*pb.RegistryEntry{job}}, nil
 				}
 			}
