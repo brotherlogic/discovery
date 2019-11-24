@@ -303,7 +303,7 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 
 func (s *Server) findFriend(host int) {
 	hostStr := fmt.Sprintf("192.168.86.%v:50055", host)
-	if s.Registry.Ip == hostStr {
+	if fmt.Sprintf("%v:50055", s.Registry.Ip) == hostStr {
 		return
 	}
 	for _, f := range s.friends {
