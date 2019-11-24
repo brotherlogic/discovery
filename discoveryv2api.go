@@ -72,6 +72,10 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 		s.fanoutRegister(ctx, req)
 	}
 
+	if req.Fanout && req.GetService().GetMaster() {
+		s.addMaster(req.GetService())
+	}
+
 	return &pb.RegisterResponse{Service: req.GetService()}, nil
 }
 
