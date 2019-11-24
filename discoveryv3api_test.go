@@ -20,7 +20,7 @@ func TestRegisterV2(t *testing.T) {
 		t.Errorf("Port number not assigned")
 	}
 
-	respg, err := s.Get(context.Background(), &pb.GetRequest{Job: "test_job", Server: "test_server"})
+	respg, err := s.Get(context.Background(), &pb.GetRequest{Job: "test_job", Server: "test_server", Friend: "madeup"})
 	if err != nil {
 		t.Errorf("Unable to get %v", err)
 	}

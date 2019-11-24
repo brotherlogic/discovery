@@ -99,6 +99,7 @@ service DiscoveryService {
 message GetRequest {
   string job = 1;
   string server = 2;
+  string friend = 3;
 }
 
 message GetResponse {
