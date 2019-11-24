@@ -109,12 +109,16 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 	}
 
 	if len(req.Job) != 0 {
+		jobs := []*pb.RegistryEntry{}
 		for _, job := range s.portMap {
 			if job != nil {
 				if (len(req.GetServer()) == 0 || job.Identifier == req.Server) && job.Name == req.Job {
-					return &pb.GetResponse{Services: []*pb.RegistryEntry{job}}, nil
+					jobs = append(jobs, job)
 				}
 			}
+		}
+		if len(jobs) > 0 {
+			return &pb.GetResponse{Services: jobs}, nil
 		}
 
 		return nil, status.Errorf(codes.NotFound, "%v not found on %v", req.Job, req.Server)
