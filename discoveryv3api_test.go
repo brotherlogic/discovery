@@ -7,10 +7,10 @@ import (
 	pb "github.com/brotherlogic/discovery/proto"
 )
 
-func TestRegisterV3(t *testing.T) {
+func TestRegisterV2(t *testing.T) {
 	s := InitTestServer()
 
-	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V3}})
+	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V2}})
 
 	if err != nil {
 		t.Errorf("Unable to register %v", err)
@@ -30,10 +30,10 @@ func TestRegisterV3(t *testing.T) {
 	}
 }
 
-func TestRegisterV3WithAcquireFail(t *testing.T) {
+func TestRegisterV2WithAcquireFail(t *testing.T) {
 	s := InitTestServer()
 
-	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V3}})
+	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V2}})
 
 	if err != nil {
 		t.Errorf("Unable to register %v", err)
@@ -45,7 +45,7 @@ func TestRegisterV3WithAcquireFail(t *testing.T) {
 
 	s.failAcquire = true
 
-	resp2, err := s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V3}, MasterElect: true})
+	resp2, err := s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V2}, MasterElect: true})
 	if err == nil {
 		t.Errorf("Register with lock fail succeeded: %v", resp2)
 	}
@@ -54,7 +54,7 @@ func TestRegisterV3WithAcquireFail(t *testing.T) {
 func TestMasterv3(t *testing.T) {
 	s := InitTestServer()
 
-	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V3}})
+	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V2}})
 
 	if err != nil {
 		t.Errorf("Unable to register %v", err)
@@ -74,7 +74,7 @@ func TestMasterv3(t *testing.T) {
 func TestMasterv3LockFail(t *testing.T) {
 	s := InitTestServer()
 
-	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V3}})
+	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V2}})
 
 	if err != nil {
 		t.Errorf("Unable to register %v", err)
