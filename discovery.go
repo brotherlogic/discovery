@@ -302,8 +302,14 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 }
 
 func (s *Server) findFriend(host int) {
-	if s.Registry.Ip == fmt.Sprintf("192.168.86.%v", host) {
+	hostStr := fmt.Sprintf("192.168.86.%v:50055", host)
+	if s.Registry.Ip == hostStr {
 		return
+	}
+	for _, f := range s.friends {
+		if f == hostStr {
+			return
+		}
 	}
 	conn, err := grpc.Dial(fmt.Sprintf("192.168.86.%v:50055", host), grpc.WithInsecure())
 	if err == nil {
@@ -313,7 +319,6 @@ func (s *Server) findFriend(host int) {
 		defer cancel()
 		_, err := client.IsAlive(ctx, &pbg.Alive{})
 		if err == nil {
-			hostStr := fmt.Sprintf("192.168.86.%v:50055", host)
 			s.friends = append(s.friends, hostStr)
 			s.readFriend(hostStr)
 		}
