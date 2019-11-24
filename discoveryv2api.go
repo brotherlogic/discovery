@@ -54,7 +54,7 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 	// Reject a master registration
 	if req.GetService().GetMaster() && !req.GetFanout() {
-		return nil, fmt.Errorf("Can't register as master")
+		req.GetService().Master = false
 	}
 
 	curr, _ := s.getJob(req.GetService())
