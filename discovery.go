@@ -327,7 +327,7 @@ func (s *Server) readFriend(host string) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 		defer cancel()
 		client := pb.NewDiscoveryServiceV2Client(conn)
-		regs, err := client.Get(ctx, &pb.GetRequest{})
+		regs, err := client.Get(ctx, &pb.GetRequest{Friend: fmt.Sprintf("%v:%v", s.Registry.Ip, s.Registry.Port)})
 		if err == nil {
 			for _, entry := range regs.GetServices() {
 				if entry.GetVersion() != pb.RegistryEntry_V1 {

@@ -54,7 +54,7 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 	// Reject a master registration
 	if req.GetService().GetMaster() && !req.GetFanout() {
-		return nil, fmt.Errorf("Can't register as master")
+		req.GetService().Master = false
 	}
 
 	curr, _ := s.getJob(req.GetService())
@@ -86,6 +86,21 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 // Get an entry from the registry
 func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
+
+	if len(req.GetFriend()) > 0 {
+		found := false
+		for _, friend := range s.friends {
+			if friend == req.GetFriend() {
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			s.friends = append(s.friends, req.GetFriend())
+		}
+	}
+
 	if val, ok := s.version.Load(req.GetJob()); ok {
 		if val.(int32) == 0 {
 			resp, err := s.Discover(ctx, &pb.DiscoverRequest{Caller: "v2", Request: &pb.RegistryEntry{Name: req.GetJob(), Identifier: req.GetServer()}})
