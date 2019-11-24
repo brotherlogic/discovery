@@ -81,10 +81,10 @@ func main() {
 					ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 					defer cancel()
 					if *master {
-						a, err := client.MasterElect(ctx, &pbdi.MasterRequest{Service: &pbdi.RegistryEntry{Name: *name, Identifier: *server, Version: pbdi.RegistryEntry_V3}, MasterElect: true})
+						a, err := client.MasterElect(ctx, &pbdi.MasterRequest{Service: &pbdi.RegistryEntry{Name: *name, Identifier: *server, Version: pbdi.RegistryEntry_V2}, MasterElect: true})
 						fmt.Printf("Registered: %v -> %v\n", err, a)
 					} else {
-						a, err := client.RegisterV2(ctx, &pbdi.RegisterRequest{Service: &pbdi.RegistryEntry{Name: *name, Identifier: *server, Version: pbdi.RegistryEntry_V3}})
+						a, err := client.RegisterV2(ctx, &pbdi.RegisterRequest{Service: &pbdi.RegistryEntry{Name: *name, Identifier: *server, Version: pbdi.RegistryEntry_V2}})
 						fmt.Printf("Registered: %v -> %v\n", err, a)
 					}
 				}
