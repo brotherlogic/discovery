@@ -71,6 +71,15 @@ func TestMasterv3(t *testing.T) {
 	}
 }
 
+func TestMasterv3Fanout(t *testing.T) {
+	s := InitTestServer()
+
+	_, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server", Version: pb.RegistryEntry_V2, Master: true}, Fanout: true})
+	if err != nil {
+		t.Errorf("Unable to fanout register %v", err)
+	}
+}
+
 func TestMasterv3LockFail(t *testing.T) {
 	s := InitTestServer()
 
