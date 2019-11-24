@@ -126,8 +126,9 @@ func main() {
 				}
 			}
 		case "list":
+			var host = buildFlags.String("host", utils.Discover, "host")
 			if err := buildFlags.Parse(os.Args[2:]); err == nil {
-				conn, _ := grpc.Dial(utils.Discover, grpc.WithInsecure())
+				conn, _ := grpc.Dial(*host, grpc.WithInsecure())
 				defer conn.Close()
 
 				registry := pbdi.NewDiscoveryServiceClient(conn)
