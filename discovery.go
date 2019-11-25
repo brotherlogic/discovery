@@ -205,6 +205,7 @@ func (p *prodElector) unelect(ctx context.Context, entry *pb.RegistryEntry) erro
 		return nil
 	}
 	conn, err := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
+	entry.Master = false
 	if err != nil {
 		return err
 	}
