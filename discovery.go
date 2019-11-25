@@ -117,7 +117,7 @@ func InitServer() *Server {
 	s.masterv2Mutex = &sync.Mutex{}
 	s.friends = make([]string, 0)
 	s.locks = make(map[string]int64)
-	s.elector = &prodElector{}
+	s.elector = &prodElector{dial: s.DoDial}
 	return s
 }
 
@@ -186,6 +186,7 @@ type elector interface {
 }
 
 type prodElector struct {
+	dial func(entry *pb.RegistryEntry) (*grpc.ClientConn, error)
 }
 
 func (p *prodElector) elect(ctx context.Context, entry *pb.RegistryEntry) error {
@@ -204,8 +205,7 @@ func (p *prodElector) unelect(ctx context.Context, entry *pb.RegistryEntry) erro
 	if entry == nil {
 		return nil
 	}
-	conn, err := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
-	entry.Master = false
+	conn, err := p.dial(entry)
 	if err != nil {
 		return err
 	}
@@ -213,6 +213,10 @@ func (p *prodElector) unelect(ctx context.Context, entry *pb.RegistryEntry) erro
 
 	server := pbg.NewGoserverServiceClient(conn)
 	_, err = server.Mote(ctx, &pbg.MoteRequest{Master: false})
+
+	if err == nil {
+		entry.Master = false
+	}
 
 	return err
 }

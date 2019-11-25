@@ -141,8 +141,8 @@ func main() {
 				fmt.Printf("MASTERS\n-------\n")
 				masters := []string{}
 				for _, bit := range bits.GetServices().Services {
-					regtime := time.Unix(0, bit.GetLastSeenTime()).Sub(time.Unix(0, bit.GetRegisterTime())).Truncate(time.Minute)
-					mastertime := time.Unix(0, bit.GetLastSeenTime()).Sub(time.Unix(0, bit.GetMasterTime())).Truncate(time.Minute)
+					regtime := time.Now().Sub(time.Unix(0, bit.GetRegisterTime())).Truncate(time.Minute)
+					mastertime := time.Now().Sub(time.Unix(0, bit.GetMasterTime())).Truncate(time.Minute)
 					if bit.GetMaster() {
 						masters = append(masters, fmt.Sprintf("%v [%v - %v]", repEntry(bit), mastertime, regtime))
 					}
@@ -168,7 +168,7 @@ func main() {
 					sort.SliceStable(slaves[key], func(i, j int) bool {
 						return slaves[key][i].Identifier < slaves[key][j].Identifier
 					})
-					regtime := time.Unix(0, slaves[key][0].GetLastSeenTime()).Sub(time.Unix(0, slaves[key][0].GetRegisterTime())).Truncate(time.Minute)
+					regtime := time.Now().Sub(time.Unix(0, slaves[key][0].GetRegisterTime())).Truncate(time.Minute)
 					fmt.Printf("%v {%v} [%v]\n", repEntry(slaves[key][0]), len(slaves[key]), regtime)
 				}
 
