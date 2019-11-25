@@ -253,6 +253,9 @@ func (s *Server) addMaster(in *pb.RegistryEntry) {
 	//Register as master if there is none
 	in.MasterTime = time.Now().UnixNano()
 	s.mm.Lock()
+	if val, ok := s.masterMap[in.GetName()]; ok {
+		val.Master = false
+	}
 	s.masterMap[in.GetName()] = in
 	s.masterTime[in.GetName()] = time.Now()
 	s.mm.Unlock()

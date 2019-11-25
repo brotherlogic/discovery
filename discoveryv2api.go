@@ -52,7 +52,7 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 		return nil, fmt.Errorf("Discover is not yet ready to perform registration")
 	}
 
-	// Reject a master registration
+	// Collapse a master registration
 	if req.GetService().GetMaster() && !req.GetFanout() {
 		req.GetService().Master = false
 	}
