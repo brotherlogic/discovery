@@ -404,7 +404,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 	for _, f := range s.friends {
-		conn, err := grpc.Dial(f, grpc.WithInsecure())
+		conn, err := s.BaseDial(f)
 		if err == nil {
 			defer conn.Close()
 			client := pb.NewDiscoveryServiceV2Client(conn)
@@ -414,7 +414,7 @@ func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 }
 func (s *Server) fanoutMaster(ctx context.Context, req *pb.MasterRequest) {
 	for _, f := range s.friends {
-		conn, err := grpc.Dial(f, grpc.WithInsecure())
+		conn, err := s.BaseDial(f)
 		if err == nil {
 			defer conn.Close()
 			client := pb.NewDiscoveryServiceV2Client(conn)
@@ -425,7 +425,7 @@ func (s *Server) fanoutMaster(ctx context.Context, req *pb.MasterRequest) {
 
 func (s *Server) fanoutUnregister(ctx context.Context, req *pb.UnregisterRequest) {
 	for _, f := range s.friends {
-		conn, err := grpc.Dial(f, grpc.WithInsecure())
+		conn, err := s.BaseDial(f)
 		if err == nil {
 			defer conn.Close()
 			client := pb.NewDiscoveryServiceV2Client(conn)
