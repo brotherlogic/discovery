@@ -49,7 +49,7 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 	// Fail register until we're ready to serve
 	if s.friendTime <= 0 && !req.GetFanout() {
-		return nil, fmt.Errorf("Discover is not yet ready to perform registration")
+		return nil, status.Errorf(codes.FailedPrecondition, "Discover is not yet ready to perform registration")
 	}
 
 	// Collapse a master registration
