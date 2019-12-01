@@ -155,7 +155,7 @@ func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb
 func (s *Server) Lock(ctx context.Context, req *pb.LockRequest) (*pb.LockResponse, error) {
 	if val, ok := s.locks[req.GetJob()]; ok {
 		if time.Now().Sub(time.Unix(0, val)) < time.Minute || req.GetLockKey() < val {
-			return nil, fmt.Errorf("Unable to acquire master lock: %v or %v", time.Now().Sub(time.Unix(0, val)), req.GetLockKey()-val)
+			return nil, fmt.Errorf("Unable to acquire master for %v lock: %v or %v", req.GetJob(), time.Now().Sub(time.Unix(0, val)), req.GetLockKey()-val)
 		}
 	}
 	s.locks[req.GetJob()] = req.GetLockKey()
