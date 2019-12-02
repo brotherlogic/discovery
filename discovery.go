@@ -466,7 +466,7 @@ func main() {
 	server.PrepServerNoRegister(port)
 	server.Register = server
 
-	server.RegisterServer("discovery", false)
+	server.RegisterServerV2("discovery", false, false)
 	server.Registry.IgnoresMaster = true
 
 	server.RegisterRepeatingTaskNonMaster(server.clean, "clean", time.Second)
