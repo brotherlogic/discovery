@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	pb "github.com/brotherlogic/discovery/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	pb "github.com/brotherlogic/discovery/proto"
 )
 
 func (s *Server) MasterElect(ctx context.Context, req *pb.MasterRequest) (*pb.MasterResponse, error) {
@@ -24,7 +25,7 @@ func (s *Server) MasterElect(ctx context.Context, req *pb.MasterRequest) (*pb.Ma
 
 	m, t := s.getCMaster(req.GetService())
 	if m != nil && time.Now().Sub(t) < time.Minute {
-		return nil, fmt.Errorf("Cannot become master until %v", t.Add(time.Minute))
+		return nil, status.Errorf(codes.FailedPrecondition, "Cannot become master until %v", t.Add(time.Minute))
 	}
 
 	s.elector.unelect(ctx, m)
