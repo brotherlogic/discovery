@@ -131,16 +131,16 @@ func main() {
 				conn, _ := grpc.Dial(*host, grpc.WithInsecure())
 				defer conn.Close()
 
-				registry := pbdi.NewDiscoveryServiceClient(conn)
+				registry := pbdi.NewDiscoveryServiceV2Client(conn)
 				ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 				defer cancel()
-				bits, err := registry.ListAllServices(ctx, &pbdi.ListRequest{}, grpc.FailFast(false))
+				bits, err := registry.Get(ctx, &pbdi.GetRequest{}, grpc.FailFast(false))
 				if err != nil {
 					log.Fatalf("Error building job: %v", err)
 				}
 				fmt.Printf("MASTERS\n-------\n")
 				masters := []string{}
-				for _, bit := range bits.GetServices().Services {
+				for _, bit := range bits.GetServices() {
 					regtime := time.Now().Sub(time.Unix(0, bit.GetRegisterTime())).Truncate(time.Minute)
 					mastertime := time.Now().Sub(time.Unix(0, bit.GetMasterTime())).Truncate(time.Minute)
 					if bit.GetMaster() {
@@ -154,7 +154,7 @@ func main() {
 
 				fmt.Printf("\nSLAVES\n-------\n")
 				slaves := make(map[string][]*pbdi.RegistryEntry)
-				for _, bit := range bits.GetServices().Services {
+				for _, bit := range bits.GetServices() {
 					if !bit.GetMaster() {
 						slaves[bit.Name] = append(slaves[bit.Name], bit)
 					}
