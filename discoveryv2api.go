@@ -64,7 +64,12 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 	// Fast path on a re-register
 	if curr != nil {
-		return &pb.RegisterResponse{Service: curr}, nil
+		if curr.Master && !req.GetService().GetMaster() {
+			s.removeMaster(curr)
+			curr.Master = false
+		} else {
+			return &pb.RegisterResponse{Service: curr}, nil
+		}
 	}
 
 	//Place this in the port map

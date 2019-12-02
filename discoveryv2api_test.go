@@ -91,15 +91,34 @@ func TestMasterElect(t *testing.T) {
 		t.Errorf("Service not returned or master is wrong: %v", respg.Services)
 	}
 
+	resp, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+	if err != nil {
+		t.Errorf("Error on reg")
+	}
+
+	if resp.GetService().Master {
+		t.Fatalf("Rereg held master")
+	}
+
 	resp, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server2"}})
 	if err != nil {
 		t.Errorf("Error on reg")
 	}
 
+	if resp.GetService().Master {
+		t.Fatalf("Rereg held master")
+	}
+
 	resp2, err := s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server2"}, MasterElect: true})
+	if err != nil {
+		t.Errorf("Quick master reg did not fail: %v", resp2)
+	}
+
+	resp2, err = s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}, MasterElect: true})
 	if err == nil {
 		t.Errorf("Quick master reg did not fail: %v", resp2)
 	}
+
 }
 
 func TestRedirectV2(t *testing.T) {
