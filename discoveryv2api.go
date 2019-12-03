@@ -67,9 +67,12 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 		if curr.Master && !req.GetService().GetMaster() {
 			s.removeMaster(curr)
 			curr.Master = false
-		} else {
-			return &pb.RegisterResponse{Service: curr}, nil
+			if !req.Fanout {
+				req.Fanout = true
+				s.fanoutRegister(ctx, req)
+			}
 		}
+		return &pb.RegisterResponse{Service: curr}, nil
 	}
 
 	//Place this in the port map
