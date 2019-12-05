@@ -468,6 +468,7 @@ func main() {
 
 	server.RegisterServerV2("discovery", false, false)
 	server.Registry.IgnoresMaster = true
+	server.SendTrace = false
 
 	server.RegisterRepeatingTaskNonMaster(server.clean, "clean", time.Second)
 	go func() {
