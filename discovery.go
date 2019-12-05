@@ -486,7 +486,7 @@ func main() {
 	go func() {
 		t := time.Now()
 		time.Sleep(time.Second)
-		for i := 1; i <= 255; i++ {
+		for i := 1; i < 255; i++ {
 			server.findFriend(i)
 		}
 		server.friendTime = time.Now().Sub(t)
