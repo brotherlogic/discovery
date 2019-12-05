@@ -33,7 +33,7 @@ func (s *Server) MasterElect(ctx context.Context, req *pb.MasterRequest) (*pb.Ma
 	key := time.Now().UnixNano()
 	err := s.acquireMasterLock(ctx, curr.GetName(), key)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to acquire lock to become master")
+		return nil, err
 	}
 
 	curr.Master = true
