@@ -65,6 +65,7 @@ type Server struct {
 	friendTime      time.Duration
 	locks           map[string]int64
 	failAcquire     bool
+	lastError       string
 }
 
 type httpGetter interface {
@@ -329,7 +330,11 @@ func (s *Server) findFriend(host int) {
 		if err == nil {
 			s.friends = append(s.friends, hostStr)
 			s.readFriend(hostStr)
+		} else {
+			s.lastError = fmt.Sprintf("%v", err)
 		}
+	} else {
+		s.lastError = fmt.Sprintf("%v", err)
 	}
 }
 
@@ -347,6 +352,8 @@ func (s *Server) readFriend(host string) {
 					s.RegisterV2(ctx, &pb.RegisterRequest{Fanout: true, Service: entry})
 				}
 			}
+		} else {
+			s.lastError = fmt.Sprintf("%v", err)
 		}
 	}
 }
@@ -379,6 +386,7 @@ func (s *Server) GetState() []*pbg.State {
 	s.mm.RLock()
 	defer s.mm.RUnlock()
 	return []*pbg.State{
+		&pbg.State{Key: "last_error", Text: s.lastError},
 		&pbg.State{Key: "locks", Text: fmt.Sprintf("%v", s.locks)},
 		&pbg.State{Key: "ftime", TimeDuration: s.friendTime.Nanoseconds()},
 		&pbg.State{Key: "friends", Text: fmt.Sprintf("%v", s.friends)},
