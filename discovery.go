@@ -15,6 +15,8 @@ import (
 
 	"github.com/brotherlogic/goserver"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pb "github.com/brotherlogic/discovery/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
@@ -331,10 +333,12 @@ func (s *Server) findFriend(host int) {
 			s.friends = append(s.friends, hostStr)
 			s.readFriend(hostStr)
 		} else {
-			s.lastError = fmt.Sprintf("%v", err)
+			c := status.Convert(err)
+			if c.Code() != codes.DeadlineExceeded {
+				s.lastError = fmt.Sprintf("%v", err)
+			}
 		}
-	} else {
-		s.lastError = fmt.Sprintf("%v", err)
+
 	}
 }
 
