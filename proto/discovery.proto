@@ -108,6 +108,8 @@ message GetResponse {
 
 message UnregisterRequest{
   RegistryEntry service = 1;
+  string address = 3;
+  
   bool fanout = 2;
 }
 
