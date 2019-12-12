@@ -356,7 +356,7 @@ func TestLockLocks(t *testing.T) {
 		t.Fatalf("Unable to lock")
 	}
 
-	_, err = s.Lock(context.Background(), &pb.LockRequest{Job: "hello", LockKey: time.Now().UnixNano()})
+	_, err = s.Lock(context.Background(), &pb.LockRequest{Job: "hello", LockKey: time.Now().UnixNano(), Requestor: "blah"})
 	if err == nil {
 		t.Errorf("Lock did fail")
 	}
