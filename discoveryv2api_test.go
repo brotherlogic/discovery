@@ -356,8 +356,17 @@ func TestLockLocks(t *testing.T) {
 		t.Fatalf("Unable to lock")
 	}
 
-	_, err = s.Lock(context.Background(), &pb.LockRequest{Job: "hello", LockKey: time.Now().UnixNano()})
+	_, err = s.Lock(context.Background(), &pb.LockRequest{Job: "hello", LockKey: time.Now().UnixNano(), Requestor: "blah"})
 	if err == nil {
 		t.Errorf("Lock did fail")
 	}
+}
+
+func TestMasterElectNoRegister(t *testing.T) {
+	s := InitTestServer()
+	_, err := s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "blah"}})
+	if err == nil {
+		t.Errorf("Should have failed")
+	}
+
 }
