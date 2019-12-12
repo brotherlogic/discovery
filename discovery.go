@@ -66,6 +66,7 @@ type Server struct {
 	registerPeer    string
 	friendTime      time.Duration
 	locks           map[string]int64
+	lockNames       map[string]string
 	failAcquire     bool
 	lastError       string
 }
@@ -120,6 +121,7 @@ func InitServer() *Server {
 	s.masterv2Mutex = &sync.Mutex{}
 	s.friends = make([]string, 0)
 	s.locks = make(map[string]int64)
+	s.lockNames = make(map[string]string)
 	s.elector = &prodElector{dial: s.DoDial}
 	return s
 }
@@ -455,7 +457,7 @@ func (s *Server) acquireMasterLock(ctx context.Context, job string, lk int64) er
 		if err == nil {
 			defer conn.Close()
 			client := pb.NewDiscoveryServiceV2Client(conn)
-			_, err = client.Lock(ctx, &pb.LockRequest{Job: job, LockKey: lk})
+			_, err = client.Lock(ctx, &pb.LockRequest{Job: job, LockKey: lk, Requestor: s.Registry.Identifier})
 			if err != nil {
 				return err
 			}

@@ -44,6 +44,7 @@ func (s *Server) MasterElect(ctx context.Context, req *pb.MasterRequest) (*pb.Ma
 	req.Fanout = true
 	req.LockKey = key
 	s.fanoutMaster(ctx, req)
+	delete(s.locks, req.GetService().GetName())
 	return &pb.MasterResponse{Service: curr}, nil
 }
 
@@ -167,9 +168,10 @@ func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb
 func (s *Server) Lock(ctx context.Context, req *pb.LockRequest) (*pb.LockResponse, error) {
 	if val, ok := s.locks[req.GetJob()]; ok {
 		if time.Now().Sub(time.Unix(0, val)) < time.Minute || req.GetLockKey() < val {
-			return nil, status.Errorf(codes.FailedPrecondition, "Unable to acquire master for %v lock: %v or %v", req.GetJob(), time.Now().Sub(time.Unix(0, val)), req.GetLockKey()-val)
+			return nil, status.Errorf(codes.FailedPrecondition, "Unable to acquire master for %v lock (held by %v): %v or %v", req.GetJob(), req.GetRequestor(), time.Now().Sub(time.Unix(0, val)), req.GetLockKey()-val)
 		}
 	}
 	s.locks[req.GetJob()] = req.GetLockKey()
+	s.lockNames[req.GetJob()] = req.GetRequestor()
 	return &pb.LockResponse{}, nil
 }
