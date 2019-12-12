@@ -13,6 +13,9 @@ import (
 
 func (s *Server) MasterElect(ctx context.Context, req *pb.MasterRequest) (*pb.MasterResponse, error) {
 	curr, _ := s.getJob(req.GetService())
+	if curr == nil {
+		return nil, status.Errorf(codes.FailedPrecondition, "Job %v is not registered", req.GetService().GetName())
+	}
 
 	if req.GetFanout() {
 		if val, ok := s.locks[req.GetService().GetName()]; !ok || val != req.GetLockKey() {
