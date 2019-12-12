@@ -118,6 +118,7 @@ message UnregisterResponse {}
 message LockRequest{
   string job = 1;
   int64 lock_key = 2;
+  string requestor = 3;
 }
 
 message LockResponse{
