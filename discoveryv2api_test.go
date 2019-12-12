@@ -361,3 +361,12 @@ func TestLockLocks(t *testing.T) {
 		t.Errorf("Lock did fail")
 	}
 }
+
+func TestMasterElectNoRegister(t *testing.T) {
+	s := InitTestServer()
+	_, err := s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "blah"}})
+	if err == nil {
+		t.Errorf("Should have failed")
+	}
+
+}
