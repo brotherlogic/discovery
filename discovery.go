@@ -389,10 +389,17 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 
+	bad := int64(0)
+	for _, blah := range s.portMap {
+		if blah == nil {
+			bad++
+		}
+	}
+
 	s.mm.RLock()
 	defer s.mm.RUnlock()
 	return []*pbg.State{
-		&pbg.State{Key: "ports", Text: fmt.Sprintf("%v", s.portMap)},
+		&pbg.State{Key: "ports", Value: bad},
 		&pbg.State{Key: "locks", Text: fmt.Sprintf("%v", s.locks)},
 		&pbg.State{Key: "last_error", Text: s.lastError},
 		&pbg.State{Key: "ftime", TimeDuration: s.friendTime.Nanoseconds()},
