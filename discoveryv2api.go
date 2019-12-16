@@ -170,7 +170,7 @@ func (s *Server) Lock(ctx context.Context, req *pb.LockRequest) (*pb.LockRespons
 		if time.Now().Sub(time.Unix(0, val)) < time.Minute || req.GetLockKey() > val {
 			if v2, ok2 := s.lockNames[req.GetJob()]; ok2 {
 				if v2 != req.GetRequestor() {
-					return nil, status.Errorf(codes.FailedPrecondition, "Unable to acquire master for %v lock (held by %v): %v or %v", req.GetJob(), req.GetRequestor(), time.Now().Sub(time.Unix(0, val)), req.GetLockKey()-val)
+					return nil, status.Errorf(codes.FailedPrecondition, "Unable to acquire master on %v for %v lock (held by %v): %v or %v", s.Registry, req.GetJob(), req.GetRequestor(), time.Now().Sub(time.Unix(0, val)), req.GetLockKey()-val)
 				}
 			}
 		}
