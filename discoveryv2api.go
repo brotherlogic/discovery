@@ -28,7 +28,7 @@ func (s *Server) MasterElect(ctx context.Context, req *pb.MasterRequest) (*pb.Ma
 
 	m, t := s.getCMaster(req.GetService())
 	if m != nil && time.Now().Sub(t) < time.Minute {
-		return nil, status.Errorf(codes.FailedPrecondition, "Cannot become master until %v", t.Add(time.Minute))
+		return nil, status.Errorf(codes.FailedPrecondition, "Cannot become master until %v -> current master is %v", t.Add(time.Minute), m)
 	}
 
 	s.elector.unelect(ctx, m)
@@ -170,7 +170,7 @@ func (s *Server) Lock(ctx context.Context, req *pb.LockRequest) (*pb.LockRespons
 		if time.Now().Sub(time.Unix(0, val)) < time.Minute || req.GetLockKey() > val {
 			if v2, ok2 := s.lockNames[req.GetJob()]; ok2 {
 				if v2 != req.GetRequestor() {
-					return nil, status.Errorf(codes.FailedPrecondition, "Unable to acquire master on %v for %v lock (held by %v): %v or %v acq %v", s.Registry, req.GetJob(), req.GetRequestor(), time.Now().Sub(time.Unix(0, val)), req.GetLockKey()-val, time.Unix(0, val))
+					return nil, status.Errorf(codes.FailedPrecondition, "Unable to acquire master on %v for %v lock (held by %v not %v): %v or %v acq %v", s.Registry, req.GetJob(), v2, req.GetRequestor(), time.Now().Sub(time.Unix(0, val)), req.GetLockKey()-val, time.Unix(0, val))
 				}
 			}
 		}
