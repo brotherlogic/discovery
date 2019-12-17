@@ -152,7 +152,7 @@ func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb
 	s.removeFromPortMap(req.GetService())
 
 	master, _ := s.getCMaster(req.GetService())
-	if master.GetIdentifier() == req.GetService().GetIdentifier() {
+	if master != nil && master.GetIdentifier() == req.GetService().GetIdentifier() {
 		s.removeMaster(req.GetService())
 	}
 
