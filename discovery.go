@@ -211,6 +211,8 @@ func (p *prodElector) unelect(ctx context.Context, entry *pb.RegistryEntry) erro
 	if entry == nil {
 		return nil
 	}
+	entry.Master = false
+
 	conn, err := p.dial(entry)
 	if err != nil {
 		return err
@@ -219,10 +221,6 @@ func (p *prodElector) unelect(ctx context.Context, entry *pb.RegistryEntry) erro
 
 	server := pbg.NewGoserverServiceClient(conn)
 	_, err = server.Mote(ctx, &pbg.MoteRequest{Master: false})
-
-	if err == nil {
-		entry.Master = false
-	}
 
 	return err
 }
