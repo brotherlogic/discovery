@@ -170,7 +170,7 @@ func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb
 //Lock in prep for master elect
 func (s *Server) Lock(ctx context.Context, req *pb.LockRequest) (*pb.LockResponse, error) {
 	if val, ok := s.locks[req.GetJob()]; ok {
-		if time.Now().Sub(time.Unix(0, val)) < time.Minute && req.GetLockKey() > val {
+		if time.Now().Sub(time.Unix(0, val)) < time.Second*4 && req.GetLockKey() > val {
 			if v2, ok2 := s.lockNames[req.GetJob()]; ok2 {
 				if v2 != req.GetRequestor() {
 					return nil, status.Errorf(codes.FailedPrecondition, "Unable to acquire master on %v for %v lock (held by %v not %v): %v or %v acq %v", s.Registry, req.GetJob(), v2, req.GetRequestor(), time.Now().Sub(time.Unix(0, val)), req.GetLockKey()-val, time.Unix(0, val))
