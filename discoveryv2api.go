@@ -149,6 +149,10 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 
 //Unregister a service from the listing
 func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb.UnregisterResponse, error) {
+	if req.GetService() == nil {
+		return nil, fmt.Errorf("Attempting to unregister empty service: %v", req)
+	}
+
 	s.removeFromPortMap(req.GetService())
 
 	master, _ := s.getCMaster(req.GetService())
