@@ -468,6 +468,13 @@ func (s *Server) acquireMasterLock(ctx context.Context, job string, lk int64) er
 	if s.failAcquire {
 		return fmt.Errorf("Built to fail")
 	}
+
+	//Local lock first
+	_, err := s.Lock(ctx, &pb.LockRequest{Job: job, LockKey: lk, Requestor: s.Registry.Identifier})
+	if err != nil {
+		return err
+	}
+
 	for _, f := range s.friends {
 		conn, err := grpc.Dial(f, grpc.WithInsecure())
 		if err == nil {
