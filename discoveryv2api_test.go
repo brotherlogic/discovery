@@ -370,3 +370,13 @@ func TestMasterElectNoRegister(t *testing.T) {
 	}
 
 }
+func TestEmptyUnRegisterFail(t *testing.T) {
+	s := InitTestServer()
+	s.friendTime = 0
+
+	resp, err := s.Unregister(context.Background(), &pb.UnregisterRequest{})
+
+	if err == nil {
+		t.Errorf("Register did not fail: %v", resp)
+	}
+}

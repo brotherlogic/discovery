@@ -18,6 +18,7 @@ func InitTestServer() *Server {
 	s := InitServer()
 	s.elector = &testElector{}
 	s.friendTime = time.Minute
+	s.Registry = &pb.RegistryEntry{}
 	return s
 }
 
