@@ -403,6 +403,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "last_remove", Text: s.lastRemove},
 		&pbg.State{Key: "ports", Value: bad},
 		&pbg.State{Key: "locks", Text: fmt.Sprintf("%v", s.locks)},
+		&pbg.State{Key: "locks_name", Text: fmt.Sprintf("%v", s.lockNames)},
 		&pbg.State{Key: "last_error", Text: s.lastError},
 		&pbg.State{Key: "ftime", TimeDuration: s.friendTime.Nanoseconds()},
 		&pbg.State{Key: "friends", Text: fmt.Sprintf("%v", s.friends)},
