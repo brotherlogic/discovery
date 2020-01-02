@@ -283,6 +283,14 @@ func (s *Server) removeFromPortMap(in *pb.RegistryEntry) {
 	newPortMap := make([]*pb.RegistryEntry, 0)
 
 	for _, entry := range s.portMap {
+		if in == nil {
+			panic("nil request in")
+		}
+
+		if entry == nil {
+			panic("nil entry")
+		}
+
 		if entry.GetIdentifier() != in.GetIdentifier() ||
 			(len(in.GetName()) > 0 && in.GetName() != entry.GetName()) {
 			newPortMap = append(newPortMap, entry)
