@@ -44,7 +44,6 @@ func (s *Server) MasterElect(ctx context.Context, req *pb.MasterRequest) (*pb.Ma
 	req.Fanout = true
 	req.LockKey = key
 	s.fanoutMaster(ctx, req)
-	delete(s.locks, req.GetService().GetName())
 	return &pb.MasterResponse{Service: curr}, nil
 }
 
