@@ -25,6 +25,7 @@ func (s *Server) ListAllServices(ctx context.Context, in *pb.ListRequest) (*pb.L
 
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
+	s.RaiseIssue(ctx, "Bad Register", fmt.Sprintf("%v is a v1 register", req), false)
 	s.countRegister++
 
 	pr, _ := peer.FromContext(ctx)
