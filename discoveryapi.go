@@ -25,7 +25,7 @@ func (s *Server) ListAllServices(ctx context.Context, in *pb.ListRequest) (*pb.L
 
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
-	if req.GetService().GetName() != "PictureFrame" {
+	if req.GetService().GetName() != "PictureFrame" && req.GetService().GetName() != "GraphPlotter" {
 		s.RaiseIssue(ctx, "Bad Register", fmt.Sprintf("%v is a v1 register", req), false)
 	}
 	s.countRegister++
