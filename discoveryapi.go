@@ -6,9 +6,7 @@ import (
 	"time"
 
 	pb "github.com/brotherlogic/discovery/proto"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
-	"google.golang.org/grpc/status"
 )
 
 // ListAllServices returns a list of all the services
@@ -89,59 +87,11 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 
 // Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.DiscoverResponse, error) {
-
-	pr, _ := peer.FromContext(ctx)
-	s.discoverPeer = fmt.Sprintf("%+v", pr)
-
-	//Reject requests without caller
-	if req.Caller == "" {
-		pr, _ := peer.FromContext(ctx)
-		s.peerFail = fmt.Sprintf("%+v", pr)
-		return nil, fmt.Errorf("Must specify caller")
+	resp, err := s.Get(ctx, &pb.GetRequest{Job: req.GetRequest().GetName(), Server: req.GetRequest().GetIdentifier()})
+	if len(resp.GetServices()) > 0 {
+		return &pb.DiscoverResponse{Service: resp.GetServices()[0]}, err
 	}
-
-	if val, ok := s.version.Load(req.GetRequest().GetName()); ok {
-		if val.(int32) == 1 {
-			resp, err := s.Get(ctx, &pb.GetRequest{Job: req.GetRequest().GetName(), Server: req.GetRequest().GetIdentifier()})
-			if len(resp.GetServices()) > 0 {
-				return &pb.DiscoverResponse{Service: resp.GetServices()[0]}, err
-			}
-			return &pb.DiscoverResponse{}, err
-		}
-	}
-	s.countDiscover++
-	in := req.GetRequest()
-
-	s.callerCountM.Lock()
-	s.reqCountM.Lock()
-	s.callerCount[req.Caller]++
-	s.reqCount[in.GetName()]++
-	s.reqCountM.Unlock()
-	s.callerCountM.Unlock()
-
-	// Check if we've been asked for something specific
-	if in.GetIdentifier() != "" && in.GetName() != "" {
-		in.Port = s.hashPortNumber(in.GetIdentifier(), in.GetName(), SEP)
-		val := s.getCurr(in)
-		if val != nil {
-			return &pb.DiscoverResponse{Service: val}, nil
-		}
-
-		return nil, fmt.Errorf("Unable to locate %v on server %v", in.GetName(), in.GetIdentifier())
-	}
-
-	// Return the master if it exists
-	val, _ := s.getCMaster(in)
-	if val != nil && val.LastSeenTime+val.TimeToClean*1000000 > time.Now().UnixNano() && !val.WeakMaster {
-		return &pb.DiscoverResponse{Service: val}, nil
-	}
-
-	if val != nil && val.LastSeenTime+val.TimeToClean*1000000 < time.Now().UnixNano() {
-		s.removeMaster(val)
-		return &pb.DiscoverResponse{}, status.Error(codes.Unavailable, fmt.Sprintf("Removed old master for %v", in.GetIdentifier()))
-	}
-
-	return &pb.DiscoverResponse{}, status.Error(codes.Unavailable, fmt.Sprintf("Cannot find master for "+in.GetName()+" on server "+in.GetIdentifier()+" got %v -> %v from %v and %v,%v", val, time.Now().UnixNano()-val.GetLastSeenTime() > val.GetTimeToClean()*1000000, time.Now().UnixNano(), val.GetLastSeenTime(), val.GetTimeToClean()*1000000))
+	return &pb.DiscoverResponse{}, err
 }
 
 //State gets the state of the server
