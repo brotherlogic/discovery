@@ -104,6 +104,12 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 		if val.(int32) == 1 {
 			resp, err := s.Get(ctx, &pb.GetRequest{Job: req.GetRequest().GetName(), Server: req.GetRequest().GetIdentifier()})
 			if len(resp.GetServices()) > 0 {
+				//Lead with master
+				for _, service := range resp.GetServices() {
+					if service.Master {
+						return &pb.DiscoverResponse{Service: service}, err
+					}
+				}
 				return &pb.DiscoverResponse{Service: resp.GetServices()[0]}, err
 			}
 			return &pb.DiscoverResponse{}, err
