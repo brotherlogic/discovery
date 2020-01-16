@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/brotherlogic/discovery/proto"
@@ -149,7 +150,8 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 //Unregister a service from the listing
 func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb.UnregisterResponse, error) {
 	if req.GetService() == nil {
-		return nil, fmt.Errorf("Attempting to unregister empty service: %v", req)
+		p, _ := peer.FromContext(ctx)
+		return nil, fmt.Errorf("Attempting to unregister empty service: %v: %+v", req, p)
 	}
 
 	s.removeFromPortMap(req.GetService())
