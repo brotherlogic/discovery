@@ -122,6 +122,10 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 	}
 
 	if len(req.Job) != 0 {
+		cval, ok := s.getMap.LoadOrStore(req.GetJob(), 1)
+		if ok {
+			s.getMap.Store(req.GetJob(), cval.(int)+1)
+		}
 		jobs := []*pb.RegistryEntry{}
 		for _, job := range s.portMap {
 			if job != nil {
