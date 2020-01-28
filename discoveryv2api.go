@@ -155,7 +155,7 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb.UnregisterResponse, error) {
 	if req.GetService() == nil {
 		p, _ := peer.FromContext(ctx)
-		return nil, fmt.Errorf("Attempting to unregister empty service: %v: %+v", req, p)
+		return nil, status.Errorf(codes.InvalidArgument, "Attempting to unregister empty service: %v: %+v", req, p)
 	}
 
 	s.removeFromPortMap(req.GetService())
