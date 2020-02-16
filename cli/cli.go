@@ -173,6 +173,44 @@ func main() {
 				}
 
 			}
+		case "find":
+			var server = buildFlags.String("server", "", "server")
+			if err := buildFlags.Parse(os.Args[2:]); err == nil {
+				for _, ip := range []string{
+					"192.168.86.20:50055",
+					"192.168.86.24:50055",
+					"192.168.86.249:50055",
+					"192.168.86.28:50055",
+					"192.168.86.32:50055",
+					"192.168.86.40:50055",
+					"192.168.86.42:50055",
+					"192.168.86.43:50055",
+					"192.168.86.44:50055",
+					"192.168.86.49:50055",
+					"192.168.86.53:50055",
+					"73.162.90.182:50055",
+				} {
+					conn, err := grpc.Dial(ip, grpc.WithInsecure())
+					defer conn.Close()
+
+					registry := pbdi.NewDiscoveryServiceV2Client(conn)
+					ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+					defer cancel()
+					bits, err := registry.Get(ctx, &pbdi.GetRequest{}, grpc.FailFast(false))
+
+					if err != nil {
+						log.Fatalf("Error in get: %v", err)
+					}
+
+					for _, bit := range bits.GetServices() {
+						if bit.GetName() == *server && bit.GetMaster() {
+							fmt.Printf("%v -> %v\n", ip, bit)
+						}
+					}
+
+				}
+			}
+
 		}
 	}
 }

@@ -517,7 +517,7 @@ func TestFailExternalGet(t *testing.T) {
 		t.Errorf("Bad register: %v", err)
 	}
 
-	if r.Service.Port > 50053 {
+	if r.Service.Port > 50054 {
 		t.Errorf("Oh dead: %v", r)
 	}
 }
