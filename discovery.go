@@ -502,6 +502,7 @@ func main() {
 		log.SetFlags(0)
 		log.SetOutput(ioutil.Discard)
 	}
+
 	server := InitServer()
 	server.setExternalIP(prodHTTPGetter{})
 	server.PrepServerNoRegister(port)
