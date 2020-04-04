@@ -29,7 +29,7 @@ func (s *Server) MasterElect(ctx context.Context, req *pb.MasterRequest) (*pb.Ma
 
 	m, t := s.getCMaster(req.GetService())
 	if m != nil && time.Now().Sub(t) < time.Minute {
-		return nil, status.Errorf(codes.FailedPrecondition, "Cannot become master until %v -> current master is %v", t.Add(time.Minute), m)
+		return nil, status.Errorf(codes.FailedPrecondition, "Cannot become master until %v -> current master is %v (%v is making the request)", t.Add(time.Minute), m, req.GetService())
 	}
 
 	s.elector.unelect(ctx, m)
