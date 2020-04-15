@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package discovery;
 
-option go_package = ".;discovery";
+option go_package = "github.com/brotherlogic/discovery/proto";
 
 message RegistryEntry {
   // The ip address associated with this entry
