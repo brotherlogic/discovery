@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package discovery;
 
+option go_package = ".;discovery";
+
 message RegistryEntry {
   // The ip address associated with this entry
   string ip = 1;
