@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/brotherlogic/goserver"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -28,6 +30,14 @@ const (
 
 const (
 	strikeCount = 3
+)
+
+var (
+	//Friends discovery chums
+	Friends = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "discovery_friends",
+		Help: "The number of friends we have",
+	})
 )
 
 var externalPorts = map[string][]int32{"main": []int32{50052, 50053}}
@@ -344,6 +354,7 @@ func (s *Server) findFriend(host int) {
 		_, err := client.IsAlive(ctx, &pbg.Alive{})
 		if err == nil {
 			s.friends = append(s.friends, hostStr)
+			Friends.Set(float64(len(s.friends)))
 			s.readFriend(hostStr)
 		} else {
 			c := status.Convert(err)
