@@ -421,6 +421,7 @@ func (s *Server) GetState() []*pbg.State {
 	s.mm.RLock()
 	defer s.mm.RUnlock()
 	return []*pbg.State{
+		&pbg.State{Key: "friend", Text: fmt.Sprintf("%v", s.friends)},
 		&pbg.State{Key: "last_remove", Text: s.lastRemove},
 		&pbg.State{Key: "ports", Value: bad},
 		&pbg.State{Key: "locks", Text: fmt.Sprintf("%v", s.locks)},
