@@ -81,6 +81,7 @@ type Server struct {
 	lastError       string
 	lastRemove      string
 	getMap          sync.Map
+	countMap        map[int]string
 }
 
 type httpGetter interface {
@@ -135,6 +136,7 @@ func InitServer() *Server {
 	s.locks = make(map[string]int64)
 	s.lockNames = make(map[string]string)
 	s.elector = &prodElector{dial: s.DoDial}
+	s.countMap = make(map[int]string)
 	return s
 }
 
@@ -338,6 +340,7 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 func (s *Server) findFriend(host int) {
 	hostStr := fmt.Sprintf("192.168.86.%v:50055", host)
 	if fmt.Sprintf("%v:50055", s.Registry.Ip) == hostStr {
+		s.countMap[host] = fmt.Sprintf("%v SELF", time.Now())
 		return
 	}
 	for _, f := range s.friends {
@@ -353,6 +356,7 @@ func (s *Server) findFriend(host int) {
 		defer cancel()
 		_, err := client.IsAlive(ctx, &pbg.Alive{})
 		if err == nil {
+			s.countMap[host] = fmt.Sprintf("%v FOUND_FRIEND", time.Now())
 			s.friends = append(s.friends, hostStr)
 			Friends.Set(float64(len(s.friends)))
 			s.readFriend(hostStr)
@@ -361,6 +365,7 @@ func (s *Server) findFriend(host int) {
 			if c.Code() != codes.DeadlineExceeded {
 				s.lastError = fmt.Sprintf("%v", err)
 			}
+			s.countMap[host] = fmt.Sprintf("%v", err)
 		}
 
 	}
@@ -380,6 +385,7 @@ func (s *Server) readFriend(host string) {
 					s.RegisterV2(ctx, &pb.RegisterRequest{Fanout: true, Service: entry})
 				}
 			}
+
 		} else {
 			s.lastError = fmt.Sprintf("%v", err)
 		}
@@ -422,6 +428,7 @@ func (s *Server) GetState() []*pbg.State {
 	defer s.mm.RUnlock()
 	return []*pbg.State{
 		&pbg.State{Key: "friend", Text: fmt.Sprintf("%v", s.friends)},
+		&pbg.State{Key: "friend_map", Text: fmt.Sprintf("%v", s.countMap)},
 		&pbg.State{Key: "last_remove", Text: s.lastRemove},
 		&pbg.State{Key: "ports", Value: bad},
 		&pbg.State{Key: "locks", Text: fmt.Sprintf("%v", s.locks)},

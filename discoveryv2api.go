@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -111,6 +113,11 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 
 		if !found {
 			s.friends = append(s.friends, req.GetFriend())
+			elems := strings.Split(req.GetFriend(), ":")
+			if len(elems) > 1 {
+				blah, _ := strconv.Atoi(elems[1])
+				s.countMap[blah] = fmt.Sprintf("%v %v", time.Now(), "FROM_API")
+			}
 			Friends.Set(float64(len(s.friends)))
 		}
 	}
