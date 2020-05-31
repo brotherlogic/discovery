@@ -89,6 +89,20 @@ func main() {
 					}
 				}
 			}
+		case "unreg":
+			var host = buildFlags.String("host", utils.Discover, "dicsover host")
+			var name = buildFlags.String("name", "blah", "dicsover host")
+			if err := buildFlags.Parse(os.Args[2:]); err == nil {
+				conn, err := grpc.Dial(*host, grpc.WithInsecure())
+				if err == nil {
+					defer conn.Close()
+					client := pbdi.NewDiscoveryServiceV2Client(conn)
+					ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+					defer cancel()
+					a, err := client.Unregister(ctx, &pbdi.UnregisterRequest{Service: &pbdi.RegistryEntry{Identifier: *name}})
+					fmt.Printf("Unregistered: %v -> %v\n", err, a)
+				}
+			}
 		case "get":
 			var host = buildFlags.String("host", utils.Discover, "dicsover host")
 			var name = buildFlags.String("name", "", "name")
