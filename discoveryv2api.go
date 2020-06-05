@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -108,6 +109,11 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 
 	if s.getLoad > 10 {
 		s.RaiseIssue(ctx, "Overload", fmt.Sprintf("Discover on %v is recording %v get calls", s.Registry, s.getLoad), false)
+	}
+
+	if s.getLoad > 50 {
+		fmt.Printf("Severe Overlad\n")
+		os.Exit(1)
 	}
 
 	if len(req.GetFriend()) > 0 {
