@@ -82,6 +82,7 @@ type Server struct {
 	lastRemove      string
 	getMap          sync.Map
 	countMap        map[int]string
+	getLoad         int
 }
 
 type httpGetter interface {
@@ -394,28 +395,9 @@ func (s *Server) readFriend(host string) {
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
-	topC := 0
 	topCaller := ""
 	topR := 0
 	topRequest := ""
-
-	s.callerCountM.Lock()
-	s.reqCountM.Lock()
-	defer s.callerCountM.Unlock()
-	defer s.reqCountM.Unlock()
-	for key, value := range s.callerCount {
-		if value > topC {
-			topC = value
-			topCaller = key
-		}
-	}
-
-	for key, value := range s.reqCount {
-		if value > topR {
-			topR = value
-			topRequest = key
-		}
-	}
 
 	bad := int64(0)
 	for _, blah := range s.portMap {
