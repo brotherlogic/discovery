@@ -107,7 +107,7 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 		s.getLoad--
 	}()
 
-	if s.getLoad > 10 {
+	if s.getLoad > 50 {
 		s.RaiseIssue(ctx, "Overload", fmt.Sprintf("Discover on %v is recording %v get calls", s.Registry, s.getLoad), false)
 	}
 
