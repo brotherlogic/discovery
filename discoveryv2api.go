@@ -101,6 +101,14 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 // Get an entry from the registry
 func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
+	s.getLoad++
+	defer func() {
+		s.getLoad--
+	}()
+
+	if s.getLoad > 10 {
+		s.RaiseIssue(ctx, "Overload", fmt.Sprintf("Discover is recording %v get calls", s.getLoad), false)
+	}
 
 	if len(req.GetFriend()) > 0 {
 		found := false
