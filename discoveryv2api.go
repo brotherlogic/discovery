@@ -107,8 +107,22 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 		s.getLoad--
 	}()
 
+	jobName := "unknown"
+	if len(req.GetJob()) > 0 {
+		jobName = req.GetJob()
+	}
+	s.mapLock.Lock()
+	s.getMapB[jobName]++
+	s.mapLock.Unlock()
+
+	defer func() {
+		s.mapLock.Lock()
+		s.getMapB[jobName]--
+		s.mapLock.Unlock()
+	}()
+
 	if s.getLoad > 50 {
-		s.RaiseIssue(ctx, "Overload", fmt.Sprintf("Discover on %v is recording %v get calls", s.Registry, s.getLoad), false)
+		s.RaiseIssue(ctx, "Overload", fmt.Sprintf("Discover on %v is recording %v get calls: %v", s.Registry, s.getLoad, s.getMapB), false)
 	}
 
 	if s.getLoad > 100 {
