@@ -83,6 +83,8 @@ type Server struct {
 	getMap          sync.Map
 	countMap        map[int]string
 	getLoad         int
+	getMapB         map[string]int
+	mapLock         *sync.Mutex
 }
 
 type httpGetter interface {
@@ -138,6 +140,8 @@ func InitServer() *Server {
 	s.lockNames = make(map[string]string)
 	s.elector = &prodElector{dial: s.DoDial}
 	s.countMap = make(map[int]string)
+	s.getMapB = make(map[string]int)
+	s.mapLock = &sync.Mutex{}
 	return s
 }
 
