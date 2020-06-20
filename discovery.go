@@ -353,7 +353,7 @@ func (s *Server) findFriend(host int) {
 			return
 		}
 	}
-	conn, err := grpc.Dial(fmt.Sprintf("192.168.86.%v:50055", host), grpc.WithInsecure())
+	conn, err := s.FDial(fmt.Sprintf("192.168.86.%v:50055", host))
 	if err == nil {
 		defer conn.Close()
 		client := pbg.NewGoserverServiceClient(conn)
@@ -373,6 +373,12 @@ func (s *Server) findFriend(host int) {
 			s.countMap[host] = fmt.Sprintf("%v", err)
 		}
 
+	}
+}
+
+func (s *Server) validateFriends() {
+	for _, f := range s.friends {
+		s.readFriend(f)
 	}
 }
 
@@ -525,6 +531,9 @@ func main() {
 		for i := 1; i < 255; i++ {
 			server.findFriend(i)
 		}
+
+		// Double check that we have everything
+		server.validateFriends()
 		server.friendTime = time.Now().Sub(t)
 	}()
 	server.Serve()
