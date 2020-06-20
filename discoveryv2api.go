@@ -3,9 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
-	"strconv"
-	"strings"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -102,11 +99,6 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 // Get an entry from the registry
 func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
-	s.getLoad++
-	defer func() {
-		s.getLoad--
-	}()
-
 	jobName := "unknown"
 	if len(req.GetJob()) > 0 {
 		jobName = req.GetJob()
@@ -121,15 +113,6 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 		s.mapLock.Unlock()
 	}()
 
-	if s.getLoad > 50 {
-		s.RaiseIssue("Overload", fmt.Sprintf("Discover on %v is recording %v get calls: %v", s.Registry, s.getLoad, s.getMapB))
-	}
-
-	if s.getLoad > 100 {
-		fmt.Printf("Severe Overlad\n")
-		os.Exit(1)
-	}
-
 	if len(req.GetFriend()) > 0 {
 		found := false
 		for _, friend := range s.friends {
@@ -141,11 +124,6 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 
 		if !found {
 			s.friends = append(s.friends, req.GetFriend())
-			elems := strings.Split(req.GetFriend(), ":")
-			if len(elems) > 1 {
-				blah, _ := strconv.Atoi(elems[1])
-				s.countMap[blah] = fmt.Sprintf("%v %v", time.Now(), "FROM_API")
-			}
 			Friends.Set(float64(len(s.friends)))
 		}
 	}
