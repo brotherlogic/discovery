@@ -444,7 +444,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 	for _, f := range s.friends {
-		conn, err := s.BaseDial(f)
+		conn, err := s.FDial(f)
 		if err == nil {
 			defer conn.Close()
 			client := pb.NewDiscoveryServiceV2Client(conn)
@@ -454,7 +454,7 @@ func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 }
 func (s *Server) fanoutMaster(ctx context.Context, req *pb.MasterRequest) {
 	for _, f := range s.friends {
-		conn, err := s.BaseDial(f)
+		conn, err := s.FDial(f)
 		if err == nil {
 			defer conn.Close()
 			client := pb.NewDiscoveryServiceV2Client(conn)
@@ -465,7 +465,7 @@ func (s *Server) fanoutMaster(ctx context.Context, req *pb.MasterRequest) {
 
 func (s *Server) fanoutUnregister(ctx context.Context, req *pb.UnregisterRequest) {
 	for _, f := range s.friends {
-		conn, err := s.BaseDial(f)
+		conn, err := s.FDial(f)
 		if err == nil {
 			defer conn.Close()
 			client := pb.NewDiscoveryServiceV2Client(conn)
@@ -518,7 +518,7 @@ func main() {
 	server.Registry.IgnoresMaster = true
 	server.SendTrace = false
 
-	server.RegisterRepeatingTaskNonMaster(server.clean, "clean", time.Second)
+	// Find friends
 	go func() {
 		t := time.Now()
 		time.Sleep(time.Second)
