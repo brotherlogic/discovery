@@ -18,8 +18,6 @@ func (s *Server) MasterElect(ctx context.Context, req *pb.MasterRequest) (*pb.Ma
 		return nil, status.Errorf(codes.FailedPrecondition, "Job %v is not registered", req.GetService().GetName())
 	}
 
-	go s.checkFriend(fmt.Sprintf("%v", req.GetService().GetIp()))
-
 	if req.GetFanout() {
 		if val, ok := s.locks[req.GetService().GetName()]; !ok || val != req.GetLockKey() {
 			return nil, fmt.Errorf("Lock was not acquired here")
@@ -63,6 +61,8 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 	if req.GetService().GetMaster() && !req.GetFanout() {
 		req.GetService().Master = false
 	}
+
+	s.checkFriend(fmt.Sprintf("%v", req.GetService().GetIp()))
 
 	curr, _ := s.getJob(req.GetService())
 
