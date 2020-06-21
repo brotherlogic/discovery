@@ -383,6 +383,11 @@ func (s *Server) validateFriends() {
 }
 
 func (s *Server) checkFriend(addr string) {
+	//Don't friend ourselves
+	if addr == s.Registry.GetIp() {
+		return
+	}
+
 	newaddr := addr + ":50055"
 
 	for _, f := range s.friends {
