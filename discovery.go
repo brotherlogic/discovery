@@ -397,6 +397,7 @@ func (s *Server) checkFriend(addr string) {
 	}
 
 	s.friends = append(s.friends, newaddr)
+	Friends.Set(float64(len(s.friends)))
 }
 
 func (s *Server) readFriend(host string) {
