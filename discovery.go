@@ -382,6 +382,18 @@ func (s *Server) validateFriends() {
 	}
 }
 
+func (s *Server) checkFriend(addr string) {
+	newaddr := addr + ":50055"
+
+	for _, f := range s.friends {
+		if f == newaddr {
+			return
+		}
+	}
+
+	s.friends = append(s.friends, newaddr)
+}
+
 func (s *Server) readFriend(host string) {
 	conn, err := grpc.Dial(host, grpc.WithInsecure())
 	if err == nil {
