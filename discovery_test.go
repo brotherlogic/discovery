@@ -20,6 +20,7 @@ func InitTestServer() *Server {
 	s.friendTime = time.Minute
 	s.Registry = &pb.RegistryEntry{}
 	s.SkipIssue = true
+	s.SkipLog = true
 	return s
 }
 
