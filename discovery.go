@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os/exec"
 	"strconv"
 	"strings"
 	"sync"
@@ -397,7 +398,22 @@ func (s *Server) checkFriend(addr string) {
 	}
 
 	s.friends = append(s.friends, newaddr)
+	go s.registerCluster(newaddr)
 	Friends.Set(float64(len(s.friends)))
+}
+
+var (
+	etcreg = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "discovery_etcreg",
+		Help: "ETCD Registry Attempts",
+	}, []string{"error"})
+)
+
+func (s *Server) registerCluster(addr string) {
+	etcHost := strings.Replace(addr, "50055", "2380", 1)
+	cmd := exec.Command("etcdctl", "member", "add", etcHost)
+	err := cmd.Run()
+	etcreg.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 }
 
 func (s *Server) readFriend(host string) {
