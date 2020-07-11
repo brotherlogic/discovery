@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/brotherlogic/goserver"
+	"github.com/brotherlogic/goserver/utils"
+	"github.com/etcd-io/etcd/clientv3"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"google.golang.org/grpc"
@@ -22,6 +24,8 @@ import (
 
 	pb "github.com/brotherlogic/discovery/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
+
+	etcpb "github.com/etcd-io/etcd/etcdserver/etcdserverpb"
 )
 
 const (
@@ -397,7 +401,35 @@ func (s *Server) checkFriend(addr string) {
 	}
 
 	s.friends = append(s.friends, newaddr)
+	go s.registerCluster(newaddr)
 	Friends.Set(float64(len(s.friends)))
+}
+
+var (
+	etcreg = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "discovery_etcreg",
+		Help: "ETCD Registry Attempts",
+	}, []string{"error"})
+)
+
+func (s *Server) registerCluster(addr string) {
+	etcdHost := strings.Replace(addr, "50055", "2379", 1)
+	cli, cerr := clientv3.NewFromURL("http://localhost:2379")
+	r := &etcdnaming.GRPCResolver{Client: cli}
+	b := grpc.RoundRobin(r)
+	conn, gerr := grpc.Dial("my-service", grpc.WithBalancer(b))
+	if gerr != nil {
+		etcreg.With(prometheus.Labels{"error": fmt.Sprintf("DIAL: %v", err)}).Inc()
+		s.Log(fmt.Sprintf("Cannot dial etcd: %v", err))
+
+	}
+
+	client := etcpb.NewClusterClient(conn)
+	ctx, cancel := utils.ManualContext("disc", "disc", time.Minute, false)
+	defer cancel()
+	_, err = client.MemberAdd(ctx, &etcpb.MemberAddRequest{PeerURLs: []string{etcdHost}})
+	etcreg.With(prometheus.Labels{"error": fmt.Sprintf("ADD: %v", err)}).Inc()
+	s.Log(fmt.Sprintf("Added member: %v", err))
 }
 
 func (s *Server) readFriend(host string) {
