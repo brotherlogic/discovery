@@ -413,7 +413,7 @@ func (s *Server) registerCluster(addr string) {
 	etcHost := strings.Replace(addr, "50055", "2380", 1)
 	cmd := exec.Command("etcdctl", "member", "add", etcHost)
 	err := cmd.Run()
-	etcreg.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
+	etcreg.With(prometheus.Labels{"error": fmt.Sprintf("%v -> %v", etcHost, err)}).Inc()
 }
 
 func (s *Server) readFriend(host string) {
