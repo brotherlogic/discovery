@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os/exec"
 	"strconv"
 	"strings"
 	"sync"
@@ -16,14 +17,12 @@ import (
 	"github.com/brotherlogic/goserver"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"go.etcd.io/etcd/clientv3"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	pb "github.com/brotherlogic/discovery/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
-	"github.com/brotherlogic/goserver/utils"
 )
 
 const (
@@ -412,20 +411,8 @@ var (
 
 func (s *Server) registerCluster(addr string) {
 	etcHost := strings.Replace(addr, "50055", "2380", 1)
-	cfg := clientv3.Config{
-		Endpoints:   []string{"http://127.0.0.1:2379"},
-		DialTimeout: 2 * time.Second,
-	}
-	c, err := clientv3.New(cfg)
-	if err != nil {
-		etcreg.With(prometheus.Labels{"error": fmt.Sprintf("DIAL %v", err)}).Inc()
-		return
-	}
-	defer c.Close()
-
-	ctx, cancel := utils.ManualContext("disc", "disc", time.Minute, false)
-	defer cancel()
-	_, err = c.MemberAdd(ctx, []string{etcHost})
+	cmd := exec.Command("etcdctl", "member", "add", etcHost)
+	err := cmd.Run()
 	etcreg.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 }
 
