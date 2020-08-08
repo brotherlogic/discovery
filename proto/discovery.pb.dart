@@ -600,6 +600,7 @@ class UnregisterRequest extends $pb.GeneratedMessage {
     ..aOM<RegistryEntry>(1, 'service', subBuilder: RegistryEntry.create)
     ..aOB(2, 'fanout')
     ..aOS(3, 'address')
+    ..aOS(4, 'caller')
     ..hasRequiredFields = false
   ;
 
@@ -646,6 +647,15 @@ class UnregisterRequest extends $pb.GeneratedMessage {
   $core.bool hasAddress() => $_has(2);
   @$pb.TagNumber(3)
   void clearAddress() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get caller => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set caller($core.String v) { $_setString(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasCaller() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCaller() => clearField(4);
 }
 
 class UnregisterResponse extends $pb.GeneratedMessage {

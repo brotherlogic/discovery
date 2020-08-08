@@ -10,6 +10,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/brotherlogic/discovery/proto"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 func (s *Server) MasterElect(ctx context.Context, req *pb.MasterRequest) (*pb.MasterResponse, error) {
@@ -48,9 +50,21 @@ func (s *Server) MasterElect(ctx context.Context, req *pb.MasterRequest) (*pb.Ma
 	return &pb.MasterResponse{Service: curr}, nil
 }
 
+var (
+	register = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "discovery_register",
+		Help: "The size of the print queue",
+	}, []string{"service", "origin"})
+	unregister = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "discovery_unregister",
+		Help: "The size of the print queue",
+	}, []string{"service", "origin"})
+)
+
 // Register a server
 func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	s.countV2Register++
+	register.With(prometheus.Labels{"service": req.GetService().GetName(), "origin": req.GetCaller()}).Inc()
 
 	// Fail register until we're ready to serve
 	if s.friendTime <= 0 && !req.GetFanout() {
@@ -169,6 +183,7 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 
 //Unregister a service from the listing
 func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb.UnregisterResponse, error) {
+	unregister.With(prometheus.Labels{"service": req.GetService().GetName(), "origin": req.GetCaller()}).Inc()
 	if req.GetService() == nil {
 		p, _ := peer.FromContext(ctx)
 		return nil, status.Errorf(codes.InvalidArgument, "Attempting to unregister empty service: %v: %+v", req, p)

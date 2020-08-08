@@ -124,6 +124,7 @@ const UnregisterRequest$json = const {
   '2': const [
     const {'1': 'service', '3': 1, '4': 1, '5': 11, '6': '.discovery.RegistryEntry', '10': 'service'},
     const {'1': 'address', '3': 3, '4': 1, '5': 9, '10': 'address'},
+    const {'1': 'caller', '3': 4, '4': 1, '5': 9, '10': 'caller'},
     const {'1': 'fanout', '3': 2, '4': 1, '5': 8, '10': 'fanout'},
   ],
 };
