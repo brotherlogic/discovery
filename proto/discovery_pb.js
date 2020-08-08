@@ -1545,6 +1545,7 @@ proto.discovery.UnregisterRequest.toObject = function(includeInstance, msg) {
   var f, obj = {
     service: (f = msg.getService()) && proto.discovery.RegistryEntry.toObject(includeInstance, f),
     address: msg.getAddress(),
+    caller: msg.getCaller(),
     fanout: msg.getFanout()
   };
 
@@ -1607,6 +1608,21 @@ proto.discovery.UnregisterRequest.prototype.getAddress = function() {
 /** @param {string} value  */
 proto.discovery.UnregisterRequest.prototype.setAddress = function(value) {
   jspb.Message.setField(this, 3, value);
+};
+
+
+/**
+ * optional string caller = 4;
+ * @return {string}
+ */
+proto.discovery.UnregisterRequest.prototype.getCaller = function() {
+  return /** @type {string} */ (jspb.Message.getFieldProto3(this, 4, ""));
+};
+
+
+/** @param {string} value  */
+proto.discovery.UnregisterRequest.prototype.setCaller = function(value) {
+  jspb.Message.setField(this, 4, value);
 };
 
 
