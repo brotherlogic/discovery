@@ -55,6 +55,11 @@ var (
 		Name: "discovery_register",
 		Help: "The size of the print queue",
 	}, []string{"service", "origin"})
+	get = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "discovery_get",
+		Help: "The size of the print queue",
+	}, []string{"service", "origin"})
+
 	unregister = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "discovery_unregister",
 		Help: "The size of the print queue",
@@ -119,6 +124,9 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 	if len(req.GetJob()) > 0 {
 		jobName = req.GetJob()
 	}
+
+	get.With(prometheus.Labels{"service": jobName, "origin": req.GetFriend()}).Inc()
+
 	s.mapLock.Lock()
 	s.getMapB[jobName]++
 	s.mapLock.Unlock()
