@@ -479,7 +479,12 @@ func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 		if err == nil {
 			defer conn.Close()
 			client := pb.NewDiscoveryServiceV2Client(conn)
-			client.RegisterV2(ctx, req)
+			_, err := client.RegisterV2(ctx, req)
+			if err != nil {
+				s.Log(fmt.Sprintf("register error: %v", err))
+			}
+		} else {
+			s.Log(fmt.Sprintf("Dial error in fanout register: %v", err))
 		}
 	}
 }
