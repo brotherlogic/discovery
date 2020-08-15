@@ -473,6 +473,13 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	return nil
 }
 
+var (
+	fanout = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "discovery_fanout",
+		Help: "The size of the print queue",
+	}, []string{"service", "origin", "error"})
+)
+
 func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 	for _, f := range s.friends {
 		conn, err := s.FDial(f)
@@ -482,9 +489,11 @@ func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 			_, err := client.RegisterV2(ctx, req)
 			if err != nil {
 				s.Log(fmt.Sprintf("register error: %v", err))
+				fanout.With(prometheus.Labels{"service": req.GetService().GetName(), "origin": f, "error": fmt.Sprintf("%v", err)}).Inc()
 			}
 		} else {
 			s.Log(fmt.Sprintf("Dial error in fanout register: %v", err))
+			fanout.With(prometheus.Labels{"service": req.GetService().GetName(), "origin": f, "error": fmt.Sprintf("%v", err)}).Inc()
 		}
 	}
 }
