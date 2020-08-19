@@ -487,6 +487,7 @@ func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 			defer conn.Close()
 			client := pb.NewDiscoveryServiceV2Client(conn)
 			_, err := client.RegisterV2(ctx, req)
+			s.DLog(fmt.Sprintf("REGISTER %v -> %v = %v", req, f, err))
 			if err != nil {
 				s.Log(fmt.Sprintf("register error: %v", err))
 				fanout.With(prometheus.Labels{"service": req.GetService().GetName(), "origin": f, "error": fmt.Sprintf("%v", err)}).Inc()
