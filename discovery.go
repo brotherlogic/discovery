@@ -481,6 +481,10 @@ var (
 )
 
 func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
+	dead, ok := ctx.Deadline()
+	if ok {
+		s.DLog(fmt.Sprintf("Remaining: %v meaning %v per friend", dead.Sub(time.Now()), dead.Sub(time.Now())/time.Duration(len(s.friends))))
+	}
 	for _, f := range s.friends {
 		conn, err := s.FDial(f)
 		if err == nil {
