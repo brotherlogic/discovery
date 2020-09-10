@@ -1,4 +1,4 @@
->package main
+package main
 
 import (
 	"flag"
@@ -142,13 +142,16 @@ func main() {
 		case "list":
 			var host = buildFlags.String("host", utils.Discover, "host")
 			if err := buildFlags.Parse(os.Args[2:]); err == nil {
-				conn, _ := grpc.Dial(*host, grpc.WithInsecure())
+				conn, err := grpc.Dial(*host, grpc.WithInsecure())
+				if err != nil {
+					log.Fatalf("Cannot dial: %v", err)
+				}
 				defer conn.Close()
 
 				registry := pbdi.NewDiscoveryServiceV2Client(conn)
 				ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 				defer cancel()
-				bits, err := registry.Get(ctx, &pbdi.GetRequest{}, grpc.FailFast(false))
+				bits, err := registry.Get(ctx, &pbdi.GetRequest{})
 				if err != nil {
 					log.Fatalf("Error building job: %v", err)
 				}
