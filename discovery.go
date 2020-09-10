@@ -569,7 +569,7 @@ func main() {
 	server.PrepServerNoRegister(port)
 	server.Register = server
 
-	server.RegisterServerV2("discovery", false, false)
+	server.RegisterServerV2("discovery", false, true)
 	server.Registry.IgnoresMaster = true
 	server.SendTrace = false
 
