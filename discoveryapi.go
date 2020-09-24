@@ -6,6 +6,8 @@ import (
 	"time"
 
 	pb "github.com/brotherlogic/discovery/proto"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
@@ -25,13 +27,15 @@ func (s *Server) ListAllServices(ctx context.Context, in *pb.ListRequest) (*pb.L
 
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
+	pr, _ := peer.FromContext(ctx)
+	s.registerPeer = fmt.Sprintf("%+v", pr)
+
+	legacyPeer.With(prometheus.Labels{"method": "Register", "peer": fmt.Sprintf("%+v", pr)}).Inc()
+
 	if req.GetService().GetName() != "PictureFrame" && req.GetService().GetName() != "GraphPlotter" && req.GetService().GetName() != "RecordSelector" {
 		s.RaiseIssue("Bad Register", fmt.Sprintf("%v is a v1 register", req))
 	}
 	s.countRegister++
-
-	pr, _ := peer.FromContext(ctx)
-	s.registerPeer = fmt.Sprintf("%+v", pr)
 
 	//Reject the request with no time to clean
 	if req.GetService().GetTimeToClean() == 0 {
@@ -87,11 +91,19 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 	return &pb.RegisterResponse{Service: curr}, nil
 }
 
+var (
+	legacyPeer = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "discovery_peer",
+		Help: "Push Size",
+	}, []string{"method", "peer"})
+)
+
 // Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.DiscoverResponse, error) {
 
 	pr, _ := peer.FromContext(ctx)
 	s.discoverPeer = fmt.Sprintf("%+v", pr)
+	legacyPeer.With(prometheus.Labels{"method": "Discover", "peer": fmt.Sprintf("%+v", pr)}).Inc()
 
 	//Reject requests without caller
 	if req.Caller == "" {
