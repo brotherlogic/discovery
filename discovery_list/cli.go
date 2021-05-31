@@ -53,7 +53,9 @@ func main() {
 		b, err := json.Marshal(entries)
 		if err == nil {
 			err = ioutil.WriteFile(os.Args[1], b, 0644)
-			log.Printf("Written: %v", err)
+			if err != nil {
+				log.Printf("Write error: %v", err)
+			}
 		} else {
 			log.Printf("Bad: %v", err)
 		}
