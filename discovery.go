@@ -485,7 +485,7 @@ func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 	dead, ok := ctx.Deadline()
 	detime := time.Second
 	if ok {
-		s.DLog(fmt.Sprintf("Remaining: %v meaning %v per friend", dead.Sub(time.Now()), dead.Sub(time.Now())/time.Duration(len(s.friends))))
+		s.DLog(ctx, fmt.Sprintf("Remaining: %v meaning %v per friend", dead.Sub(time.Now()), dead.Sub(time.Now())/time.Duration(len(s.friends))))
 		detime = dead.Sub(time.Now()) / time.Duration(len(s.friends))
 	}
 	for _, f := range s.friends {
@@ -493,9 +493,9 @@ func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 		if err == nil {
 			defer conn.Close()
 			client := pb.NewDiscoveryServiceV2Client(conn)
-			ctx, cancel := utils.ManualContext("difa", "difa", detime, false)
+			ctx, cancel := utils.ManualContext("difa", detime)
 			_, err := client.RegisterV2(ctx, req)
-			s.DLog(fmt.Sprintf("REGISTER %v -> %v = %v", req, f, err))
+			s.DLog(ctx, fmt.Sprintf("REGISTER %v -> %v = %v", req, f, err))
 			if err != nil {
 				s.Log(fmt.Sprintf("register error: %v", err))
 				fanout.With(prometheus.Labels{"service": req.GetService().GetName(), "origin": f, "error": fmt.Sprintf("%v", err)}).Inc()
