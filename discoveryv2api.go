@@ -57,7 +57,7 @@ var (
 	}, []string{"service", "origin"})
 	get = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "discovery_get",
-		Help: "The size of the print queue",
+		Help: "The size of the get queue",
 	}, []string{"service", "origin"})
 
 	unregister = promauto.NewGaugeVec(prometheus.GaugeOpts{
