@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -86,6 +87,7 @@ type Server struct {
 	getLoad         int
 	getMapB         map[string]int
 	mapLock         *sync.Mutex
+	writePrometheus bool
 }
 
 type httpGetter interface {
@@ -554,6 +556,14 @@ func (s *Server) acquireMasterLock(ctx context.Context, job string, lk int64) er
 	return nil
 }
 
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
+
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	flag.Parse()
@@ -585,5 +595,10 @@ func main() {
 		server.validateFriends()
 		server.friendTime = time.Now().Sub(t)
 	}()
+
+	if fileExists("/etc/prometheus/prometheus.yml") {
+		server.writePrometheus = true
+	}
+
 	server.Serve()
 }

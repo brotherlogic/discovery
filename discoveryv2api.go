@@ -68,6 +68,7 @@ var (
 
 // Register a server
 func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
+	defer s.doWrite()
 	s.countV2Register++
 	register.With(prometheus.Labels{"service": req.GetService().GetName(), "origin": req.GetCaller()}).Inc()
 
@@ -189,8 +190,26 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 	return resp, nil
 }
 
+func (s *Server) doWrite() {
+	if s.writePrometheus {
+		var services []*pb.RegistryEntry
+
+		for _, job := range s.portMap {
+			if job != nil {
+				services = append(services, job)
+			}
+		}
+		err := s.writeFile("/etc/prometheus/jobs.json", services)
+		if err != nil {
+			s.Log(fmt.Sprintf("Unable to write job file: %v", err))
+		}
+	}
+}
+
 //Unregister a service from the listing
 func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb.UnregisterResponse, error) {
+	defer s.doWrite()
+
 	unregister.With(prometheus.Labels{"service": req.GetService().GetName(), "origin": req.GetCaller()}).Inc()
 	if req.GetService() == nil {
 		p, _ := peer.FromContext(ctx)

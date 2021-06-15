@@ -28,6 +28,7 @@ func (s *Server) ListAllServices(ctx context.Context, in *pb.ListRequest) (*pb.L
 
 // RegisterService supports the RegisterService rpc end point
 func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
+
 	pr, _ := peer.FromContext(ctx)
 	s.registerPeer = fmt.Sprintf("%+v", pr)
 
