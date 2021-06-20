@@ -41,11 +41,15 @@ func (s *Server) writeFile(f string, services []*pb.RegistryEntry) error {
 	for server, _ := range servers {
 		// This is the raspberry pi export
 		nodes.Targets = append(nodes.Targets, fmt.Sprintf("%v:9100", server))
+	}
+	entries = append(entries, nodes)
 
+	nodes2 := &Entry{Targets: []string{}, Labels: Label{Job: "discovery"}}
+	for server, _ := range servers {
 		// Track discovery
 		nodes.Targets = append(nodes.Targets, fmt.Sprintf("%v:50057", server))
 	}
-	entries = append(entries, nodes)
+	entries = append(entries, nodes2)
 
 	b, err := json.Marshal(entries)
 	if err == nil {
