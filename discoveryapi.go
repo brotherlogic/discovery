@@ -102,7 +102,7 @@ var (
 
 // Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.DiscoverResponse, error) {
-	s.Log(fmt.Sprintf("DISCOVER -> %v", req))
+	s.Log(fmt.Sprintf("DDISCOVER -> %v", req))
 
 	pr, _ := peer.FromContext(ctx)
 	s.discoverPeer = fmt.Sprintf("%+v", pr)
