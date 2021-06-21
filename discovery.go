@@ -36,10 +36,10 @@ const (
 
 var (
 	//Friends discovery chums
-	Friends = promauto.NewGauge(prometheus.GaugeOpts{
+	Friends = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "discovery_friends",
 		Help: "The number of friends we have",
-	})
+	}, []string{"state"})
 )
 
 var externalPorts = map[string][]int32{"main": []int32{50052, 50053}}
@@ -88,6 +88,7 @@ type Server struct {
 	getMapB         map[string]int
 	mapLock         *sync.Mutex
 	writePrometheus bool
+	state           pb.DiscoveryState
 }
 
 type httpGetter interface {
@@ -366,7 +367,7 @@ func (s *Server) findFriend(host int) {
 		if err == nil {
 			s.countMap[host] = fmt.Sprintf("%v FOUND_FRIEND", time.Now())
 			s.friends = append(s.friends, hostStr)
-			Friends.Set(float64(len(s.friends)))
+			Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
 			s.readFriend(hostStr)
 		} else {
 			c := status.Convert(err)
@@ -400,7 +401,7 @@ func (s *Server) checkFriend(addr string) {
 	}
 
 	s.friends = append(s.friends, newaddr)
-	Friends.Set(float64(len(s.friends)))
+	Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
 }
 
 var (
@@ -586,10 +587,12 @@ func main() {
 	// Find friends
 	go func() {
 		t := time.Now()
+		server.state = pb.DiscoveryState_TRACKING
 		time.Sleep(time.Second)
 		for i := 1; i < 255; i++ {
 			server.findFriend(i)
 		}
+		server.state = pb.DiscoveryState_COMPLETE
 
 		// Double check that we have everything
 		server.validateFriends()

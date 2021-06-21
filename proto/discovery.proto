@@ -139,7 +139,11 @@ message MasterResponse {
   RegistryEntry service = 1;
 }
 
-
+enum DiscoveryState {
+  UNKNOWN = 0;
+  TRACKING = 1;
+  COMPLETE = 2;
+}
 
 service DiscoveryServiceV2 {
   rpc Lock(LockRequest) returns (LockResponse) {}

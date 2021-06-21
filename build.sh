@@ -1,3 +1,1 @@
-protoc --proto_path ../../../ -I=./proto --go_out=plugins=grpc:./proto proto/discovery.proto --js_out=import_style=commonjs:./proto  --grpc-web_out=import_style=commonjs,mode=grpcwebtext:./proto --dart_out=grpc:./proto
-
-mv proto/github.com/brotherlogic/discovery/proto/* ./proto
+protoc --proto_path ../../../ -I=./proto --go_out ./proto --go_opt=paths=source_relative --go-grpc_out ./proto --go-grpc_opt paths=source_relative --go-grpc_opt=require_unimplemented_servers=false proto/discovery.proto
