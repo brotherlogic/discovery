@@ -40,6 +40,11 @@ var (
 		Name: "discovery_friends",
 		Help: "The number of friends we have",
 	}, []string{"state"})
+
+	startup = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "discovery_startup",
+		Help: "The time (in ms) to startup",
+	})
 )
 
 var externalPorts = map[string][]int32{"main": []int32{50052, 50053}}
@@ -596,7 +601,8 @@ func main() {
 
 		// Double check that we have everything
 		server.validateFriends()
-		server.friendTime = time.Now().Sub(t)
+		server.friendTime = time.Since(t)
+		startup.Set(float64(server.friendTime.Milliseconds()))
 	}()
 
 	if fileExists("/etc/prometheus/prometheus.yml") {

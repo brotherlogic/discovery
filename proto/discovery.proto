@@ -106,6 +106,7 @@ message GetRequest {
 
 message GetResponse {
   repeated RegistryEntry services = 1;
+  DiscoveryState state = 2;
 }
 
 message UnregisterRequest{
