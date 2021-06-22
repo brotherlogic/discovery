@@ -47,7 +47,7 @@ func (s *Server) writeFile(f string, services []*pb.RegistryEntry) error {
 	nodes2 := &Entry{Targets: []string{}, Labels: Label{Job: "discovery"}}
 	for server, _ := range servers {
 		// Track discovery entries
-		nodes.Targets = append(nodes.Targets, fmt.Sprintf("%v:50057", server))
+		nodes2.Targets = append(nodes2.Targets, fmt.Sprintf("%v:50057", server))
 	}
 	entries = append(entries, nodes2)
 
