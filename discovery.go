@@ -45,6 +45,11 @@ var (
 		Name: "discovery_startup",
 		Help: "The time (in ms) to startup",
 	})
+
+	lastFriend = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "discovery_last_friend",
+		Help: "The number of friends we have",
+	})
 )
 
 var externalPorts = map[string][]int32{"main": []int32{50052, 50053}}
@@ -352,6 +357,7 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 }
 
 func (s *Server) findFriend(host int) {
+	lastFriend.Set(float64(host))
 	hostStr := fmt.Sprintf("192.168.86.%v:50055", host)
 	if fmt.Sprintf("%v:50055", s.Registry.Ip) == hostStr {
 		s.countMap[host] = fmt.Sprintf("%v SELF", time.Now())
