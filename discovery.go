@@ -609,6 +609,7 @@ func main() {
 		server.validateFriends()
 		server.friendTime = time.Since(t)
 		startup.Set(float64(server.friendTime.Milliseconds()))
+		Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", server.state)}).Set(float64(len(server.friends)))
 	}()
 
 	if fileExists("/etc/prometheus/prometheus.yml") {
