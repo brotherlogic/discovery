@@ -608,7 +608,7 @@ func main() {
 		for i := 1; i < 255; i++ {
 			found := server.findFriend(i)
 			if found {
-				server.Log("We're short cutting here")
+				server.Log("We're short cutting here since we've found a full")
 				break
 			}
 		}
