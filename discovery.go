@@ -356,16 +356,16 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 	return nil
 }
 
-func (s *Server) findFriend(host int) {
+func (s *Server) findFriend(host int) bool {
 	lastFriend.Set(float64(host))
 	hostStr := fmt.Sprintf("192.168.86.%v:50055", host)
 	if fmt.Sprintf("%v:50055", s.Registry.Ip) == hostStr {
 		s.countMap[host] = fmt.Sprintf("%v SELF", time.Now())
-		return
+		return false
 	}
 	for _, f := range s.friends {
 		if f == hostStr {
-			return
+			return false
 		}
 	}
 	conn, err := s.FDial(fmt.Sprintf("192.168.86.%v:50055", host))
@@ -379,7 +379,7 @@ func (s *Server) findFriend(host int) {
 			s.countMap[host] = fmt.Sprintf("%v FOUND_FRIEND", time.Now())
 			s.friends = append(s.friends, hostStr)
 			Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
-			s.readFriend(hostStr)
+			return s.readFriend(hostStr)
 		} else {
 			c := status.Convert(err)
 			if c.Code() != codes.DeadlineExceeded {
@@ -387,8 +387,9 @@ func (s *Server) findFriend(host int) {
 			}
 			s.countMap[host] = fmt.Sprintf("%v", err)
 		}
-
 	}
+
+	return false
 }
 
 func (s *Server) validateFriends() {
@@ -422,7 +423,7 @@ var (
 	}, []string{"error"})
 )
 
-func (s *Server) readFriend(host string) {
+func (s *Server) readFriend(host string) bool {
 	conn, err := grpc.Dial(host, grpc.WithInsecure())
 	if err == nil {
 		defer conn.Close()
@@ -437,10 +438,14 @@ func (s *Server) readFriend(host string) {
 				}
 			}
 
+			return regs.GetState() == pb.DiscoveryState_COMPLETE
+
 		} else {
 			s.lastError = fmt.Sprintf("%v", err)
 		}
 	}
+
+	return false
 }
 
 // GetState gets the state of the server
@@ -601,7 +606,10 @@ func main() {
 		server.state = pb.DiscoveryState_TRACKING
 		time.Sleep(time.Second)
 		for i := 1; i < 255; i++ {
-			server.findFriend(i)
+			found := server.findFriend(i)
+			if found {
+				break
+			}
 		}
 		server.state = pb.DiscoveryState_COMPLETE
 
