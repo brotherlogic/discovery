@@ -46,10 +46,10 @@ var (
 		Help: "The time (in ms) to startup",
 	})
 
-	lastFriend = promauto.NewGauge(prometheus.GaugeOpts{
+	lastFriend = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "discovery_last_friend",
 		Help: "The number of friends we have",
-	})
+	}, []string{"result"})
 )
 
 var externalPorts = map[string][]int32{"main": []int32{50052, 50053}}
@@ -357,9 +357,10 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 }
 
 func (s *Server) findFriend(host int) bool {
-	lastFriend.Set(float64(host))
+
 	hostStr := fmt.Sprintf("192.168.86.%v:50055", host)
 	if fmt.Sprintf("%v:50055", s.Registry.Ip) == hostStr {
+		lastFriend.With(prometheus.Labels{"result": "SELF"}).Set(float64(host))
 		s.countMap[host] = fmt.Sprintf("%v SELF", time.Now())
 		return false
 	}
@@ -379,8 +380,10 @@ func (s *Server) findFriend(host int) bool {
 			s.countMap[host] = fmt.Sprintf("%v FOUND_FRIEND", time.Now())
 			s.friends = append(s.friends, hostStr)
 			Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
-			return s.readFriend(hostStr)
+			return s.readFriend(hostStr, host)
 		} else {
+			lastFriend.With(prometheus.Labels{"result": fmt.Sprintf("%v", err)}).Set(float64(host))
+
 			c := status.Convert(err)
 			if c.Code() != codes.DeadlineExceeded {
 				s.lastError = fmt.Sprintf("%v", err)
@@ -394,7 +397,7 @@ func (s *Server) findFriend(host int) bool {
 
 func (s *Server) validateFriends() {
 	for _, f := range s.friends {
-		s.readFriend(f)
+		s.readFriend(f, 0)
 	}
 }
 
@@ -423,7 +426,7 @@ var (
 	}, []string{"error"})
 )
 
-func (s *Server) readFriend(host string) bool {
+func (s *Server) readFriend(host string, port int) bool {
 	conn, err := grpc.Dial(host, grpc.WithInsecure())
 	if err == nil {
 		defer conn.Close()
@@ -432,6 +435,9 @@ func (s *Server) readFriend(host string) bool {
 		client := pb.NewDiscoveryServiceV2Client(conn)
 		regs, err := client.Get(ctx, &pb.GetRequest{Friend: fmt.Sprintf("%v:%v", s.Registry.Ip, s.Registry.Port)})
 		if err == nil {
+			if port > 0 {
+				lastFriend.With(prometheus.Labels{"result": fmt.Sprintf("%v", regs.GetState())}).Set(float64(port))
+			}
 			for _, entry := range regs.GetServices() {
 				if entry.GetVersion() != pb.RegistryEntry_V1 {
 					s.RegisterV2(ctx, &pb.RegisterRequest{Fanout: true, Service: entry})
