@@ -180,7 +180,7 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 		return nil, status.Errorf(codes.NotFound, "%v not found on %v (via %v)", req.Job, req.Server, s.Registry.GetIdentifier())
 	}
 
-	resp := &pb.GetResponse{Services: []*pb.RegistryEntry{}}
+	resp := &pb.GetResponse{Services: []*pb.RegistryEntry{}, State: s.state}
 
 	for _, job := range s.portMap {
 		if job != nil {
