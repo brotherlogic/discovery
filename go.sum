@@ -61,7 +61,6 @@ github.com/brotherlogic/buildserver v0.0.0-20201019183109-5b9d0c13b530/go.mod h1
 github.com/brotherlogic/buildserver v0.0.0-20210310012628-b12a393fe88a/go.mod h1:ZAwx2ZhsKIo+MaMpoN7T8d3dgHO8mjCFDPB4wMBIFlE=
 github.com/brotherlogic/buildserver v0.0.0-20210531172900-f3efc690be07/go.mod h1:vskCbtc/0SfNZqOyRb3FE1jVCp+UUbNJnkh/wlxmHN8=
 github.com/brotherlogic/buildserver v0.0.0-20210605223242-7077ab22924b/go.mod h1:vskCbtc/0SfNZqOyRb3FE1jVCp+UUbNJnkh/wlxmHN8=
-github.com/brotherlogic/buildserver v0.0.0-20210608014422-d448e406a81a h1:CjD8s5qQPzIdZO0RXUJC+5G5GM3ISlKQR+OOSkHrFvI=
 github.com/brotherlogic/buildserver v0.0.0-20210608014422-d448e406a81a/go.mod h1:FTN/9Rhv3eaH9k1zbsN7eHtxWx0VOYe8gmjToZV+UIY=
 github.com/brotherlogic/buildserver v0.0.0-20210612184743-db6b0ba581f4/go.mod h1:bJZTN/Xr7jK1zWOPiR9cjnvfCkBtPIE7enLTYk4ZFZY=
 github.com/brotherlogic/buildserver v0.0.0-20210616011633-2d28fd61c61d h1:ViO9kVIBLykGMWrYfaqTfa9GIh+HXHindIKM/tQ8OYk=
@@ -84,7 +83,6 @@ github.com/brotherlogic/gobuildslave v0.0.0-20201112143137-ce3a2e75a18e/go.mod h
 github.com/brotherlogic/gobuildslave v0.0.0-20210517144112-4098e8e4a598/go.mod h1:fiYCjFtjZNogzRObwEGJ0Uev0pD/2tctSlW3mAgW1yE=
 github.com/brotherlogic/gobuildslave v0.0.0-20210602144845-3668b9c969f1/go.mod h1:0JppatVrSKZb799PaHbX8j9nJIwEziC0Gu8OnNLgggk=
 github.com/brotherlogic/gobuildslave v0.0.0-20210605221324-4acb33622dad/go.mod h1:0JppatVrSKZb799PaHbX8j9nJIwEziC0Gu8OnNLgggk=
-github.com/brotherlogic/gobuildslave v0.0.0-20210608160506-333d8c38d957 h1:Q3ez6UhHWuHIjGy1A9PoEXUbYbIvaX0jkTmyWiLNdbs=
 github.com/brotherlogic/gobuildslave v0.0.0-20210608160506-333d8c38d957/go.mod h1:d8bticuVc6Pzp3SWob3ImFkAtRkM5r7/m1/N53yqajQ=
 github.com/brotherlogic/gobuildslave v0.0.0-20210613062433-81c426136291 h1:PEMf5FKo8V3qdO9IFrk4A9h3+E8tuyCyF1uaxXQDReA=
 github.com/brotherlogic/gobuildslave v0.0.0-20210613062433-81c426136291/go.mod h1:LDYhHu3H/e92wvuoxzyAD6n8/01sNqvTi63WLeTnSw8=
@@ -106,7 +104,6 @@ github.com/brotherlogic/keystore v0.0.0-20201029130503-da423c07fd79 h1:qPaI4ZmBI
 github.com/brotherlogic/keystore v0.0.0-20201029130503-da423c07fd79/go.mod h1:L2AuADQh5H+ZZAZ/8y5zUf819ApTMmM6/L3/2GNI/qY=
 github.com/brotherlogic/logging v0.0.0-20200903150238-67a07e215efe/go.mod h1:cHEM7v1fl8VwwyN4qcrh8hQHR+XNT+xHI4+yOr4l8Wg=
 github.com/brotherlogic/logging v0.0.0-20210606012857-db059830d1dc/go.mod h1:FOXFywySb2dOOhsEFIwxniCxGJltgA395Dhzp2lFXYI=
-github.com/brotherlogic/logging v0.0.0-20210609015032-e6d0ef792137 h1:xr7IyAhfXrinqcvOy71Eb2rBNmD10xhjufiwFt601bU=
 github.com/brotherlogic/logging v0.0.0-20210609015032-e6d0ef792137/go.mod h1:FOXFywySb2dOOhsEFIwxniCxGJltgA395Dhzp2lFXYI=
 github.com/brotherlogic/logging v0.0.0-20210611234942-a3917f7f53cf h1:DbFJ1WQ8vikP/IHwS7VcOAjE+5rmyBOOrucuaIupBXs=
 github.com/brotherlogic/logging v0.0.0-20210611234942-a3917f7f53cf/go.mod h1:ejiDNCqrbbqTgYaqt+c3ybKtfpxQVot2VcHCWaKKbzA=
@@ -375,7 +372,6 @@ github.com/prometheus/common v0.15.0/go.mod h1:U+gB1OBLb1lF3O42bTCL+FK18tX9Oar16
 github.com/prometheus/common v0.18.0/go.mod h1:U+gB1OBLb1lF3O42bTCL+FK18tX9Oar16Clt/msog/s=
 github.com/prometheus/common v0.26.0/go.mod h1:M7rCNAaPfAosfx8veZJCuw84e35h3Cfd9VFqTh1DIvc=
 github.com/prometheus/common v0.27.0/go.mod h1:LdLj/WiR+LL0ThCPrtSZbijrsxInIhizDTiPlJhPPq4=
-github.com/prometheus/common v0.28.0 h1:vGVfV9KrDTvWt5boZO0I19g2E3CsWfpPPKZM9dt3mEw=
 github.com/prometheus/common v0.28.0/go.mod h1:vu+V0TpY+O6vW9J44gczi3Ap/oXXR10b+M/gUGO4Hls=
 github.com/prometheus/common v0.29.0 h1:3jqPBvKT4OHAbje2Ql7KeaaSicDBCxMYwEJU1zRJceE=
 github.com/prometheus/common v0.29.0/go.mod h1:vu+V0TpY+O6vW9J44gczi3Ap/oXXR10b+M/gUGO4Hls=
@@ -518,7 +514,6 @@ golang.org/x/net v0.0.0-20201202161906-c7110b5ffcbb/go.mod h1:sp8m0HH+o8qH0wwXwY
 golang.org/x/net v0.0.0-20201224014010-6772e930b67b/go.mod h1:m0MpNAwzfU5UDzcl9v0D8zg8gWTRqZa9RBIspLL5mdg=
 golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4/go.mod h1:p54w0d4576C0XHj96bSt6lcn1PtDYWL6XObtHCRCNQM=
 golang.org/x/net v0.0.0-20210525063256-abc453219eb5/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
-golang.org/x/net v0.0.0-20210610132358-84b48f89b13b h1:k+E048sYJHyVnsr1GDrRZWQ32D2C7lWs9JRc0bel53A=
 golang.org/x/net v0.0.0-20210610132358-84b48f89b13b/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/net v0.0.0-20210614182718-04defd469f4e h1:XpT3nA5TvE525Ne3hInMh6+GETgn27Zfm9dxsThnX2Q=
 golang.org/x/net v0.0.0-20210614182718-04defd469f4e/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
@@ -589,7 +584,6 @@ golang.org/x/sys v0.0.0-20210510120138-977fb7262007/go.mod h1:oPkhp1MJrh7nUepCBc
 golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20210603125802-9665404d3644/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20210608053332-aa57babbf139/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
-golang.org/x/sys v0.0.0-20210611083646-a4fc73990273 h1:faDu4veV+8pcThn4fewv6TVlNCezafGoC1gM/mxQLbQ=
 golang.org/x/sys v0.0.0-20210611083646-a4fc73990273/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20210616094352-59db8d763f22 h1:RqytpXGR1iVNX7psjB3ff8y7sNFinVFvkx1c8SjBkio=
 golang.org/x/sys v0.0.0-20210616094352-59db8d763f22/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
@@ -718,7 +712,6 @@ google.golang.org/genproto v0.0.0-20201214200347-8c77b98c765d/go.mod h1:FWY/as6D
 google.golang.org/genproto v0.0.0-20210604141403-392c879c8b08/go.mod h1:UODoCrxHCcBojKKwX1terBiRUaqAsFqJiF615XL43r0=
 google.golang.org/genproto v0.0.0-20210607140030-00d4fb20b1ae/go.mod h1:UODoCrxHCcBojKKwX1terBiRUaqAsFqJiF615XL43r0=
 google.golang.org/genproto v0.0.0-20210608205507-b6d2f5bf0d7d/go.mod h1:UODoCrxHCcBojKKwX1terBiRUaqAsFqJiF615XL43r0=
-google.golang.org/genproto v0.0.0-20210611144927-798beca9d670 h1:M9c2dapWGIISuWaz5vr/RUk5Qn2Hs8DZ9CJb5aH266Q=
 google.golang.org/genproto v0.0.0-20210611144927-798beca9d670/go.mod h1:UODoCrxHCcBojKKwX1terBiRUaqAsFqJiF615XL43r0=
 google.golang.org/genproto v0.0.0-20210614182748-5b3b54cad159/go.mod h1:SzzZ/N+nwJDaO1kznhnlzqS8ocJICar6hYhVyhi++24=
 google.golang.org/genproto v0.0.0-20210617175327-b9e0b3197ced h1:c5geK1iMU3cDKtFrCVQIcjR3W+JOZMuhIyICMCTbtus=
