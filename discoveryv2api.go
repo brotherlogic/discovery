@@ -177,7 +177,7 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 			return &pb.GetResponse{Services: jobs, State: s.state}, nil
 		}
 
-		return nil, status.Errorf(codes.NotFound, "%v not found on %v (via %v)", req.Job, req.Server, s.Registry.GetIdentifier())
+		return nil, status.Errorf(codes.NotFound, "%v has not found on %v (via %v)", req.Job, req.Server, s.Registry.GetIdentifier())
 	}
 
 	resp := &pb.GetResponse{Services: []*pb.RegistryEntry{}, State: s.state}
