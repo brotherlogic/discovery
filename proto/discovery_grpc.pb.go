@@ -215,6 +215,7 @@ type DiscoveryServiceV2Client interface {
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	Unregister(ctx context.Context, in *UnregisterRequest, opts ...grpc.CallOption) (*UnregisterResponse, error)
 	MasterElect(ctx context.Context, in *MasterRequest, opts ...grpc.CallOption) (*MasterResponse, error)
+	GetFriends(ctx context.Context, in *GetFriendsRequest, opts ...grpc.CallOption) (*GetFriendsResponse, error)
 }
 
 type discoveryServiceV2Client struct {
@@ -270,6 +271,15 @@ func (c *discoveryServiceV2Client) MasterElect(ctx context.Context, in *MasterRe
 	return out, nil
 }
 
+func (c *discoveryServiceV2Client) GetFriends(ctx context.Context, in *GetFriendsRequest, opts ...grpc.CallOption) (*GetFriendsResponse, error) {
+	out := new(GetFriendsResponse)
+	err := c.cc.Invoke(ctx, "/discovery.DiscoveryServiceV2/GetFriends", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DiscoveryServiceV2Server is the server API for DiscoveryServiceV2 service.
 // All implementations should embed UnimplementedDiscoveryServiceV2Server
 // for forward compatibility
@@ -279,6 +289,7 @@ type DiscoveryServiceV2Server interface {
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	Unregister(context.Context, *UnregisterRequest) (*UnregisterResponse, error)
 	MasterElect(context.Context, *MasterRequest) (*MasterResponse, error)
+	GetFriends(context.Context, *GetFriendsRequest) (*GetFriendsResponse, error)
 }
 
 // UnimplementedDiscoveryServiceV2Server should be embedded to have forward compatible implementations.
@@ -299,6 +310,9 @@ func (UnimplementedDiscoveryServiceV2Server) Unregister(context.Context, *Unregi
 }
 func (UnimplementedDiscoveryServiceV2Server) MasterElect(context.Context, *MasterRequest) (*MasterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method MasterElect not implemented")
+}
+func (UnimplementedDiscoveryServiceV2Server) GetFriends(context.Context, *GetFriendsRequest) (*GetFriendsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetFriends not implemented")
 }
 
 // UnsafeDiscoveryServiceV2Server may be embedded to opt out of forward compatibility for this service.
@@ -402,6 +416,24 @@ func _DiscoveryServiceV2_MasterElect_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DiscoveryServiceV2_GetFriends_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetFriendsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiscoveryServiceV2Server).GetFriends(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/discovery.DiscoveryServiceV2/GetFriends",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiscoveryServiceV2Server).GetFriends(ctx, req.(*GetFriendsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // DiscoveryServiceV2_ServiceDesc is the grpc.ServiceDesc for DiscoveryServiceV2 service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -428,6 +460,10 @@ var DiscoveryServiceV2_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "MasterElect",
 			Handler:    _DiscoveryServiceV2_MasterElect_Handler,
+		},
+		{
+			MethodName: "GetFriends",
+			Handler:    _DiscoveryServiceV2_GetFriends_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

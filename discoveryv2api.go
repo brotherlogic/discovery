@@ -246,3 +246,7 @@ func (s *Server) Lock(ctx context.Context, req *pb.LockRequest) (*pb.LockRespons
 	s.lockNames[req.GetJob()] = req.GetRequestor()
 	return &pb.LockResponse{}, nil
 }
+
+func (s *Server) GetFriends(_ context.Context, req *pb.GetFriendsRequest) (*pb.GetFriendsResponse, error) {
+	return &pb.GetFriendsResponse{Friends: s.friends}, nil
+}
