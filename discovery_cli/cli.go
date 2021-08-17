@@ -36,6 +36,27 @@ func main() {
 		fmt.Printf("Commands: list\n")
 	} else {
 		switch os.Args[1] {
+		case "friends":
+			friendsFlags := flag.NewFlagSet("Friends", flag.ExitOnError)
+			var friend = friendsFlags.String("friend", "", "Friend")
+			if err := friendsFlags.Parse(os.Args[2:]); err == nil {
+				conn, err := utils.LFDial(fmt.Sprintf("%v:50055", *friend))
+				if err != nil {
+					log.Fatalf("Dial err: %v", err)
+				}
+				defer conn.Close()
+
+				registry := pbdi.NewDiscoveryServiceV2Client(conn)
+				ctx, cancel := utils.ManualContext("discovery_cli-friends", time.Minute)
+				defer cancel()
+				friends, err := registry.GetFriends(ctx, &pbdi.GetFriendsRequest{})
+				if err != nil {
+					log.Fatalf("Error on get friends: %v", err)
+				}
+				for _, friend := range friends.GetFriends() {
+					fmt.Printf("%v\n", friend)
+				}
+			}
 		case "state":
 			conn, _ := grpc.Dial(utils.Discover, grpc.WithInsecure())
 			defer conn.Close()
