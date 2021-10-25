@@ -2,11 +2,9 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"hash/fnv"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -588,15 +586,6 @@ func fileExists(filename string) bool {
 }
 
 func main() {
-	var quiet = flag.Bool("quiet", false, "Show all output")
-	flag.Parse()
-
-	//Turn off logging
-	if *quiet {
-		log.SetFlags(0)
-		log.SetOutput(ioutil.Discard)
-	}
-
 	server := InitServer()
 	server.setExternalIP(prodHTTPGetter{})
 	server.PrepServerNoRegister(port)
