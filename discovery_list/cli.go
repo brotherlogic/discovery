@@ -62,7 +62,7 @@ func main() {
 		for server, _ := range servers {
 
 			// Track discovery
-			nodes2.Targets = append(nodes2.Targets, fmt.Sprintf("%v:50055", server))
+			nodes2.Targets = append(nodes2.Targets, fmt.Sprintf("%v:50056", server))
 		}
 		entries = append(entries, nodes)
 		entries = append(entries, nodes2)
