@@ -57,11 +57,15 @@ func main() {
 		for server, _ := range servers {
 			// This is the raspberry pi export
 			nodes.Targets = append(nodes.Targets, fmt.Sprintf("%v:9100", server))
+		}
+		nodes2 := &Entry{Targets: []string{}, Labels: Label{Job: "discovery"}}
+		for server, _ := range servers {
 
 			// Track discovery
-			nodes.Targets = append(nodes.Targets, fmt.Sprintf("%v:50055", server))
+			nodes2.Targets = append(nodes2.Targets, fmt.Sprintf("%v:50055", server))
 		}
 		entries = append(entries, nodes)
+		entries = append(entries, nodes2)
 
 		b, err := json.Marshal(entries)
 		if err == nil {
