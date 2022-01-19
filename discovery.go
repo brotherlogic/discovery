@@ -601,6 +601,7 @@ func main() {
 		server.state = pb.DiscoveryState_TRACKING
 		time.Sleep(time.Second)
 		for i := 1; i < 255; i++ {
+			server.DLog(context.Background(), fmt.Sprintf("Checking %v", i))
 			found := server.findFriend(i)
 			if found {
 				server.Log("We're short cutting here since we've found a full")
