@@ -210,6 +210,10 @@ func (s *Server) doWrite() {
 func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb.UnregisterResponse, error) {
 	defer s.doWrite()
 
+	if req.GetReason() == "" {
+		return nil, fmt.Errorf("Unable to unregister without a good reason")
+	}
+
 	unregister.With(prometheus.Labels{"service": req.GetService().GetName(), "origin": req.GetCaller()}).Inc()
 	if req.GetService() == nil {
 		p, _ := peer.FromContext(ctx)

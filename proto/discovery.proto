@@ -115,6 +115,8 @@ message UnregisterRequest{
   string caller = 4;
   
   bool fanout = 2;
+
+  string reason = 5;
 }
 
 message UnregisterResponse {}
