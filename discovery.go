@@ -511,6 +511,7 @@ func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 		s.DLog(ctx, fmt.Sprintf("Remaining: %v meaning %v per friend", dead.Sub(time.Now()), dead.Sub(time.Now())/time.Duration(len(s.friends))))
 		detime = dead.Sub(time.Now()) / time.Duration(len(s.friends))
 	}
+	s.CtxLog(ctx, fmt.Sprintf("Registering %v with %v", req.GetService().GetName(), s.friends))
 	for _, f := range s.friends {
 		conn, err := s.FDial(f)
 		if err == nil {
