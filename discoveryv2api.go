@@ -90,6 +90,7 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 	// Fast path on a re-register
 	if curr != nil {
+		s.CtxLog(ctx, fmt.Sprintf("Registering on fast path - %v", curr))
 		if curr.Master && !req.GetService().GetMaster() {
 			s.removeMaster(curr)
 			curr.Master = false
