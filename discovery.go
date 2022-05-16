@@ -370,7 +370,7 @@ func (s *Server) internalFindFriend(host string) bool {
 			return false
 		}
 	}
-	conn, err := s.FDial(fmt.Sprintf("192.168.86.%v:50055", host))
+	conn, err := s.FDial(fmt.Sprintf("%v:50055", host))
 	if err == nil {
 		defer conn.Close()
 		client := pbg.NewGoserverServiceClient(conn)
