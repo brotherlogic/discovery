@@ -604,7 +604,7 @@ func main() {
 			server.DLog(context.Background(), fmt.Sprintf("Checking %v", i))
 			found := server.findFriend(i)
 			if found {
-				server.Log("We're short cutting here since we've found a full")
+				server.Log("We are short cutting here since we've found a full")
 				break
 			}
 		}
