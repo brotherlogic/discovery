@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -12,6 +14,10 @@ import (
 	pb "github.com/brotherlogic/discovery/proto"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+)
+
+const (
+	IP_FILE = "/media/scratch/discovery-list"
 )
 
 func (s *Server) MasterElect(ctx context.Context, req *pb.MasterRequest) (*pb.MasterResponse, error) {
@@ -65,6 +71,36 @@ var (
 		Help: "The size of the print queue",
 	}, []string{"service", "origin"})
 )
+
+func (s *Server) addIP(ip string) {
+	for _, lip := range s.iplist {
+		if lip == ip {
+			return
+		}
+	}
+
+	s.iplist = append(s.iplist, ip)
+	s.writeIplist(s.iplist)
+}
+
+func (s *Server) writeIplist(lis []string) {
+	if _, err := os.Stat(IP_FILE); errors.Is(err, os.ErrNotExist) {
+		_, err := os.Create(IP_FILE)
+		if err != nil {
+			return
+		}
+	}
+
+	fw, err := os.OpenFile(IP_FILE, os.O_WRONLY, 0777)
+	if err != nil {
+		return
+	}
+	defer fw.Close()
+
+	for _, str := range lis {
+		fw.WriteString(fmt.Sprintf("%v\n", str))
+	}
+}
 
 // Register a server
 func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {

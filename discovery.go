@@ -97,6 +97,7 @@ type Server struct {
 	mapLock         *sync.Mutex
 	writePrometheus bool
 	state           pb.DiscoveryState
+	iplist          []string
 }
 
 type httpGetter interface {
