@@ -356,11 +356,13 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 }
 
 func (s *Server) findFriend(host int) bool {
+	return s.internalFindFriend(fmt.Sprintf("192.168.86.%v", host))
+}
 
-	hostStr := fmt.Sprintf("192.168.86.%v:50055", host)
+func (s *Server) internalFindFriend(host string) bool {
+
+	hostStr := fmt.Sprintf("%v:50055", host)
 	if fmt.Sprintf("%v:50055", s.Registry.Ip) == hostStr {
-		lastFriend.With(prometheus.Labels{"result": "SELF"}).Set(float64(host))
-		s.countMap[host] = fmt.Sprintf("%v SELF", time.Now())
 		return false
 	}
 	for _, f := range s.friends {
@@ -376,18 +378,15 @@ func (s *Server) findFriend(host int) bool {
 		defer cancel()
 		_, err := client.IsAlive(ctx, &pbg.Alive{})
 		if err == nil {
-			s.countMap[host] = fmt.Sprintf("%v FOUND_FRIEND", time.Now())
 			s.friends = append(s.friends, hostStr)
 			Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
-			return s.readFriend(hostStr, host)
+			return s.readFriend(hostStr)
 		} else {
-			lastFriend.With(prometheus.Labels{"result": fmt.Sprintf("%v", err)}).Set(float64(host))
 
 			c := status.Convert(err)
 			if c.Code() != codes.DeadlineExceeded {
 				s.lastError = fmt.Sprintf("%v", err)
 			}
-			s.countMap[host] = fmt.Sprintf("%v", err)
 		}
 	}
 
@@ -396,7 +395,7 @@ func (s *Server) findFriend(host int) bool {
 
 func (s *Server) validateFriends() {
 	for _, f := range s.friends {
-		s.readFriend(f, 0)
+		s.readFriend(f)
 	}
 }
 
@@ -425,7 +424,7 @@ var (
 	}, []string{"error"})
 )
 
-func (s *Server) readFriend(host string, port int) bool {
+func (s *Server) readFriend(host string) bool {
 	conn, err := grpc.Dial(host, grpc.WithInsecure())
 	if err == nil {
 		defer conn.Close()
@@ -434,9 +433,6 @@ func (s *Server) readFriend(host string, port int) bool {
 		client := pb.NewDiscoveryServiceV2Client(conn)
 		regs, err := client.Get(ctx, &pb.GetRequest{Friend: fmt.Sprintf("%v:%v", s.Registry.Ip, s.Registry.Port)})
 		if err == nil {
-			if port > 0 {
-				lastFriend.With(prometheus.Labels{"result": fmt.Sprintf("%v", regs.GetState())}).Set(float64(port))
-			}
 			for _, entry := range regs.GetServices() {
 				if entry.GetVersion() != pb.RegistryEntry_V1 {
 					s.RegisterV2(ctx, &pb.RegisterRequest{Fanout: true, Service: entry})
@@ -597,8 +593,10 @@ func main() {
 	server.Registry.IgnoresMaster = true
 	server.SendTrace = false
 
-	// Find friends
+	// Find friends before
 	go func() {
+		// Work through known IPs first
+
 		t := time.Now()
 		server.state = pb.DiscoveryState_TRACKING
 		time.Sleep(time.Second)
