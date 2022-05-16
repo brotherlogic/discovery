@@ -108,6 +108,8 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 	s.countV2Register++
 	register.With(prometheus.Labels{"service": req.GetService().GetName(), "origin": req.GetCaller()}).Inc()
 
+	s.addIP(req.GetService().GetIp())
+
 	// Fail register until we're ready to serve
 	if s.friendTime <= 0 && !req.GetFanout() {
 		return nil, status.Errorf(codes.FailedPrecondition, "Discover is not yet ready to perform registration")
