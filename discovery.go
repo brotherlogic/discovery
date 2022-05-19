@@ -504,7 +504,7 @@ var (
 func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 	dead, ok := ctx.Deadline()
 	detime := time.Second
-	if ok {
+	if ok && len(s.friends) > 0 {
 		s.DLog(ctx, fmt.Sprintf("Remaining: %v meaning %v per friend", dead.Sub(time.Now()), dead.Sub(time.Now())/time.Duration(len(s.friends))))
 		detime = dead.Sub(time.Now()) / time.Duration(len(s.friends))
 	}
