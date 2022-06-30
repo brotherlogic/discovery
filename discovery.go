@@ -98,6 +98,8 @@ type Server struct {
 	writePrometheus bool
 	state           pb.DiscoveryState
 	iplist          []string
+	config          *pb.Config
+	internalState   *pb.InternalState
 }
 
 type httpGetter interface {
@@ -155,6 +157,10 @@ func InitServer() *Server {
 	s.countMap = make(map[int]string)
 	s.getMapB = make(map[string]int)
 	s.mapLock = &sync.Mutex{}
+	s.config = &pb.Config{}
+	s.internalState = &pb.InternalState{
+		State: pb.InternalState_NOT_SERVING,
+	}
 	return s
 }
 

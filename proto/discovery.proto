@@ -4,6 +4,20 @@ package discovery;
 
 option go_package = "github.com/brotherlogic/discovery/proto";
 
+message InternalState {
+  enum ServingState {
+    UNKNOWN = 0;
+    SERVING = 1;
+    NOT_SERVING = 2;
+    UNREACHABLE = 3;
+  }
+  ServingState state = 1;
+}
+
+message Config {
+  map<string, InternalState> friend_state = 1;
+}
+
 message RegistryEntry {
   // The ip address associated with this entry
   string ip = 1;
@@ -153,6 +167,16 @@ message GetFriendsResponse {
   repeated string friends = 1;
 }
 
+message GetStateRequest {}
+message GetStateResponse {
+  InternalState state = 1;
+}
+
+message GetConfigRequest {}
+message GetConfigResponse {
+  Config config = 1;
+}
+
 service DiscoveryServiceV2 {
   rpc Lock(LockRequest) returns (LockResponse) {}
   rpc RegisterV2(RegisterRequest) returns (RegisterResponse) {}
@@ -160,4 +184,6 @@ service DiscoveryServiceV2 {
   rpc Unregister(UnregisterRequest) returns (UnregisterResponse) {}
   rpc MasterElect(MasterRequest) returns (MasterResponse) {}
   rpc GetFriends(GetFriendsRequest) returns (GetFriendsResponse) {}
+  rpc GetInternalState(GetStateRequest) returns (GetStateResponse) {}
+  rpc GetConfig(GetConfigRequest) returns (GetConfigResponse) {}
 }

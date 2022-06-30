@@ -293,3 +293,11 @@ func (s *Server) Lock(ctx context.Context, req *pb.LockRequest) (*pb.LockRespons
 func (s *Server) GetFriends(_ context.Context, req *pb.GetFriendsRequest) (*pb.GetFriendsResponse, error) {
 	return &pb.GetFriendsResponse{Friends: s.friends}, nil
 }
+
+func (s *Server) GetInternalState(_ context.Context, req *pb.GetStateRequest) (*pb.GetStateResponse, error) {
+	return &pb.GetStateResponse{State: s.internalState}, nil
+}
+
+func (s *Server) GetConfig(_ context.Context, req *pb.GetConfigRequest) (*pb.GetConfigResponse, error) {
+	return &pb.GetConfigResponse{Config: s.config}, nil
+}
