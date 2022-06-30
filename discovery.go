@@ -157,7 +157,9 @@ func InitServer() *Server {
 	s.countMap = make(map[int]string)
 	s.getMapB = make(map[string]int)
 	s.mapLock = &sync.Mutex{}
-	s.config = &pb.Config{}
+	s.config = &pb.Config{
+		FriendState: make(map[string]*pb.InternalState),
+	}
 	s.internalState = &pb.InternalState{
 		State: pb.InternalState_NOT_SERVING,
 	}
