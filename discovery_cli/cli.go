@@ -57,6 +57,18 @@ func main() {
 					fmt.Printf("%v\n", friend)
 				}
 			}
+		case "config":
+			conn, _ := grpc.Dial(utils.Discover, grpc.WithInsecure())
+			defer conn.Close()
+
+			registry := pbdi.NewDiscoveryServiceV2Client(conn)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			state, err := registry.GetConfig(ctx, &pbdi.GetConfigRequest{})
+			if err != nil {
+				log.Fatalf("Error getting state: %v", err)
+			}
+			fmt.Printf("STATE: %v\n", state)
 		case "state":
 			conn, _ := grpc.Dial(utils.Discover, grpc.WithInsecure())
 			defer conn.Close()
