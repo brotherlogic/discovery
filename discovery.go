@@ -445,6 +445,11 @@ func (s *Server) readFriend(host string) bool {
 				}
 			}
 
+			state, err := client.GetInternalState(ctx, &pb.GetStateRequest{})
+			if err == nil {
+				s.config.FriendState[host] = state.GetState()
+			}
+
 			return regs.GetState() == pb.DiscoveryState_COMPLETE
 
 		} else {
@@ -615,6 +620,9 @@ func main() {
 			}
 		}
 		server.state = pb.DiscoveryState_COMPLETE
+		server.internalState = &pb.InternalState{
+			State: pb.InternalState_SERVING,
+		}
 
 		// Double check that we have everything
 		server.validateFriends()
