@@ -423,11 +423,12 @@ func (s *Server) checkFriend(addr string) {
 
 	s.friends = append(s.friends, newaddr)
 	Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
+	s.readFriend(newaddr)
 }
 
 var (
-	etcreg = promauto.NewGaugeVec(prometheus.GaugeOpts{
-		Name: "discovery_etcreg",
+	friendState = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "discovery_friend_state",
 		Help: "ETCD Registry Attempts",
 	}, []string{"error"})
 )
@@ -448,6 +449,7 @@ func (s *Server) readFriend(host string) bool {
 			}
 
 			state, err := client.GetInternalState(ctx, &pb.GetStateRequest{})
+			friendState.With(prometheus.Labels{"error": fmt.Sprintf("%v", status.Convert(err).Code())}).Inc()
 			if err == nil {
 				s.config.FriendState[host] = state.GetState()
 			}
