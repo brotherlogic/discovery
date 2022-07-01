@@ -450,6 +450,7 @@ func (s *Server) readFriend(host string) bool {
 
 			state, err := client.GetInternalState(ctx, &pb.GetStateRequest{})
 			friendState.With(prometheus.Labels{"error": fmt.Sprintf("%v", status.Convert(err).Code())}).Inc()
+			s.CtxLog(ctx, fmt.Sprintf("Read friend %v -> %v,%v", host, state, err))
 			if err == nil {
 				s.config.FriendState[host] = state.GetState()
 			}
