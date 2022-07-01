@@ -58,17 +58,20 @@ func main() {
 				}
 			}
 		case "config":
-			conn, _ := grpc.Dial(utils.Discover, grpc.WithInsecure())
-			defer conn.Close()
+			var host = buildFlags.String("host", utils.Discover, "dicsover host")
+			if err := buildFlags.Parse(os.Args[2:]); err == nil {
+				conn, _ := grpc.Dial(*host, grpc.WithInsecure())
+				defer conn.Close()
 
-			registry := pbdi.NewDiscoveryServiceV2Client(conn)
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-			defer cancel()
-			state, err := registry.GetConfig(ctx, &pbdi.GetConfigRequest{})
-			if err != nil {
-				log.Fatalf("Error getting state: %v", err)
+				registry := pbdi.NewDiscoveryServiceV2Client(conn)
+				ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+				defer cancel()
+				state, err := registry.GetConfig(ctx, &pbdi.GetConfigRequest{})
+				if err != nil {
+					log.Fatalf("Error getting state: %v", err)
+				}
+				fmt.Printf("STATE: %v\n", state)
 			}
-			fmt.Printf("STATE: %v\n", state)
 		case "istate":
 			conn, _ := grpc.Dial(utils.Discover, grpc.WithInsecure())
 			defer conn.Close()
