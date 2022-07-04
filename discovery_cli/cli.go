@@ -123,7 +123,6 @@ func main() {
 			var host = buildFlags.String("host", utils.Discover, "dicsover host")
 			var server = buildFlags.String("server", "192.168.86.32", "dicsover host")
 			var name = buildFlags.String("name", "blah", "dicsover host")
-			var master = buildFlags.Bool("master", false, "master")
 			if err := buildFlags.Parse(os.Args[2:]); err == nil {
 				conn, err := grpc.Dial(*host, grpc.WithInsecure())
 				if err == nil {
@@ -131,13 +130,8 @@ func main() {
 					client := pbdi.NewDiscoveryServiceV2Client(conn)
 					ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 					defer cancel()
-					if *master {
-						a, err := client.MasterElect(ctx, &pbdi.MasterRequest{Service: &pbdi.RegistryEntry{Name: *name, Identifier: *server, Version: pbdi.RegistryEntry_V2}, MasterElect: true})
-						fmt.Printf("Registered: %v -> %v\n", err, a)
-					} else {
-						a, err := client.RegisterV2(ctx, &pbdi.RegisterRequest{Service: &pbdi.RegistryEntry{Name: *name, Identifier: *server, Version: pbdi.RegistryEntry_V2}})
-						fmt.Printf("Registered: %v -> %v\n", err, a)
-					}
+					a, err := client.RegisterV2(ctx, &pbdi.RegisterRequest{Service: &pbdi.RegistryEntry{Name: *name, Identifier: *server, Version: pbdi.RegistryEntry_V2}})
+					fmt.Printf("Registered: %v -> %v\n", err, a)
 				}
 			}
 		case "unreg":
@@ -206,26 +200,9 @@ func main() {
 				if err != nil {
 					log.Fatalf("Error building job: %v", err)
 				}
-				fmt.Printf("MASTERS\n-------\n")
-				masters := []string{}
-				for _, bit := range bits.GetServices() {
-					regtime := time.Now().Sub(time.Unix(0, bit.GetRegisterTime())).Truncate(time.Minute)
-					mastertime := time.Now().Sub(time.Unix(0, bit.GetMasterTime())).Truncate(time.Minute)
-					if bit.GetMaster() {
-						masters = append(masters, fmt.Sprintf("%v [%v - %v]", repEntry(bit), mastertime, regtime))
-					}
-				}
-				sort.Strings(masters)
-				for _, str := range masters {
-					fmt.Printf("%v\n", str)
-				}
-
-				fmt.Printf("\nSLAVES\n-------\n")
 				slaves := make(map[string][]*pbdi.RegistryEntry)
 				for _, bit := range bits.GetServices() {
-					if !bit.GetMaster() {
-						slaves[bit.Name] = append(slaves[bit.Name], bit)
-					}
+					slaves[bit.Name] = append(slaves[bit.Name], bit)
 				}
 				keys := []string{}
 				for k := range slaves {
@@ -242,7 +219,6 @@ func main() {
 
 			}
 		case "find":
-			var server = buildFlags.String("server", "", "server")
 			if err := buildFlags.Parse(os.Args[2:]); err == nil {
 				for _, ip := range []string{
 					"192.168.86.20:50055",
@@ -271,9 +247,7 @@ func main() {
 					}
 
 					for _, bit := range bits.GetServices() {
-						if bit.GetName() == *server && bit.GetMaster() {
-							fmt.Printf("%v -> %v\n", ip, bit)
-						}
+						fmt.Printf("%v -> %v\n", ip, bit)
 					}
 
 				}

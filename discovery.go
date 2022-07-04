@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -136,8 +135,6 @@ func InitServer() *Server {
 	s.GoServer = &goserver.GoServer{}
 	s.entries = make([]*pb.RegistryEntry, 0)
 	s.mm = &sync.RWMutex{}
-	s.masterMap = make(map[string]*pb.RegistryEntry)
-	s.masterTime = make(map[string]time.Time)
 	s.callerCount = make(map[string]int)
 	s.callerCountM = &sync.Mutex{}
 	s.reqCount = make(map[string]int)
@@ -153,7 +150,6 @@ func InitServer() *Server {
 	s.friends = make([]string, 0)
 	s.locks = make(map[string]int64)
 	s.lockNames = make(map[string]string)
-	s.elector = &prodElector{dial: s.DoDial}
 	s.countMap = make(map[int]string)
 	s.getMapB = make(map[string]int)
 	s.mapLock = &sync.Mutex{}
@@ -172,12 +168,6 @@ func (s *Server) cleanEntries(t time.Time) {
 		//Clean if we haven't seen this entry in the time to clean window
 		// Don't clean V2 entries
 		if t.UnixNano()-entry.GetLastSeenTime() > entry.GetTimeToClean()*1000000 && entry.Version == pb.RegistryEntry_V1 {
-			if entry.GetMaster() {
-				s.mm.Lock()
-				delete(s.masterMap, entry.GetName())
-				delete(s.masterTime, entry.GetName())
-				s.mm.Unlock()
-			}
 		} else {
 			nPortMap = append(nPortMap, entry)
 		}
@@ -234,41 +224,6 @@ type prodElector struct {
 	dial func(entry *pb.RegistryEntry) (*grpc.ClientConn, error)
 }
 
-func (p *prodElector) elect(ctx context.Context, entry *pb.RegistryEntry) error {
-	conn, err := grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	server := pbg.NewGoserverServiceClient(conn)
-	_, err = server.Mote(ctx, &pbg.MoteRequest{Master: true})
-
-	return err
-}
-func (p *prodElector) unelect(ctx context.Context, entry *pb.RegistryEntry) error {
-	if entry == nil {
-		return nil
-	}
-	entry.Master = false
-
-	conn, err := p.dial(entry)
-	if err != nil {
-		return err
-	}
-	defer conn.Close()
-
-	server := pbg.NewGoserverServiceClient(conn)
-	_, err = server.Mote(ctx, &pbg.MoteRequest{Master: false})
-
-	return err
-}
-
-// Mote promotes/demotes this server
-func (s *Server) Mote(ctx context.Context, master bool) error {
-	return nil
-}
-
 func (s *Server) getCurr(in *pb.RegistryEntry) *pb.RegistryEntry {
 	for _, val := range s.portMap {
 		if val.Identifier == in.Identifier && val.Name == in.Name {
@@ -278,30 +233,10 @@ func (s *Server) getCurr(in *pb.RegistryEntry) *pb.RegistryEntry {
 	return nil
 }
 
-func (s *Server) getCMaster(in *pb.RegistryEntry) (*pb.RegistryEntry, time.Time) {
-	s.mm.RLock()
-	defer s.mm.RUnlock()
-	return s.masterMap[in.GetName()], s.masterTime[in.GetName()]
-}
-
-func (s *Server) getJob(in *pb.RegistryEntry) (*pb.RegistryEntry, *pb.RegistryEntry) {
+func (s *Server) getJob(in *pb.RegistryEntry) *pb.RegistryEntry {
 	// Setup the port info
 	s.setupPort(in)
-
-	m, _ := s.getCMaster(in)
-	return s.getCurr(in), m
-}
-
-func (s *Server) addMaster(in *pb.RegistryEntry) {
-	//Register as master if there is none
-	in.MasterTime = time.Now().UnixNano()
-	s.mm.Lock()
-	if val, ok := s.masterMap[in.GetName()]; ok {
-		val.Master = false
-	}
-	s.masterMap[in.GetName()] = in
-	s.masterTime[in.GetName()] = time.Now()
-	s.mm.Unlock()
+	return s.getCurr(in)
 }
 
 func (s *Server) removeMaster(in *pb.RegistryEntry) {
@@ -546,16 +481,6 @@ func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 		}
 	}
 }
-func (s *Server) fanoutMaster(ctx context.Context, req *pb.MasterRequest) {
-	for _, f := range s.friends {
-		conn, err := s.FDial(f)
-		if err == nil {
-			defer conn.Close()
-			client := pb.NewDiscoveryServiceV2Client(conn)
-			client.MasterElect(ctx, req)
-		}
-	}
-}
 
 func (s *Server) fanoutUnregister(ctx context.Context, req *pb.UnregisterRequest) {
 	for _, f := range s.friends {
@@ -604,11 +529,10 @@ func fileExists(filename string) bool {
 func main() {
 	server := InitServer()
 	server.setExternalIP(prodHTTPGetter{})
-	server.PrepServerNoRegister(port)
+	server.PrepServerNoRegister("discovery", port)
 	server.Register = server
 
-	server.RegisterServerV2("discovery", false, true)
-	server.Registry.IgnoresMaster = true
+	server.RegisterServerV2(false)
 	server.SendTrace = false
 
 	// Find friends before

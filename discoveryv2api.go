@@ -20,42 +20,6 @@ const (
 	IP_FILE = "/media/scratch/discovery-list"
 )
 
-func (s *Server) MasterElect(ctx context.Context, req *pb.MasterRequest) (*pb.MasterResponse, error) {
-	curr, _ := s.getJob(req.GetService())
-	if curr == nil {
-		return nil, status.Errorf(codes.FailedPrecondition, "Job %v is not registered", req.GetService().GetName())
-	}
-
-	if req.GetFanout() {
-		if val, ok := s.locks[req.GetService().GetName()]; !ok || val != req.GetLockKey() {
-			return nil, fmt.Errorf("Lock was not acquired here")
-		}
-		s.addMaster(curr)
-		curr.Master = true
-		return &pb.MasterResponse{Service: curr}, nil
-	}
-
-	m, t := s.getCMaster(req.GetService())
-	if m != nil && time.Now().Sub(t) < time.Minute {
-		return nil, status.Errorf(codes.FailedPrecondition, "Cannot become master until %v -> current master is %v (%v is making the request)", t.Add(time.Minute), m, req.GetService())
-	}
-
-	s.elector.unelect(ctx, m)
-
-	key := time.Now().UnixNano()
-	err := s.acquireMasterLock(ctx, curr.GetName(), key)
-	if err != nil {
-		return nil, err
-	}
-
-	curr.Master = true
-	s.addMaster(curr)
-	req.Fanout = true
-	req.LockKey = key
-	s.fanoutMaster(ctx, req)
-	return &pb.MasterResponse{Service: curr}, nil
-}
-
 var (
 	register = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "discovery_register",
@@ -115,27 +79,18 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 		return nil, status.Errorf(codes.FailedPrecondition, "Discover is not yet ready to perform registration")
 	}
 
-	// Collapse a master registration
-	if req.GetService().GetMaster() && !req.GetFanout() {
-		req.GetService().Master = false
-	}
-
 	s.checkFriend(fmt.Sprintf("%v", req.GetService().GetIp()))
 
-	curr, _ := s.getJob(req.GetService())
+	curr := s.getJob(req.GetService())
 
 	s.version.Store(req.GetService().GetName(), int32(1))
 
 	// Fast path on a re-register
 	if curr != nil {
 		s.CtxLog(ctx, fmt.Sprintf("Registering on fast path - %v", curr))
-		if curr.Master && !req.GetService().GetMaster() {
-			s.removeMaster(curr)
-			curr.Master = false
-			if !req.Fanout {
-				req.Fanout = true
-				s.fanoutRegister(ctx, req)
-			}
+		if !req.Fanout {
+			req.Fanout = true
+			s.fanoutRegister(ctx, req)
 		}
 		return &pb.RegisterResponse{Service: curr}, nil
 	}
@@ -156,10 +111,6 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 	if !req.Fanout {
 		req.Fanout = true
 		s.fanoutRegister(ctx, req)
-	}
-
-	if req.Fanout && req.GetService().GetMaster() {
-		s.addMaster(req.GetService())
 	}
 
 	return &pb.RegisterResponse{Service: req.GetService()}, nil
@@ -267,11 +218,6 @@ func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb
 	}
 
 	s.removeFromPortMap(req.GetService())
-
-	master, _ := s.getCMaster(req.GetService())
-	if master != nil && master.GetIdentifier() == req.GetService().GetIdentifier() {
-		s.removeMaster(req.GetService())
-	}
 
 	if !req.Fanout {
 		req.Fanout = true

@@ -210,7 +210,6 @@ type DiscoveryServiceV2Client interface {
 	RegisterV2(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	Unregister(ctx context.Context, in *UnregisterRequest, opts ...grpc.CallOption) (*UnregisterResponse, error)
-	MasterElect(ctx context.Context, in *MasterRequest, opts ...grpc.CallOption) (*MasterResponse, error)
 	GetFriends(ctx context.Context, in *GetFriendsRequest, opts ...grpc.CallOption) (*GetFriendsResponse, error)
 	GetInternalState(ctx context.Context, in *GetStateRequest, opts ...grpc.CallOption) (*GetStateResponse, error)
 	GetConfig(ctx context.Context, in *GetConfigRequest, opts ...grpc.CallOption) (*GetConfigResponse, error)
@@ -260,15 +259,6 @@ func (c *discoveryServiceV2Client) Unregister(ctx context.Context, in *Unregiste
 	return out, nil
 }
 
-func (c *discoveryServiceV2Client) MasterElect(ctx context.Context, in *MasterRequest, opts ...grpc.CallOption) (*MasterResponse, error) {
-	out := new(MasterResponse)
-	err := c.cc.Invoke(ctx, "/discovery.DiscoveryServiceV2/MasterElect", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *discoveryServiceV2Client) GetFriends(ctx context.Context, in *GetFriendsRequest, opts ...grpc.CallOption) (*GetFriendsResponse, error) {
 	out := new(GetFriendsResponse)
 	err := c.cc.Invoke(ctx, "/discovery.DiscoveryServiceV2/GetFriends", in, out, opts...)
@@ -304,7 +294,6 @@ type DiscoveryServiceV2Server interface {
 	RegisterV2(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	Unregister(context.Context, *UnregisterRequest) (*UnregisterResponse, error)
-	MasterElect(context.Context, *MasterRequest) (*MasterResponse, error)
 	GetFriends(context.Context, *GetFriendsRequest) (*GetFriendsResponse, error)
 	GetInternalState(context.Context, *GetStateRequest) (*GetStateResponse, error)
 	GetConfig(context.Context, *GetConfigRequest) (*GetConfigResponse, error)
@@ -325,9 +314,6 @@ func (UnimplementedDiscoveryServiceV2Server) Get(context.Context, *GetRequest) (
 }
 func (UnimplementedDiscoveryServiceV2Server) Unregister(context.Context, *UnregisterRequest) (*UnregisterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Unregister not implemented")
-}
-func (UnimplementedDiscoveryServiceV2Server) MasterElect(context.Context, *MasterRequest) (*MasterResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method MasterElect not implemented")
 }
 func (UnimplementedDiscoveryServiceV2Server) GetFriends(context.Context, *GetFriendsRequest) (*GetFriendsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFriends not implemented")
@@ -422,24 +408,6 @@ func _DiscoveryServiceV2_Unregister_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _DiscoveryServiceV2_MasterElect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MasterRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DiscoveryServiceV2Server).MasterElect(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/discovery.DiscoveryServiceV2/MasterElect",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DiscoveryServiceV2Server).MasterElect(ctx, req.(*MasterRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _DiscoveryServiceV2_GetFriends_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetFriendsRequest)
 	if err := dec(in); err != nil {
@@ -513,10 +481,6 @@ var _DiscoveryServiceV2_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Unregister",
 			Handler:    _DiscoveryServiceV2_Unregister_Handler,
-		},
-		{
-			MethodName: "MasterElect",
-			Handler:    _DiscoveryServiceV2_MasterElect_Handler,
 		},
 		{
 			MethodName: "GetFriends",

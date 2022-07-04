@@ -183,7 +183,6 @@ service DiscoveryServiceV2 {
   rpc RegisterV2(RegisterRequest) returns (RegisterResponse) {}
   rpc Get(GetRequest) returns (GetResponse) {}
   rpc Unregister(UnregisterRequest) returns (UnregisterResponse) {}
-  rpc MasterElect(MasterRequest) returns (MasterResponse) {}
   rpc GetFriends(GetFriendsRequest) returns (GetFriendsResponse) {}
   rpc GetInternalState(GetStateRequest) returns (GetStateResponse) {}
   rpc GetConfig(GetConfigRequest) returns (GetConfigResponse) {}
