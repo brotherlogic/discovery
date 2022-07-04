@@ -434,6 +434,7 @@ var (
 )
 
 func (s *Server) readFriend(host string) bool {
+	s.Log(fmt.Sprintf("Reading friend: %v", host))
 	conn, err := grpc.Dial(host, grpc.WithInsecure())
 	if err == nil {
 		defer conn.Close()

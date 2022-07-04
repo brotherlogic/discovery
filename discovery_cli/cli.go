@@ -70,7 +70,10 @@ func main() {
 				if err != nil {
 					log.Fatalf("Error getting state: %v", err)
 				}
-				fmt.Printf("STATE: %v\n", state)
+				fmt.Printf("Config: \n")
+				for f, v := range state.GetConfig().GetFriendState() {
+					fmt.Printf("%v -> %v\n", f, v)
+				}
 			}
 		case "istate":
 			conn, _ := grpc.Dial(utils.Discover, grpc.WithInsecure())
