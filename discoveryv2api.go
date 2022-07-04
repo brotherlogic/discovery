@@ -146,6 +146,13 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 	// This is a new registration - update the port map
 	req.GetService().LastSeenTime = time.Now().UnixNano()
 
+	// Update the friend time
+	for key, value := range s.config.GetFriendState() {
+		if key == fmt.Sprintf("%v:50055", req.GetService().GetIp()) {
+			value.LastSeen = time.Now().Unix()
+		}
+	}
+
 	if !req.Fanout {
 		req.Fanout = true
 		s.fanoutRegister(ctx, req)

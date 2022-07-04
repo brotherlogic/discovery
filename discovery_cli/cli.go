@@ -72,7 +72,7 @@ func main() {
 				}
 				fmt.Printf("Config: \n")
 				for f, v := range state.GetConfig().GetFriendState() {
-					fmt.Printf("%v -> %v\n", f, v)
+					fmt.Printf("%v -> %v @ %v\n", f, v.GetState(), time.Unix(v.GetLastSeen(), 0))
 				}
 			}
 		case "istate":

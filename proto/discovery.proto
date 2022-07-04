@@ -12,6 +12,7 @@ message InternalState {
     UNREACHABLE = 3;
   }
   ServingState state = 1;
+  int64 last_seen = 2;
 }
 
 message Config {

@@ -454,6 +454,7 @@ func (s *Server) readFriend(host string) bool {
 			s.CtxLog(ctx, fmt.Sprintf("Read friend %v -> %v,%v", host, state, err))
 			if err == nil {
 				s.config.FriendState[host] = state.GetState()
+				s.config.FriendState[host].LastSeen = time.Now().Unix()
 			}
 
 			return regs.GetState() == pb.DiscoveryState_COMPLETE
