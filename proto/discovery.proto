@@ -36,8 +36,8 @@ message RegistryEntry {
   string identifier = 5;
   
   // Boolean to show we're master/slave
-  bool master = 6;
-  bool weak_master = 12;
+  //bool master = 6;
+  //bool weak_master = 12;
   
   // The time at which this binary was registered
   int64 register_time = 7;
@@ -49,7 +49,7 @@ message RegistryEntry {
   int64 last_seen_time = 9;
   
   // We are never going to be master
-  bool ignores_master = 10;
+  //bool ignores_master = 10;
   
   // The time at which we were set master
   int64 master_time = 11;
