@@ -87,7 +87,6 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 	// Fast path on a re-register
 	if curr != nil {
-		s.CtxLog(ctx, fmt.Sprintf("Registering on fast path - %v", curr))
 		if !req.Fanout {
 			req.Fanout = true
 			s.fanoutRegister(ctx, req)
@@ -196,10 +195,7 @@ func (s *Server) doWrite() {
 				services = append(services, job)
 			}
 		}
-		err := s.writeFile("/etc/prometheus/jobs.json", services)
-		if err != nil {
-			s.Log(fmt.Sprintf("Unable to write job file: %v", err))
-		}
+		s.writeFile("/etc/prometheus/jobs.json", services)
 	}
 }
 

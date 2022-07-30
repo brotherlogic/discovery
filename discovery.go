@@ -369,7 +369,6 @@ var (
 )
 
 func (s *Server) readFriend(host string) bool {
-	s.Log(fmt.Sprintf("Reading friend: %v, with %v", host, s.friends))
 	conn, err := grpc.Dial(host, grpc.WithInsecure())
 	if err == nil {
 		defer conn.Close()
@@ -386,7 +385,6 @@ func (s *Server) readFriend(host string) bool {
 
 			state, err := client.GetInternalState(ctx, &pb.GetStateRequest{})
 			friendState.With(prometheus.Labels{"error": fmt.Sprintf("%v", status.Convert(err).Code())}).Inc()
-			s.CtxLog(ctx, fmt.Sprintf("Read friend %v -> %v,%v", host, state, err))
 			if err == nil {
 				s.config.FriendState[host] = state.GetState()
 				s.config.FriendState[host].LastSeen = time.Now().Unix()
@@ -458,10 +456,8 @@ func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 	dead, ok := ctx.Deadline()
 	detime := time.Second
 	if ok && len(s.friends) > 0 {
-		s.DLog(ctx, fmt.Sprintf("Remaining: %v meaning %v per friend", dead.Sub(time.Now()), dead.Sub(time.Now())/time.Duration(len(s.friends))))
 		detime = dead.Sub(time.Now()) / time.Duration(len(s.friends))
 	}
-	s.CtxLog(ctx, fmt.Sprintf("Registering %v with %v", req.GetService().GetName(), s.friends))
 	for _, f := range s.friends {
 		conn, err := s.FDial(f)
 		if err == nil {
@@ -469,14 +465,11 @@ func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 			client := pb.NewDiscoveryServiceV2Client(conn)
 			ctx, cancel := utils.ManualContext("difa", detime)
 			_, err := client.RegisterV2(ctx, req)
-			s.DLog(ctx, fmt.Sprintf("REGISTER %v -> %v = %v", req, f, err))
 			if err != nil {
-				s.Log(fmt.Sprintf("register error: %v", err))
 				fanout.With(prometheus.Labels{"service": req.GetService().GetName(), "origin": f, "error": fmt.Sprintf("%v", err)}).Inc()
 			}
 			cancel()
 		} else {
-			s.Log(fmt.Sprintf("Dial error in fanout register: %v", err))
 			fanout.With(prometheus.Labels{"service": req.GetService().GetName(), "origin": f, "error": fmt.Sprintf("%v", err)}).Inc()
 		}
 	}
@@ -543,10 +536,8 @@ func main() {
 		server.state = pb.DiscoveryState_TRACKING
 		time.Sleep(time.Second)
 		for i := 1; i < 255; i++ {
-			server.DLog(context.Background(), fmt.Sprintf("Checking %v", i))
 			found := server.findFriend(i)
 			if found {
-				server.Log("We are short cutting here since we've found a full")
 				break
 			}
 		}

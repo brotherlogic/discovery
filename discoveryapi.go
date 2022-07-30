@@ -67,8 +67,6 @@ var (
 
 // Discover supports the Discover rpc end point
 func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.DiscoverResponse, error) {
-	s.Log(fmt.Sprintf("DDISCOVER -> %v", req))
-
 	pr, _ := peer.FromContext(ctx)
 	s.discoverPeer = fmt.Sprintf("%+v", pr)
 	legacyPeer.With(prometheus.Labels{"method": "Discover", "peer": fmt.Sprintf("%v", strings.Split(pr.Addr.String(), ":")[0])}).Inc()
