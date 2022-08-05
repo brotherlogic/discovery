@@ -372,7 +372,7 @@ var (
 )
 
 func (s *Server) readFriend(ctx context.Context, host string) (bool, bool) {
-	s.Log(fmt.Sprintf("Read log: %v", host))
+	s.CtxLog(ctx, fmt.Sprintf("Read log: %v", host))
 	conn, err := s.FDial(host)
 	if err == nil {
 		defer conn.Close()
