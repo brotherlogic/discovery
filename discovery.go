@@ -384,7 +384,8 @@ func (s *Server) readFriend(ctx context.Context, host string) (bool, bool) {
 		client := pb.NewDiscoveryServiceV2Client(conn)
 		regs, err := client.Get(ctx, &pb.GetRequest{Friend: fmt.Sprintf("%v:%v", s.Registry.Ip, s.Registry.Port)})
 		if err == nil {
-			for _, entry := range regs.GetServices() {
+			for i, entry := range regs.GetServices() {
+				s.CtxLog(ctx, fmt.Sprintf("Reg %v/%v -> %v", i, len(regs.GetServices()), entry))
 				if entry.GetVersion() != pb.RegistryEntry_V1 {
 					s.RegisterV2(ctx, &pb.RegisterRequest{Fanout: true, Service: entry})
 				}
