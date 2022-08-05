@@ -320,10 +320,12 @@ func (s *Server) internalFindFriend(ctx context.Context, host string) bool {
 		client := pbg.NewGoserverServiceClient(conn)
 		_, err := client.IsAlive(ctx, &pbg.Alive{})
 		if err == nil {
-			s.friends = append(s.friends, hostStr)
-			Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
-			_, ready := s.readFriend(ctx, hostStr)
-			return ready
+			if !s.isFriend(hostStr) {
+				s.friends = append(s.friends, hostStr)
+				Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
+				_, ready := s.readFriend(ctx, hostStr)
+				return ready
+			}
 		} else {
 
 			c := status.Convert(err)
@@ -360,8 +362,10 @@ func (s *Server) checkFriend(ctx context.Context, addr string) {
 	//Only keep a friend if we can actually read from them
 	found, _ := s.readFriend(ctx, newaddr)
 	if found {
-		s.friends = append(s.friends, newaddr)
-		Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
+		if !s.isFriend(newaddr) {
+			s.friends = append(s.friends, newaddr)
+			Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
+		}
 	}
 }
 

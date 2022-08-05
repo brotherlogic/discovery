@@ -66,6 +66,16 @@ func (s *Server) writeIplist(lis []string) {
 	}
 }
 
+func (s *Server) isFriend(host string) bool {
+	for _, f := range s.friends {
+		if f == host {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Register a server
 func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	defer s.doWrite()
@@ -146,8 +156,10 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 		if !found {
 			check, _ := s.readFriend(ctx, req.GetFriend())
 			if check {
-				s.friends = append(s.friends, req.GetFriend())
-				Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
+				if !s.isFriend(req.GetFriend()) {
+					s.friends = append(s.friends, req.GetFriend())
+					Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
+				}
 			}
 		}
 	}
