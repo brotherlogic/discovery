@@ -144,8 +144,11 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 		}
 
 		if !found {
-			s.friends = append(s.friends, req.GetFriend())
-			Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
+			check, _ := s.readFriend(req.GetFriend())
+			if check {
+				s.friends = append(s.friends, req.GetFriend())
+				Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
+			}
 		}
 	}
 
