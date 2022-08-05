@@ -337,6 +337,7 @@ func (s *Server) internalFindFriend(ctx context.Context, host string) bool {
 }
 
 func (s *Server) validateFriends(ctx context.Context) {
+	s.CtxLog(ctx, fmt.Sprintf("VALIDATING: %v", len(s.friends)))
 	for _, f := range s.friends {
 		s.readFriend(ctx, f)
 	}
