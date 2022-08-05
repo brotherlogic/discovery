@@ -323,7 +323,7 @@ func (s *Server) internalFindFriend(ctx context.Context, host string) bool {
 			if !s.isFriend(hostStr) {
 				s.friends = append(s.friends, hostStr)
 				Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
-				_, ready := s.readFriend(ctx, hostStr)
+				_, ready := s.readFriend(ctx, hostStr, true)
 				return ready
 			}
 		} else {
@@ -341,7 +341,7 @@ func (s *Server) internalFindFriend(ctx context.Context, host string) bool {
 func (s *Server) validateFriends(ctx context.Context) {
 	s.CtxLog(ctx, fmt.Sprintf("VALIDATING: %v", len(s.friends)))
 	for _, f := range s.friends {
-		s.readFriend(ctx, f)
+		s.readFriend(ctx, f, false)
 	}
 }
 
@@ -360,7 +360,7 @@ func (s *Server) checkFriend(ctx context.Context, addr string) {
 	}
 
 	//Only keep a friend if we can actually read from them
-	found, _ := s.readFriend(ctx, newaddr)
+	found, _ := s.readFriend(ctx, newaddr, true)
 	if found {
 		if !s.isFriend(newaddr) {
 			s.friends = append(s.friends, newaddr)
@@ -376,7 +376,7 @@ var (
 	}, []string{"error"})
 )
 
-func (s *Server) readFriend(ctx context.Context, host string) (bool, bool) {
+func (s *Server) readFriend(ctx context.Context, host string, read bool) (bool, bool) {
 	s.CtxLog(ctx, fmt.Sprintf("Read log: %v", host))
 	conn, err := s.FDial(host)
 	if err == nil {
@@ -384,10 +384,12 @@ func (s *Server) readFriend(ctx context.Context, host string) (bool, bool) {
 		client := pb.NewDiscoveryServiceV2Client(conn)
 		regs, err := client.Get(ctx, &pb.GetRequest{Friend: fmt.Sprintf("%v:%v", s.Registry.Ip, s.Registry.Port)})
 		if err == nil {
-			for i, entry := range regs.GetServices() {
-				s.CtxLog(ctx, fmt.Sprintf("Reg %v/%v -> %v", i, len(regs.GetServices()), entry))
-				if entry.GetVersion() != pb.RegistryEntry_V1 {
-					s.RegisterV2(ctx, &pb.RegisterRequest{Fanout: true, Service: entry})
+			if read {
+				for i, entry := range regs.GetServices() {
+					s.CtxLog(ctx, fmt.Sprintf("Reg %v/%v -> %v", i, len(regs.GetServices()), entry))
+					if entry.GetVersion() != pb.RegistryEntry_V1 {
+						s.RegisterV2(ctx, &pb.RegisterRequest{Fanout: true, Service: entry})
+					}
 				}
 			}
 

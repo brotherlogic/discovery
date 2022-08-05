@@ -154,7 +154,7 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 		}
 
 		if !found {
-			check, _ := s.readFriend(ctx, req.GetFriend())
+			check, _ := s.readFriend(ctx, req.GetFriend(), false)
 			if check {
 				if !s.isFriend(req.GetFriend()) {
 					s.friends = append(s.friends, req.GetFriend())
