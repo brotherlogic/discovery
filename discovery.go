@@ -554,7 +554,7 @@ func main() {
 			State: pb.InternalState_SERVING,
 		}
 		server.config.MyState = &pb.InternalState{
-			State: pb.InternalState_NOT_SERVING,
+			State: pb.InternalState_SERVING,
 		}
 
 		server.Log(fmt.Sprintf("Completed friend search: %v", time.Since(t)))
