@@ -545,6 +545,7 @@ func main() {
 		time.Sleep(time.Second)
 		for i := 1; i < 255; i++ {
 			found := server.findFriend(i)
+			server.Log(fmt.Sprintf("FOUND %v -> %v", i, found))
 			if found {
 				break
 			}
