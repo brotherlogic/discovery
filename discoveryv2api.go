@@ -79,7 +79,7 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 		return nil, status.Errorf(codes.FailedPrecondition, "Discover is not yet ready to perform registration")
 	}
 
-	s.checkFriend(fmt.Sprintf("%v", req.GetService().GetIp()))
+	s.checkFriend(ctx, fmt.Sprintf("%v", req.GetService().GetIp()))
 
 	curr := s.getJob(req.GetService())
 
@@ -144,7 +144,7 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 		}
 
 		if !found {
-			check, _ := s.readFriend(req.GetFriend())
+			check, _ := s.readFriend(ctx, req.GetFriend())
 			if check {
 				s.friends = append(s.friends, req.GetFriend())
 				Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
