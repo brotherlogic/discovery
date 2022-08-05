@@ -317,7 +317,7 @@ func (s *Server) internalFindFriend(host string) bool {
 	if err == nil {
 		defer conn.Close()
 		client := pbg.NewGoserverServiceClient(conn)
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		ctx, cancel := utils.ManualContext("discovery-friend"+host, time.Second)
 		defer cancel()
 		_, err := client.IsAlive(ctx, &pbg.Alive{})
 		if err == nil {
@@ -373,10 +373,10 @@ var (
 )
 
 func (s *Server) readFriend(host string) (bool, bool) {
-	conn, err := grpc.Dial(host, grpc.WithInsecure())
+	conn, err := s.FDial(host)
 	if err == nil {
 		defer conn.Close()
-		ctx, cancel := utils.ManualContext("discovery-frient-"+host, time.Minute)
+		ctx, cancel := utils.ManualContext("discovery-readfriend-"+host, time.Minute)
 		defer cancel()
 		client := pb.NewDiscoveryServiceV2Client(conn)
 		regs, err := client.Get(ctx, &pb.GetRequest{Friend: fmt.Sprintf("%v:%v", s.Registry.Ip, s.Registry.Port)})
