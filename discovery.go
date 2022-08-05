@@ -557,6 +557,8 @@ func main() {
 			State: pb.InternalState_NOT_SERVING,
 		}
 
+		s.Log(fmt.Sprintf("Completed friend search: %v", time.Since(t))
+
 		// Double check that we have everything
 		server.validateFriends()
 		server.friendTime = time.Since(t)
