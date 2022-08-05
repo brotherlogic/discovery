@@ -303,6 +303,10 @@ func (s *Server) findFriend(host int) bool {
 }
 
 func (s *Server) internalFindFriend(host string) bool {
+	ctx, cancel := utils.ManualContext("discovery-friend-"+host, time.Second)
+	defer cancel()
+
+	s.CtxLog(ctx, fmt.Sprintf("Reading friend: %v", host))
 
 	hostStr := fmt.Sprintf("%v:50055", host)
 	if fmt.Sprintf("%v:50055", s.Registry.Ip) == hostStr {
@@ -317,8 +321,6 @@ func (s *Server) internalFindFriend(host string) bool {
 	if err == nil {
 		defer conn.Close()
 		client := pbg.NewGoserverServiceClient(conn)
-		ctx, cancel := utils.ManualContext("discovery-friend"+host, time.Second)
-		defer cancel()
 		_, err := client.IsAlive(ctx, &pbg.Alive{})
 		if err == nil {
 			s.friends = append(s.friends, hostStr)
