@@ -323,7 +323,8 @@ func (s *Server) internalFindFriend(host string) bool {
 		if err == nil {
 			s.friends = append(s.friends, hostStr)
 			Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
-			return s.readFriend(hostStr)
+			_, ready := s.readFriend(hostStr)
+			return ready
 		} else {
 
 			c := status.Convert(err)
@@ -357,7 +358,8 @@ func (s *Server) checkFriend(addr string) {
 	}
 
 	//Only keep a friend if we can actually read from them
-	if s.readFriend(newaddr) {
+	found, _ := s.readFriend(newaddr)
+	if found {
 		s.friends = append(s.friends, newaddr)
 		Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
 	}
@@ -370,7 +372,7 @@ var (
 	}, []string{"error"})
 )
 
-func (s *Server) readFriend(host string) bool {
+func (s *Server) readFriend(host string) (bool, bool) {
 	conn, err := grpc.Dial(host, grpc.WithInsecure())
 	if err == nil {
 		defer conn.Close()
@@ -392,13 +394,13 @@ func (s *Server) readFriend(host string) bool {
 				s.config.FriendState[host].LastSeen = time.Now().Unix()
 			}
 
-			return true
+			return true, regs.GetState() == pb.DiscoveryState_COMPLETE
 		} else {
 			s.lastError = fmt.Sprintf("%v", err)
 		}
 	}
 
-	return false
+	return false, false
 }
 
 // GetState gets the state of the server
