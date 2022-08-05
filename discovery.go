@@ -356,9 +356,11 @@ func (s *Server) checkFriend(addr string) {
 		}
 	}
 
-	s.friends = append(s.friends, newaddr)
-	Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
-	s.readFriend(newaddr)
+	//Only keep a friend if we can actually read from them
+	if s.readFriend(newaddr) {
+		s.friends = append(s.friends, newaddr)
+		Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
+	}
 }
 
 var (
