@@ -392,8 +392,7 @@ func (s *Server) readFriend(host string) bool {
 				s.config.FriendState[host].LastSeen = time.Now().Unix()
 			}
 
-			return regs.GetState() == pb.DiscoveryState_COMPLETE
-
+			return true
 		} else {
 			s.lastError = fmt.Sprintf("%v", err)
 		}
