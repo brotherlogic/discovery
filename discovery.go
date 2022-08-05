@@ -539,6 +539,9 @@ func main() {
 
 		t := time.Now()
 		server.state = pb.DiscoveryState_TRACKING
+		server.config.MyState = &pb.InternalState{
+			State: pb.InternalState_NOT_SERVING,
+		}
 		time.Sleep(time.Second)
 		for i := 1; i < 255; i++ {
 			found := server.findFriend(i)
@@ -549,6 +552,9 @@ func main() {
 		server.state = pb.DiscoveryState_COMPLETE
 		server.internalState = &pb.InternalState{
 			State: pb.InternalState_SERVING,
+		}
+		server.config.MyState = &pb.InternalState{
+			State: pb.InternalState_NOT_SERVING,
 		}
 
 		// Double check that we have everything

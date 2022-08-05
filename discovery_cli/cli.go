@@ -70,7 +70,7 @@ func main() {
 				if err != nil {
 					log.Fatalf("Error getting state: %v", err)
 				}
-				fmt.Printf("Config: \n")
+				fmt.Printf("Config: [%v]\n", state.GetConfig().GetMyState())
 				for f, v := range state.GetConfig().GetFriendState() {
 					fmt.Printf("%v -> %v @ %v\n", f, v.GetState(), time.Unix(v.GetLastSeen(), 0))
 				}

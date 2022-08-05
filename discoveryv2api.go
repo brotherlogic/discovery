@@ -251,5 +251,6 @@ func (s *Server) GetInternalState(_ context.Context, req *pb.GetStateRequest) (*
 }
 
 func (s *Server) GetConfig(_ context.Context, req *pb.GetConfigRequest) (*pb.GetConfigResponse, error) {
-	return &pb.GetConfigResponse{Config: s.config}, nil
+	return &pb.GetConfigResponse{
+		Config: s.config}, nil
 }
