@@ -360,7 +360,7 @@ func (s *Server) checkFriend(ctx context.Context, addr string) {
 	}
 
 	//Only keep a friend if we can actually read from them
-	found, _ := s.readFriend(ctx, newaddr, true)
+	found, _ := s.readFriend(ctx, newaddr, false)
 	if found {
 		if !s.isFriend(newaddr) {
 			s.friends = append(s.friends, newaddr)
