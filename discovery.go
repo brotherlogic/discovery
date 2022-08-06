@@ -298,12 +298,11 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 	return nil
 }
 
-func (s *Server) findFriend(ctx context.Context, host int) bool {
-	return s.internalFindFriend(ctx, fmt.Sprintf("192.168.86.%v", host))
+func (s *Server) findFriend(host int) bool {
+	return s.internalFindFriend(fmt.Sprintf("192.168.86.%v", host))
 }
 
-func (s *Server) internalFindFriend(ctx context.Context, host string) bool {
-	s.CtxLog(ctx, fmt.Sprintf("Reading friend: %v", host))
+func (s *Server) internalFindFriend(host string) bool {
 
 	hostStr := fmt.Sprintf("%v:50055", host)
 	if fmt.Sprintf("%v:50055", s.Registry.Ip) == hostStr {
@@ -318,14 +317,13 @@ func (s *Server) internalFindFriend(ctx context.Context, host string) bool {
 	if err == nil {
 		defer conn.Close()
 		client := pbg.NewGoserverServiceClient(conn)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
 		_, err := client.IsAlive(ctx, &pbg.Alive{})
 		if err == nil {
-			if !s.isFriend(hostStr) {
-				s.friends = append(s.friends, hostStr)
-				Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
-				_, ready := s.readFriend(ctx, hostStr, true)
-				return ready
-			}
+			s.friends = append(s.friends, hostStr)
+			Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
+			return s.readFriend(hostStr)
 		} else {
 
 			c := status.Convert(err)
@@ -338,14 +336,13 @@ func (s *Server) internalFindFriend(ctx context.Context, host string) bool {
 	return false
 }
 
-func (s *Server) validateFriends(ctx context.Context) {
-	s.CtxLog(ctx, fmt.Sprintf("VALIDATING: %v", len(s.friends)))
+func (s *Server) validateFriends() {
 	for _, f := range s.friends {
-		s.readFriend(ctx, f, false)
+		s.readFriend(f)
 	}
 }
 
-func (s *Server) checkFriend(ctx context.Context, addr string) {
+func (s *Server) checkFriend(addr string) {
 	//Don't friend ourselves
 	if addr == s.Registry.GetIp() {
 		return
@@ -359,14 +356,9 @@ func (s *Server) checkFriend(ctx context.Context, addr string) {
 		}
 	}
 
-	//Only keep a friend if we can actually read from them
-	found, _ := s.readFriend(ctx, newaddr, false)
-	if found {
-		if !s.isFriend(newaddr) {
-			s.friends = append(s.friends, newaddr)
-			Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
-		}
-	}
+	s.friends = append(s.friends, newaddr)
+	Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
+	s.readFriend(newaddr)
 }
 
 var (
@@ -376,20 +368,18 @@ var (
 	}, []string{"error"})
 )
 
-func (s *Server) readFriend(ctx context.Context, host string, read bool) (bool, bool) {
-	s.CtxLog(ctx, fmt.Sprintf("Read log: %v", host))
-	conn, err := s.FDial(host)
+func (s *Server) readFriend(host string) bool {
+	conn, err := grpc.Dial(host, grpc.WithInsecure())
 	if err == nil {
 		defer conn.Close()
+		ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+		defer cancel()
 		client := pb.NewDiscoveryServiceV2Client(conn)
 		regs, err := client.Get(ctx, &pb.GetRequest{Friend: fmt.Sprintf("%v:%v", s.Registry.Ip, s.Registry.Port)})
 		if err == nil {
-			if read {
-				for i, entry := range regs.GetServices() {
-					s.CtxLog(ctx, fmt.Sprintf("Reg %v/%v -> %v", i, len(regs.GetServices()), entry))
-					if entry.GetVersion() != pb.RegistryEntry_V1 {
-						s.RegisterV2(ctx, &pb.RegisterRequest{Fanout: true, Service: entry})
-					}
+			for _, entry := range regs.GetServices() {
+				if entry.GetVersion() != pb.RegistryEntry_V1 {
+					s.RegisterV2(ctx, &pb.RegisterRequest{Fanout: true, Service: entry})
 				}
 			}
 
@@ -400,13 +390,14 @@ func (s *Server) readFriend(ctx context.Context, host string, read bool) (bool, 
 				s.config.FriendState[host].LastSeen = time.Now().Unix()
 			}
 
-			return true, regs.GetState() == pb.DiscoveryState_COMPLETE
+			return regs.GetState() == pb.DiscoveryState_COMPLETE
+
 		} else {
 			s.lastError = fmt.Sprintf("%v", err)
 		}
 	}
 
-	return false, false
+	return false
 }
 
 // GetState gets the state of the server
@@ -543,34 +534,20 @@ func main() {
 
 		t := time.Now()
 		server.state = pb.DiscoveryState_TRACKING
-		server.config.MyState = &pb.InternalState{
-			State: pb.InternalState_NOT_SERVING,
-		}
 		time.Sleep(time.Second)
 		for i := 1; i < 255; i++ {
-			ctx, cancel := utils.ManualContext(fmt.Sprintf("discover-read-%v", i), time.Minute)
-			found := server.findFriend(ctx, i)
-			server.Log(fmt.Sprintf("FOUND %v -> %v", i, found))
+			found := server.findFriend(i)
 			if found {
-				cancel()
 				break
 			}
-			cancel()
 		}
 		server.state = pb.DiscoveryState_COMPLETE
 		server.internalState = &pb.InternalState{
 			State: pb.InternalState_SERVING,
 		}
-		server.config.MyState = &pb.InternalState{
-			State: pb.InternalState_SERVING,
-		}
-
-		server.Log(fmt.Sprintf("Completed friend search: %v", time.Since(t)))
 
 		// Double check that we have everything
-		ctx, cancel := utils.ManualContext("discover-validate", time.Minute*20)
-		server.validateFriends(ctx)
-		cancel()
+		server.validateFriends()
 		server.friendTime = time.Since(t)
 		startup.Set(float64(server.friendTime.Milliseconds()))
 		Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", server.state)}).Set(float64(len(server.friends)))

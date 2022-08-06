@@ -17,7 +17,6 @@ message InternalState {
 
 message Config {
   map<string, InternalState> friend_state = 1;
-  InternalState my_state = 2;
 }
 
 message RegistryEntry {

@@ -66,16 +66,6 @@ func (s *Server) writeIplist(lis []string) {
 	}
 }
 
-func (s *Server) isFriend(host string) bool {
-	for _, f := range s.friends {
-		if f == host {
-			return true
-		}
-	}
-
-	return false
-}
-
 // Register a server
 func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	defer s.doWrite()
@@ -86,10 +76,10 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 	// Fail register until we're ready to serve
 	if s.friendTime <= 0 && !req.GetFanout() {
-		return nil, status.Errorf(codes.FailedPrecondition, "Discover is not yet ready to perform registration (%v and %v)", s.friendTime, req.GetFanout())
+		return nil, status.Errorf(codes.FailedPrecondition, "Discover is not yet ready to perform registration")
 	}
 
-	s.checkFriend(ctx, fmt.Sprintf("%v", req.GetService().GetIp()))
+	s.checkFriend(fmt.Sprintf("%v", req.GetService().GetIp()))
 
 	curr := s.getJob(req.GetService())
 
@@ -154,13 +144,8 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 		}
 
 		if !found {
-			check, _ := s.readFriend(ctx, req.GetFriend(), false)
-			if check {
-				if !s.isFriend(req.GetFriend()) {
-					s.friends = append(s.friends, req.GetFriend())
-					Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
-				}
-			}
+			s.friends = append(s.friends, req.GetFriend())
+			Friends.With(prometheus.Labels{"state": fmt.Sprintf("%v", s.state)}).Set(float64(len(s.friends)))
 		}
 	}
 
@@ -263,6 +248,5 @@ func (s *Server) GetInternalState(_ context.Context, req *pb.GetStateRequest) (*
 }
 
 func (s *Server) GetConfig(_ context.Context, req *pb.GetConfigRequest) (*pb.GetConfigResponse, error) {
-	return &pb.GetConfigResponse{
-		Config: s.config}, nil
+	return &pb.GetConfigResponse{Config: s.config}, nil
 }
