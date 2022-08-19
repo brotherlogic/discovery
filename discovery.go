@@ -49,7 +49,7 @@ var (
 	}, []string{"result"})
 )
 
-var externalPorts = map[string][]int32{"main": []int32{50052, 50053}}
+var externalPorts = map[string][]int32{"main": []int32{50050, 50052}}
 
 // Server the central server object
 type Server struct {
