@@ -287,7 +287,7 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 		if in.ExternalPort && in.Name == "proxy" {
 			in.Port = 50052
 		} else if in.ExternalPort && in.Name == "secureproxy" {
-			in.Port = 50050
+			in.Port = 50048
 		} else if in.ExternalPort {
 			in.Port = 50054
 		} else {
