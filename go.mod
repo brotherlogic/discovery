@@ -6,6 +6,7 @@ require (
 	github.com/brotherlogic/buildserver v0.0.0-20220821210413-fb5baf970be6 // indirect
 	github.com/brotherlogic/dstore v0.0.0-20220828170216-e0e461f30b88 // indirect
 	github.com/brotherlogic/githubcard v0.0.0-20220829174314-a89eaf9e49be // indirect
+	github.com/brotherlogic/gobuildslave v0.0.0-20220906134326-d6713460be49 // indirect
 	github.com/brotherlogic/goserver v0.0.0-20220821031349-d47a1932e1b3
 	github.com/brotherlogic/lock v0.0.0-20220821031448-128a4731a690 // indirect
 	github.com/golang/protobuf v1.5.2
