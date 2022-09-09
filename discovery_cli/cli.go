@@ -47,7 +47,7 @@ func main() {
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 				defer cancel()
 
-				_, err := registry.SetZone(ctx, &pb.SetZoneRequest{Zone: *zone})
+				_, err := registry.SetZone(ctx, &pbdi.SetZoneRequest{Zone: *zone})
 				if err != nil {
 					log.Fatalf("Bad set: %v", err)
 				}
