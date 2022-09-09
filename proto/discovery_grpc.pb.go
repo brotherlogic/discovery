@@ -213,6 +213,7 @@ type DiscoveryServiceV2Client interface {
 	GetFriends(ctx context.Context, in *GetFriendsRequest, opts ...grpc.CallOption) (*GetFriendsResponse, error)
 	GetInternalState(ctx context.Context, in *GetStateRequest, opts ...grpc.CallOption) (*GetStateResponse, error)
 	GetConfig(ctx context.Context, in *GetConfigRequest, opts ...grpc.CallOption) (*GetConfigResponse, error)
+	SetZone(ctx context.Context, in *SetZoneRequest, opts ...grpc.CallOption) (*SetZoneResponse, error)
 }
 
 type discoveryServiceV2Client struct {
@@ -286,6 +287,15 @@ func (c *discoveryServiceV2Client) GetConfig(ctx context.Context, in *GetConfigR
 	return out, nil
 }
 
+func (c *discoveryServiceV2Client) SetZone(ctx context.Context, in *SetZoneRequest, opts ...grpc.CallOption) (*SetZoneResponse, error) {
+	out := new(SetZoneResponse)
+	err := c.cc.Invoke(ctx, "/discovery.DiscoveryServiceV2/SetZone", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // DiscoveryServiceV2Server is the server API for DiscoveryServiceV2 service.
 // All implementations should embed UnimplementedDiscoveryServiceV2Server
 // for forward compatibility
@@ -297,6 +307,7 @@ type DiscoveryServiceV2Server interface {
 	GetFriends(context.Context, *GetFriendsRequest) (*GetFriendsResponse, error)
 	GetInternalState(context.Context, *GetStateRequest) (*GetStateResponse, error)
 	GetConfig(context.Context, *GetConfigRequest) (*GetConfigResponse, error)
+	SetZone(context.Context, *SetZoneRequest) (*SetZoneResponse, error)
 }
 
 // UnimplementedDiscoveryServiceV2Server should be embedded to have forward compatible implementations.
@@ -323,6 +334,9 @@ func (UnimplementedDiscoveryServiceV2Server) GetInternalState(context.Context, *
 }
 func (UnimplementedDiscoveryServiceV2Server) GetConfig(context.Context, *GetConfigRequest) (*GetConfigResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetConfig not implemented")
+}
+func (UnimplementedDiscoveryServiceV2Server) SetZone(context.Context, *SetZoneRequest) (*SetZoneResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetZone not implemented")
 }
 
 // UnsafeDiscoveryServiceV2Server may be embedded to opt out of forward compatibility for this service.
@@ -462,6 +476,24 @@ func _DiscoveryServiceV2_GetConfig_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DiscoveryServiceV2_SetZone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetZoneRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DiscoveryServiceV2Server).SetZone(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/discovery.DiscoveryServiceV2/SetZone",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DiscoveryServiceV2Server).SetZone(ctx, req.(*SetZoneRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _DiscoveryServiceV2_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "discovery.DiscoveryServiceV2",
 	HandlerType: (*DiscoveryServiceV2Server)(nil),
@@ -493,6 +525,10 @@ var _DiscoveryServiceV2_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetConfig",
 			Handler:    _DiscoveryServiceV2_GetConfig_Handler,
+		},
+		{
+			MethodName: "SetZone",
+			Handler:    _DiscoveryServiceV2_SetZone_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

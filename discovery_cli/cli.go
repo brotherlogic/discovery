@@ -36,6 +36,22 @@ func main() {
 		fmt.Printf("Commands: list\n")
 	} else {
 		switch os.Args[1] {
+		case "zone":
+			var host = buildFlags.String("host", utils.Discover, "dicsover host")
+			var zone = buildFlags.String("zone", "unknown", "zone")
+			if err := buildFlags.Parse(os.Args[2:]); err == nil {
+				conn, _ := grpc.Dial(*host, grpc.WithInsecure())
+				defer conn.Close()
+
+				registry := pbdi.NewDiscoveryServiceV2Client(conn)
+				ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+				defer cancel()
+
+				_, err := registry.SetZone(ctx, &pb.SetZoneRequest{Zone: *zone})
+				if err != nil {
+					log.Fatalf("Bad set: %v", err)
+				}
+			}
 		case "friends":
 			friendsFlags := flag.NewFlagSet("Friends", flag.ExitOnError)
 			var friend = friendsFlags.String("friend", "", "Friend")

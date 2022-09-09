@@ -99,6 +99,7 @@ type Server struct {
 	iplist          []string
 	config          *pb.Config
 	internalState   *pb.InternalState
+	zone            string
 }
 
 type httpGetter interface {
@@ -519,6 +520,14 @@ func fileExists(filename string) bool {
 	return !info.IsDir()
 }
 
+func (s *Server) readZone() {
+	s.zone = "unknown"
+	res, err := ioutil.ReadFile("/home/simon/zone")
+	if err == nil {
+		s.zone = string(res)
+	}
+}
+
 func main() {
 	server := InitServer()
 	server.setExternalIP(prodHTTPGetter{})
@@ -527,6 +536,8 @@ func main() {
 
 	server.RegisterServerV2(false)
 	server.SendTrace = false
+
+	server.readZone()
 
 	// Find friends before
 	go func() {

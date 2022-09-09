@@ -60,6 +60,8 @@ message RegistryEntry {
   }
 
   Version version = 13;
+
+  string zone = 14;
 }
 
 message ServiceList {
@@ -178,6 +180,11 @@ message GetConfigResponse {
   Config config = 1;
 }
 
+message SetZoneRequest {
+  string zone = 1;
+}
+message SetZoneResponse {}
+
 service DiscoveryServiceV2 {
   rpc Lock(LockRequest) returns (LockResponse) {}
   rpc RegisterV2(RegisterRequest) returns (RegisterResponse) {}
@@ -186,4 +193,5 @@ service DiscoveryServiceV2 {
   rpc GetFriends(GetFriendsRequest) returns (GetFriendsResponse) {}
   rpc GetInternalState(GetStateRequest) returns (GetStateResponse) {}
   rpc GetConfig(GetConfigRequest) returns (GetConfigResponse) {}
+  rpc SetZone(SetZoneRequest) returns (SetZoneResponse) {}
 }

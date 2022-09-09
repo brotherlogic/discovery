@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"time"
 
@@ -66,6 +67,11 @@ func (s *Server) writeIplist(lis []string) {
 	}
 }
 
+func (s *Server) SetZone(ctx context.Context, req *pb.SetZoneRequest) (*pb.SetZoneResponse, error) {
+	ioutil.WriteFile("/home/simon/zone", []byte(req.GetZone()), 0644)
+	return &pb.SetZoneResponse{}, nil
+}
+
 // Register a server
 func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	defer s.doWrite()
@@ -73,6 +79,7 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 	register.With(prometheus.Labels{"service": req.GetService().GetName(), "origin": req.GetCaller()}).Inc()
 
 	s.addIP(req.GetService().GetIp())
+	req.GetService().Zone = s.zone
 
 	// Fail register until we're ready to serve
 	if s.friendTime <= 0 && !req.GetFanout() {
