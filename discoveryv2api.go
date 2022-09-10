@@ -79,7 +79,11 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 	register.With(prometheus.Labels{"service": req.GetService().GetName(), "origin": req.GetCaller()}).Inc()
 
 	s.addIP(req.GetService().GetIp())
-	req.GetService().Zone = s.zone
+
+	// Set the zone if this is an origin request
+	if req.GetFanout() {
+		req.GetService().Zone = s.zone
+	}
 
 	// Fail register until we're ready to serve
 	if s.friendTime <= 0 && !req.GetFanout() {
