@@ -129,6 +129,10 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 		jobName = req.GetJob()
 	}
 
+	if jobName == "tracer" {
+		return nil, fmt.Errorf("no tracer")
+	}
+
 	get.With(prometheus.Labels{"service": jobName, "origin": req.GetFriend()}).Inc()
 
 	s.mapLock.Lock()
