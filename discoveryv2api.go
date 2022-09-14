@@ -81,7 +81,7 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 	s.addIP(req.GetService().GetIp())
 
 	// Set the zone if this is an origin request
-	if req.GetFanout() {
+	if req.GetService().GetZone() == "" {
 		req.GetService().Zone = s.zone
 	}
 
