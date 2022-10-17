@@ -228,14 +228,14 @@ func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb
 		return nil, status.Errorf(codes.InvalidArgument, "Attempting to unregister empty service: %v: %+v", req, p)
 	}
 
-	s.removeFromPortMap(req.GetService())
+	err := s.removeFromPortMap(req.GetService())
 
-	if !req.Fanout {
+	if err == nil && !req.Fanout {
 		req.Fanout = true
 		s.fanoutUnregister(ctx, req)
 	}
 
-	return &pb.UnregisterResponse{}, nil
+	return &pb.UnregisterResponse{}, err
 }
 
 //Lock in prep for master elect

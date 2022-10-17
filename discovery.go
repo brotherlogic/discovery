@@ -253,11 +253,11 @@ func (s *Server) addToPortMap(in *pb.RegistryEntry) {
 	s.portMap = append(s.portMap, in)
 }
 
-func (s *Server) removeFromPortMap(in *pb.RegistryEntry) {
+func (s *Server) removeFromPortMap(in *pb.RegistryEntry) error {
 	s.lastRemove = fmt.Sprintf("%v", in)
 
 	if in == nil {
-		return
+		return nil
 	}
 
 	newPortMap := make([]*pb.RegistryEntry, 0)
@@ -266,10 +266,15 @@ func (s *Server) removeFromPortMap(in *pb.RegistryEntry) {
 		if entry.GetIdentifier() != in.GetIdentifier() ||
 			(len(in.GetName()) > 0 && in.GetName() != entry.GetName()) {
 			newPortMap = append(newPortMap, entry)
+		} else {
+			if time.Since(time.Unix(0, entry.GetRegisterTime())) < time.Minute*5 {
+				return status.Errorf(codes.FailedPrecondition, "Only been %v since registration", time.Since(time.Unix(0, entry.GetRegisterTime())))
+			}
 		}
 	}
 
 	s.portMap = newPortMap
+	return nil
 }
 
 func (s *Server) setupPort(in *pb.RegistryEntry) {
