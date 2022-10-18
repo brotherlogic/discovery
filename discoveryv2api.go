@@ -228,7 +228,7 @@ func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb
 		return nil, status.Errorf(codes.InvalidArgument, "Attempting to unregister empty service: %v: %+v", req, p)
 	}
 
-	err := s.removeFromPortMap(req.GetService())
+	err := s.removeFromPortMap(ctx, req.GetService())
 
 	if err == nil && !req.Fanout {
 		req.Fanout = true

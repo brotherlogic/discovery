@@ -253,7 +253,7 @@ func (s *Server) addToPortMap(in *pb.RegistryEntry) {
 	s.portMap = append(s.portMap, in)
 }
 
-func (s *Server) removeFromPortMap(in *pb.RegistryEntry) error {
+func (s *Server) removeFromPortMap(ctx context.Context, in *pb.RegistryEntry) error {
 	s.lastRemove = fmt.Sprintf("%v", in)
 
 	if in == nil {
@@ -267,6 +267,7 @@ func (s *Server) removeFromPortMap(in *pb.RegistryEntry) error {
 			(len(in.GetName()) > 0 && in.GetName() != entry.GetName()) {
 			newPortMap = append(newPortMap, entry)
 		} else {
+			s.CtxLog(ctx, fmt.Sprintf("Removing %v -> %v", entry, time.Unix(0, entry.GetRegisterTime())))
 			if time.Since(time.Unix(0, entry.GetRegisterTime())) < time.Minute*5 {
 				return status.Errorf(codes.FailedPrecondition, "Only been %v since registration", time.Since(time.Unix(0, entry.GetRegisterTime())))
 			}
