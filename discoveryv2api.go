@@ -74,6 +74,13 @@ func (s *Server) SetZone(ctx context.Context, req *pb.SetZoneRequest) (*pb.SetZo
 
 // Register a server
 func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.RegisterResponse, error) {
+	// We're receiving a registration about ourselves?
+	if req.GetService().GetIdentifier() == s.Registry.Identifier {
+		if req.GetService().GetZone() != s.zone {
+			return nil, status.Errorf(codes.OutOfRange, "Zone mismatch: %v -> %v", req.GetService(), s.Registry)
+		}
+	}
+
 	defer s.doWrite()
 	s.countV2Register++
 	register.With(prometheus.Labels{"service": req.GetService().GetName(), "origin": req.GetCaller()}).Inc()
@@ -214,7 +221,7 @@ func (s *Server) doWrite() {
 	}
 }
 
-//Unregister a service from the listing
+// Unregister a service from the listing
 func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb.UnregisterResponse, error) {
 	defer s.doWrite()
 
@@ -238,7 +245,7 @@ func (s *Server) Unregister(ctx context.Context, req *pb.UnregisterRequest) (*pb
 	return &pb.UnregisterResponse{}, err
 }
 
-//Lock in prep for master elect
+// Lock in prep for master elect
 func (s *Server) Lock(ctx context.Context, req *pb.LockRequest) (*pb.LockResponse, error) {
 	if val, ok := s.locks[req.GetJob()]; ok {
 		if time.Now().Sub(time.Unix(0, val)) < time.Second*4 && req.GetLockKey() > val {

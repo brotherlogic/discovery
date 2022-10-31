@@ -473,6 +473,10 @@ func (s *Server) fanoutRegister(ctx context.Context, req *pb.RegisterRequest) {
 			ctx, cancel := utils.ManualContext("difa", detime)
 			_, err := client.RegisterV2(ctx, req)
 			if err != nil {
+				if status.Code(err) == codes.OutOfRange {
+					code, err := utils.GetContextKey(ctx)
+					s.RaiseIssue("Registration Issue", fmt.Sprintf("Unable to register this: %v, %v -> %v", req, code, err))
+				}
 				fanout.With(prometheus.Labels{"service": req.GetService().GetName(), "origin": f, "error": fmt.Sprintf("%v", err)}).Inc()
 			}
 			cancel()
