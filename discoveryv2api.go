@@ -77,7 +77,7 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 	// We're receiving a registration about ourselves?
 	if req.GetService().GetIdentifier() == s.Registry.Identifier {
 		if req.GetService().GetZone() != s.zone && req.GetService().GetZone() != "" {
-			return nil, status.Errorf(codes.OutOfRange, "Zone mismatch: %v -> %v", req.GetService(), s.Registry)
+			return nil, status.Errorf(codes.OutOfRange, "Zone mismatch: '%v' -> '%v'", req.GetService().GetZone(), s.Registry.GetZone())
 		}
 	}
 
