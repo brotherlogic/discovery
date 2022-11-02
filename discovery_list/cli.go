@@ -44,12 +44,12 @@ func main() {
 			for _, entry := range entries {
 				if entry.Labels.Job == res.GetName() {
 					found = true
-					entry.Targets = append(entry.Targets, fmt.Sprintf("%v:%v", res.GetIdentifier(), res.GetPort()+2))
+					entry.Targets = append(entry.Targets, fmt.Sprintf("%v:%v", res.GetIdentifier(), res.GetPort()+1))
 				}
 			}
 
 			if !found {
-				entries = append(entries, &Entry{Targets: []string{fmt.Sprintf("%v:%v", res.GetIdentifier(), res.GetPort()+2)}, Labels: Label{Job: res.GetName()}})
+				entries = append(entries, &Entry{Targets: []string{fmt.Sprintf("%v:%v", res.GetIdentifier(), res.GetPort()+1)}, Labels: Label{Job: res.GetName()}})
 			}
 		}
 
