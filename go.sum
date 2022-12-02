@@ -497,8 +497,9 @@ github.com/brotherlogic/buildserver v0.0.0-20221128075601-67a53e8a79c2/go.mod h1
 github.com/brotherlogic/buildserver v0.0.0-20221129081809-fb494461f57b/go.mod h1:ukbES7IMrwVhmvFLVn8A5FH7rfH7zWdAwBVrKmlPy7o=
 github.com/brotherlogic/buildserver v0.0.0-20221130084816-ecee993ec798/go.mod h1:yf+YmTJlYKOq7RNNYOQd/GpbwocvPCA9uoRAqfZ91+w=
 github.com/brotherlogic/buildserver v0.0.0-20221201091928-6ed3780c7017/go.mod h1:yCNIA3VfmwLFSMqsUXSC2BKuMxe6pLHRoWJXXmdOjF0=
-github.com/brotherlogic/buildserver v0.0.0-20221202163839-b966d5dd8acb h1:6Uo80r7NIztB4ODIyACa/mYgjoJixcFSVrwZxNaByGw=
 github.com/brotherlogic/buildserver v0.0.0-20221202163839-b966d5dd8acb/go.mod h1:lPGC+BnPo/bqqyZ7vqNNO7jyV9gkU9ZOBZBgVPc/+SM=
+github.com/brotherlogic/buildserver v0.0.0-20221202172806-0531c793a3f6 h1:XKawE8LiEAEtb5zgT04uVgtqRxrKU4PLTEF8LKinWUI=
+github.com/brotherlogic/buildserver v0.0.0-20221202172806-0531c793a3f6/go.mod h1:KTPT9Q+JJHHVVmXy6Rc3cAvL8R1ozVf28uLDlx0OJpI=
 github.com/brotherlogic/cardserver v0.0.0-20190719223243-651f4429cf27/go.mod h1:kP95c+Z9HoDZogqHo6tnAUdvW5YnTSV+MQOPxlLPszk=
 github.com/brotherlogic/cdprocessor v0.0.0-20210516180209-a867bfb00442/go.mod h1:H5OOZDfMzL4zrDhWbxAA/N2vWTTgIf7d7JFAs5GLwew=
 github.com/brotherlogic/cdprocessor v0.0.0-20210708203323-9cf5868e44c4/go.mod h1:XXKe3j0cAcpkMuEbjT3KXQg+achF/yz+hqpgNqLgCmo=
@@ -599,6 +600,7 @@ github.com/brotherlogic/discovery v0.0.0-20221130063913-69db1b8de360/go.mod h1:h
 github.com/brotherlogic/discovery v0.0.0-20221130064308-3f761c02b5e8/go.mod h1:dhp77m1GtO9vDOgtqK4MyvTReupY+I73tj+8FbrpHBg=
 github.com/brotherlogic/discovery v0.0.0-20221201071556-b3fdf9703aa2/go.mod h1:G5wmFeZ5QQOgjn8vNhNZpsE/UDcaPJKg5RQ3QZGo2ZE=
 github.com/brotherlogic/discovery v0.0.0-20221202082957-4e0d2e6391d7/go.mod h1:Zz6V2PBY6jhuodzN6aG6y2rdiqMvRY6uAF3mAaPGy0w=
+github.com/brotherlogic/discovery v0.0.0-20221202171430-382f267ade5b/go.mod h1:UUmtRYUTca+EoQVBVFW0y6IAxH+jF1QxUDIVA01+K1g=
 github.com/brotherlogic/dstore v0.0.0-20210705011309-803d7db560a6/go.mod h1:SJdI/5dxubp66yy6slmUfen5yCIKXFvAmMs71u9xVrk=
 github.com/brotherlogic/dstore v0.0.0-20210728181450-e87a34c62535/go.mod h1:bwiN0EPWhmDNwue1BWpCQ7DL4hLwfDwDw8JwMMgDzCs=
 github.com/brotherlogic/dstore v0.0.0-20210911232556-7a6844e1f86f/go.mod h1:Wilk+LrYLvE5+fNDXp0dYQNTMxhb6rmkwv5GwZ/K3ok=
@@ -701,6 +703,7 @@ github.com/brotherlogic/filecopier v0.0.0-20221129064406-096f93cab80f/go.mod h1:
 github.com/brotherlogic/filecopier v0.0.0-20221130064614-ec0242e883bd/go.mod h1:cvc1ZbiO5TBOQeV5wc23izPzWAEuHjyP7kR75Tj9kDM=
 github.com/brotherlogic/filecopier v0.0.0-20221201070843-6370b519f2d9/go.mod h1:4Nij3brK3SVdGdnR54fziPCRrZWKDkqIFm+AHOYjKYs=
 github.com/brotherlogic/filecopier v0.0.0-20221202083033-2b76e0ad814f/go.mod h1:pvS/BozxjQPbzyEOcFe1VuQN5t4bGBhv/benNc7NbhE=
+github.com/brotherlogic/filecopier v0.0.0-20221202170559-9c5ae21e87b1/go.mod h1:VceorT/g8bF1f0MDQW7YiiWfPbdtAgjS3rGLaQVwu1c=
 github.com/brotherlogic/frametracker v0.0.0-20210108214332-61d86ee8f701/go.mod h1:21Eaa47nKHk1Ab77YyOhBdQ6cxKMvKf+9x96UL0wnhs=
 github.com/brotherlogic/frametracker v0.0.0-20220308202045-6632250e217e/go.mod h1:l52l94odEuoKaFmZxFUQ6A+p/AMD0KRY+J4E2V8mwyY=
 github.com/brotherlogic/frametracker v0.0.0-20220514055242-c87e03b44946/go.mod h1:9wXLjwHIBgssdHeWSzgcejaqu08Vmo1i2/Rk4fJ/Kxg=
@@ -1633,6 +1636,7 @@ github.com/brotherlogic/versiontracker v0.0.0-20221129060858-5b651be4617a/go.mod
 github.com/brotherlogic/versiontracker v0.0.0-20221130063807-a400b326e2b7/go.mod h1:SAqiYB22Mm79yVmcS1vedntePetzpp/1esdcUQj12Es=
 github.com/brotherlogic/versiontracker v0.0.0-20221201071035-f6191ffc6539/go.mod h1:1TR7BjCb3uoIgEhE1GJSQqGIoUkGaAjUPq9wJEiFzUg=
 github.com/brotherlogic/versiontracker v0.0.0-20221202083047-59601fef38a2/go.mod h1:rSMBPKPFHyxHg2G8FjRepbHc81ph32xAbvbyIT2Kgz8=
+github.com/brotherlogic/versiontracker v0.0.0-20221202172534-ba6f13349519/go.mod h1:52XF9Yi7WSslo6fNLiVbFQZ/LpFHa1OsvSBIfSRM2yM=
 github.com/casbin/casbin/v2 v2.1.2/go.mod h1:YcPU1XXisHhLzuxH9coDNf2FbKpjGlbCg3n9yuLkIJQ=
 github.com/cenkalti/backoff v2.2.1+incompatible/go.mod h1:90ReRw6GdpyfrHakVjL/QHaoyV4aDUVVkXQJJJ3NXXM=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
