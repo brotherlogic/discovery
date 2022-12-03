@@ -3,7 +3,7 @@ module github.com/brotherlogic/discovery
 go 1.16
 
 require (
-	github.com/brotherlogic/datastore v0.0.0-20221203174046-5d042e8e39dd // indirect
+	github.com/brotherlogic/dstore v0.0.0-20221203222033-4263e271c2d4 // indirect
 	github.com/brotherlogic/goserver v0.0.0-20221202193151-b0b39691c212
 	github.com/golang/protobuf v1.5.2
 	github.com/prometheus/client_golang v1.14.0
