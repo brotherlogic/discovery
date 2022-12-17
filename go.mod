@@ -3,7 +3,7 @@ module github.com/brotherlogic/discovery
 go 1.19
 
 require (
-	github.com/brotherlogic/goserver v0.0.0-20221216211929-ae3ee94d1e9b
+	github.com/brotherlogic/goserver v0.0.0-20221217002224-0ba5c0213be1
 	github.com/golang/protobuf v1.5.2
 	github.com/prometheus/client_golang v1.14.0
 	golang.org/x/net v0.4.0
