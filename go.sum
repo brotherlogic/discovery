@@ -689,8 +689,8 @@ github.com/brotherlogic/dstore v0.0.0-20221202193328-ab16ed80e37e/go.mod h1:y9k7
 github.com/brotherlogic/dstore v0.0.0-20221203222033-4263e271c2d4/go.mod h1:rUkX9Sdp/He//VR1EnuGS8+3DgdprVwdtOy9Q2HXCvk=
 github.com/brotherlogic/dstore v0.0.0-20221203222141-f26ce0e0a7fd/go.mod h1:sEmLU6I/VF0Q5Glx7VNq7h3Xty+vKOg04HcAEaZa36g=
 github.com/brotherlogic/dstore v0.0.0-20221209194838-9d0611d5184d/go.mod h1:e7OrGPbyNIWh0Tp/vQULuZy4acYObK+VUOmfZiYSjSY=
-github.com/brotherlogic/dstore v0.0.0-20221217140226-5fb90c662371 h1:7HjvuDc3LOvRfpgP2CimyHaVNAb4GciOeafx6Tifjjw=
-github.com/brotherlogic/dstore v0.0.0-20221217140226-5fb90c662371/go.mod h1:0httG5bFsuLbpQf0W2dD2dZ03Vn18+j7I7D1aeuQwlw=
+github.com/brotherlogic/dstore v0.0.0-20221217151431-36fa64ebe237 h1:XKbRg22aCjPP1IY67XoizNbAgl2knDnBeEgkrA3ELW0=
+github.com/brotherlogic/dstore v0.0.0-20221217151431-36fa64ebe237/go.mod h1:qUd0OwcdbXvrl8gjS/mmwMZ7WmfunXo5vo13amiDw7s=
 github.com/brotherlogic/executor v0.0.0-20200915161204-3a99e1a889c5/go.mod h1:i/BkUS1evIqvvP1PQeiBpnOnju5VtzM8inv9hK2dWBo=
 github.com/brotherlogic/executor v0.0.0-20211120222045-7cd0d2d90a92/go.mod h1:6izXVRd9q/ZNjg+OFerYLjKzLO5odrXorHcgSo68r9Q=
 github.com/brotherlogic/executor v0.0.0-20211223152906-411e9ebe268b/go.mod h1:0cY8kq6JsfeTJb19frLQXGC/dRpYbOOOk1yvbj9+P1I=
