@@ -13,14 +13,14 @@ require (
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/brotherlogic/buildserver v0.0.0-20221225021229-838a7162cae8 // indirect
-	github.com/brotherlogic/datastore v0.0.0-20221218033804-2b522d232a2f // indirect
-	github.com/brotherlogic/dstore v0.0.0-20221218055338-99a21b17382c // indirect
-	github.com/brotherlogic/githubcard v0.0.0-20221218045542-3f6d59d6597e // indirect
-	github.com/brotherlogic/gobuildslave v0.0.0-20221225032110-efbcf8ff93a5 // indirect
+	github.com/brotherlogic/buildserver v0.0.0-20230101021559-90565768ca43 // indirect
+	github.com/brotherlogic/datastore v0.0.0-20230101041740-b200a5fc54c3 // indirect
+	github.com/brotherlogic/dstore v0.0.0-20221225061644-96d629064695 // indirect
+	github.com/brotherlogic/githubcard v0.0.0-20221225062731-7418cdcb7539 // indirect
+	github.com/brotherlogic/gobuildslave v0.0.0-20221225055807-42396db74074 // indirect
 	github.com/brotherlogic/keystore v0.0.0-20221225031157-d9efa4c60049 // indirect
-	github.com/brotherlogic/lock v0.0.0-20221218033100-bd36d25fa713 // indirect
-	github.com/brotherlogic/logging v0.0.0-20221218033705-1c0d872684e5 // indirect
+	github.com/brotherlogic/lock v0.0.0-20221225053643-e6fbf2d9b812 // indirect
+	github.com/brotherlogic/logging v0.0.0-20221225055731-60128fd35350 // indirect
 	github.com/brotherlogic/monitor v0.0.0-20221025152653-c10877c5f9e6 // indirect
 	github.com/brotherlogic/versionserver v0.0.0-20221025154054-c9bcd41be2f2 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -40,5 +40,5 @@ require (
 	go.opentelemetry.io/otel/trace v1.11.2 // indirect
 	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
-	google.golang.org/genproto v0.0.0-20221207170731-23e4bf6bdc37 // indirect
+	google.golang.org/genproto v0.0.0-20221227171554-f9683d7f8bef // indirect
 )
