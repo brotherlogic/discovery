@@ -8,7 +8,6 @@ import (
 	"os"
 	"time"
 
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	pbdi "github.com/brotherlogic/discovery/proto"
@@ -31,7 +30,7 @@ func main() {
 	defer conn.Close()
 
 	registry := pbdi.NewDiscoveryServiceV2Client(conn)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := utils.ManualContext("discovery-list", time.Minute)
 	defer cancel()
 	resp, err := registry.Get(ctx, &pbdi.GetRequest{})
 	if err == nil {
