@@ -139,6 +139,8 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 	//Immediate fail if we have no context key
 	key, err := utils.GetContextKey(ctx)
 	if err != nil || key == "" {
+		pinfo, ok := peer.FromContext(ctx)
+		s.CtxLog(ctx, fmt.Sprintf("PEER: %v -> %+v", ok, pinfo))
 		return nil, fmt.Errorf("You need to provide a context key: %v, %v", key, err)
 	}
 
