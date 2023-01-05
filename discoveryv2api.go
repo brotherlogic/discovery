@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/brotherlogic/discovery/proto"
+	"github.com/brotherlogic/goserver/utils"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
@@ -135,6 +136,12 @@ func (s *Server) RegisterV2(ctx context.Context, req *pb.RegisterRequest) (*pb.R
 
 // Get an entry from the registry
 func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
+	//Immediate fail if we have no context key
+	key, err := utils.GetContextKey(ctx)
+	if err != nil || key == "" {
+		return nil, fmt.Errorf("You need to provide a context key")
+	}
+
 	jobName := "unknown"
 	if len(req.GetJob()) > 0 {
 		jobName = req.GetJob()
