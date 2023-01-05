@@ -139,7 +139,7 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 	//Immediate fail if we have no context key
 	key, err := utils.GetContextKey(ctx)
 	if err != nil || key == "" {
-		return nil, fmt.Errorf("You need to provide a context key")
+		return nil, fmt.Errorf("You need to provide a context key: %v, %v", key, err)
 	}
 
 	jobName := "unknown"
