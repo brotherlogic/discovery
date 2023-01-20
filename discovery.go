@@ -268,7 +268,7 @@ func (s *Server) removeFromPortMap(ctx context.Context, in *pb.RegistryEntry) er
 			newPortMap = append(newPortMap, entry)
 		} else {
 			s.CtxLog(ctx, fmt.Sprintf("Removing %v -> %v", entry, time.Unix(0, entry.GetRegisterTime())))
-			if time.Since(time.Unix(0, entry.GetRegisterTime())) < time.Minute*5 {
+			if !s.SkipLog && time.Since(time.Unix(0, entry.GetRegisterTime())) < time.Minute*5 {
 				return status.Errorf(codes.FailedPrecondition, "Only been %v since registration", time.Since(time.Unix(0, entry.GetRegisterTime())))
 			}
 		}
