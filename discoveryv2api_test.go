@@ -47,153 +47,12 @@ func TestPlainRegisterRun(t *testing.T) {
 
 	respg, err := s.Get(context.Background(), &pb.GetRequest{Job: "test_job", Server: "test_server"})
 	if err != nil {
-		t.Errorf("Unable to get %v", err)
+		t.Fatalf("Unable to get %v", err)
 	}
 
 	if len(respg.Services) != 1 {
 		t.Errorf("Service not returned")
 	}
-}
-
-func TestMasterElect(t *testing.T) {
-	s := InitTestServer()
-
-	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
-
-	if err != nil {
-		t.Errorf("Unable to register %v", err)
-	}
-
-	if resp.Service.Port == 0 {
-		t.Errorf("Port number not assigned")
-	}
-
-	respg, err := s.Get(context.Background(), &pb.GetRequest{Job: "test_job", Server: "test_server"})
-	if err != nil {
-		t.Errorf("Unable to get %v", err)
-	}
-
-	if len(respg.Services) != 1 {
-		t.Errorf("Service not returned")
-	}
-
-	_, err = s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}, MasterElect: true})
-	if err != nil {
-		t.Errorf("Unable to register")
-	}
-
-	respg, err = s.Get(context.Background(), &pb.GetRequest{Job: "test_job", Server: "test_server"})
-	if err != nil {
-		t.Errorf("Unable to get %v", err)
-	}
-
-	if len(respg.Services) != 1 || !respg.Services[0].Master {
-		t.Errorf("Service not returned or master is wrong: %v", respg.Services)
-	}
-
-	resp, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
-	if err != nil {
-		t.Errorf("Error on reg")
-	}
-
-	if resp.GetService().Master {
-		t.Fatalf("Rereg held master")
-	}
-
-	resp, err = s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server2"}})
-	if err != nil {
-		t.Errorf("Error on reg")
-	}
-
-	if resp.GetService().Master {
-		t.Fatalf("Rereg held master")
-	}
-
-	resp2, err := s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server2"}, MasterElect: true})
-	if err != nil {
-		t.Errorf("Quick master reg did not fail: %v", resp2)
-	}
-
-	resp2, err = s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}, MasterElect: true})
-	if err == nil {
-		t.Errorf("Quick master reg did not fail: %v", resp2)
-	}
-
-}
-
-func TestRedirectV2(t *testing.T) {
-	s := InitTestServer()
-
-	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
-
-	if err != nil {
-		t.Errorf("Unable to register %v", err)
-	}
-
-	if resp.Service.Port == 0 {
-		t.Errorf("Port number not assigned")
-	}
-
-	respg, err := s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
-	if err != nil {
-		t.Errorf("Unable to get %v", err)
-	}
-
-	if respg.Service.Name != "test_job" {
-		t.Errorf("Service not returned")
-	}
-}
-
-func TestRedirectV2Master(t *testing.T) {
-	s := InitTestServer()
-
-	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
-
-	if err != nil {
-		t.Errorf("Unable to register %v", err)
-	}
-
-	if resp.Service.Port == 0 {
-		t.Errorf("Port number not assigned")
-	}
-
-	_, err = s.MasterElect(context.Background(), &pb.MasterRequest{Service: resp.GetService()})
-	if err != nil {
-		t.Fatalf("Error becoming master: %v", err)
-	}
-
-	respg, err := s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
-	if err != nil {
-		t.Errorf("Unable to get %v", err)
-	}
-
-	if respg.Service.Name != "test_job" {
-		t.Errorf("Service not returned")
-	}
-}
-
-func TestRedirectV2Fail(t *testing.T) {
-	s := InitTestServer()
-
-	resp, err := s.RegisterV2(context.Background(), &pb.RegisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
-
-	if err != nil {
-		t.Errorf("Unable to register %v", err)
-	}
-
-	if resp.Service.Port == 0 {
-		t.Errorf("Port number not assigned")
-	}
-	_, err = s.Unregister(context.Background(), &pb.UnregisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
-	if err != nil {
-		t.Errorf("Unable to unregsiter: %v", err)
-	}
-
-	_, err = s.Discover(context.Background(), &pb.DiscoverRequest{Caller: "test", Request: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
-	if err == nil {
-		t.Errorf("Get did not fail")
-	}
-
 }
 
 func TestPlainRegisterRunWithBadGet(t *testing.T) {
@@ -296,9 +155,9 @@ func TestPlainUnregisterRun(t *testing.T) {
 		t.Errorf("Service not returned")
 	}
 
-	_, err = s.Unregister(context.Background(), &pb.UnregisterRequest{Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
+	_, err = s.Unregister(context.Background(), &pb.UnregisterRequest{Reason: "Testing", Service: &pb.RegistryEntry{Name: "test_job", Identifier: "test_server"}})
 	if err != nil {
-		t.Fatalf("Error unregistering")
+		t.Fatalf("Error unregistering: %v", err)
 	}
 
 	respg, err = s.Get(context.Background(), &pb.GetRequest{Job: "test_job", Server: "test_server"})
@@ -330,7 +189,7 @@ func TestPlainUnregisterRunWithOnlyIdentifier(t *testing.T) {
 		t.Errorf("Service not returned")
 	}
 
-	_, err = s.Unregister(context.Background(), &pb.UnregisterRequest{Service: &pb.RegistryEntry{Identifier: "test_server"}})
+	_, err = s.Unregister(context.Background(), &pb.UnregisterRequest{Reason: "Testing", Service: &pb.RegistryEntry{Identifier: "test_server"}})
 	if err != nil {
 		t.Fatalf("Error unregistering")
 	}
@@ -364,7 +223,7 @@ func TestPlainUnregisterRunWithBadCall(t *testing.T) {
 		t.Errorf("Service not returned")
 	}
 
-	_, err = s.Unregister(context.Background(), &pb.UnregisterRequest{Service: &pb.RegistryEntry{Name: "test_job2", Identifier: "test_server"}})
+	_, err = s.Unregister(context.Background(), &pb.UnregisterRequest{Reason: "Testing", Service: &pb.RegistryEntry{Name: "test_job2", Identifier: "test_server"}})
 	if err != nil {
 		t.Fatalf("Error unregistering")
 	}
@@ -390,14 +249,6 @@ func TestLockLocks(t *testing.T) {
 	}
 }
 
-func TestMasterElectNoRegister(t *testing.T) {
-	s := InitTestServer()
-	_, err := s.MasterElect(context.Background(), &pb.MasterRequest{Service: &pb.RegistryEntry{Name: "blah"}})
-	if err == nil {
-		t.Errorf("Should have failed")
-	}
-
-}
 func TestEmptyUnRegisterFail(t *testing.T) {
 	s := InitTestServer()
 	s.friendTime = 0

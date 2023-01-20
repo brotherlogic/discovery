@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	pb "github.com/brotherlogic/discovery/proto"
@@ -32,7 +31,7 @@ func (s *Server) RegisterService(ctx context.Context, req *pb.RegisterRequest) (
 	pr, _ := peer.FromContext(ctx)
 	s.registerPeer = fmt.Sprintf("%+v", pr)
 
-	legacyPeer.With(prometheus.Labels{"method": "Register", "peer": fmt.Sprintf("%v", strings.Split(pr.Addr.String(), ":")[0])}).Inc()
+	//legacyPeer.With(prometheus.Labels{"method": "Register", "peer": fmt.Sprintf("%v", strings.Split(pr.Addr.String(), ":")[0])}).Inc()
 
 	if req.GetService().GetName() != "PictureFrame" && req.GetService().GetName() != "GraphPlotter" && req.GetService().GetName() != "RecordSelector" {
 		s.RaiseIssue("Bad Register", fmt.Sprintf("%v is a v1 register", req))
@@ -69,7 +68,7 @@ var (
 func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.DiscoverResponse, error) {
 	pr, _ := peer.FromContext(ctx)
 	s.discoverPeer = fmt.Sprintf("%+v", pr)
-	legacyPeer.With(prometheus.Labels{"method": "Discover", "peer": fmt.Sprintf("%v", strings.Split(pr.Addr.String(), ":")[0])}).Inc()
+	//legacyPeer.With(prometheus.Labels{"method": "Discover", "peer": fmt.Sprintf("%v", strings.Split(pr.Addr.String(), ":")[0])}).Inc()
 
 	//Reject requests without caller
 	if req.Caller == "" {

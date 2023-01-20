@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"time"
 
@@ -69,13 +68,6 @@ func main() {
 		b, err := json.Marshal(entries)
 		if err == nil {
 			err = ioutil.WriteFile(os.Args[1], b, 0644)
-			if err != nil {
-				log.Printf("Write error: %v", err)
-			}
-		} else {
-			log.Printf("Bad: %v", err)
 		}
-	} else {
-		log.Printf("Bad: %v", err)
 	}
 }
