@@ -55,6 +55,7 @@ func main() {
 		for server, _ := range servers {
 			// This is the raspberry pi export
 			nodes.Targets = append(nodes.Targets, fmt.Sprintf("%v:9100", server))
+						nodes.Targets = append(nodes.Targets, fmt.Sprintf("%v:9110", server))	
 		}
 		nodes2 := &Entry{Targets: []string{}, Labels: Label{Job: "discovery"}}
 		for server, _ := range servers {
