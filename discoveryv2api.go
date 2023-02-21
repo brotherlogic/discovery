@@ -239,13 +239,15 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 			return &pb.GetResponse{Services: jobs, State: s.state}, nil
 		}
 
-		maybe, err := s.getFromKube(ctx, req)
-		if err != nil {
-			return nil, err
-		}
+		if s.kube {
+			maybe, err := s.getFromKube(ctx, req)
+			if err != nil {
+				return nil, err
+			}
 
-		if len(maybe.Services) > 0 {
-			return maybe, err
+			if len(maybe.Services) > 0 {
+				return maybe, err
+			}
 		}
 
 		return nil, status.Errorf(codes.Unavailable, "%v has not found on %v (via %v)", req.Job, req.Server, s.Registry.GetIdentifier())
@@ -259,13 +261,15 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 		}
 	}
 
-	maybe, err := s.getFromKube(ctx, req)
-	if err != nil {
-		return nil, err
-	}
+	if s.kube {
+		maybe, err := s.getFromKube(ctx, req)
+		if err != nil {
+			return nil, err
+		}
 
-	if len(maybe.Services) > 0 {
-		resp.Services = append(resp.Services, maybe.Services...)
+		if len(maybe.Services) > 0 {
+			resp.Services = append(resp.Services, maybe.Services...)
+		}
 	}
 
 	return resp, nil
