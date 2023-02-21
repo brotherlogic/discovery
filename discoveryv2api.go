@@ -3,11 +3,9 @@ package main
 import (
 	"context"
 	"errors"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"time"
 
 	"google.golang.org/grpc/codes"
@@ -45,8 +43,7 @@ var (
 
 func (s *Server) getFromKube(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
 	// use the current context in kubeconfig
-	kubeconfig := flag.String("kubeconfig", filepath.Join("/home/simon/", ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	config, err := clientcmd.BuildConfigFromFlags("", "/home/simon/.kube/config")
 	if err != nil {
 		s.RaiseIssue("Missing kubeconfig", fmt.Sprintf("%v is missing the kube config", s.Registry.Identifier))
 	}
