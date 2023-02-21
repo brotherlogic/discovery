@@ -100,6 +100,7 @@ type Server struct {
 	config          *pb.Config
 	internalState   *pb.InternalState
 	zone            string
+	kube            bool
 }
 
 type httpGetter interface {
@@ -546,6 +547,7 @@ func main() {
 
 	server.RegisterServerV2(false)
 	server.SendTrace = false
+	server.kube = true
 
 	server.readZone()
 
