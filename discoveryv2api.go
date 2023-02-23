@@ -46,6 +46,7 @@ func (s *Server) getFromKube(ctx context.Context, req *pb.GetRequest) (*pb.GetRe
 	config, err := clientcmd.BuildConfigFromFlags("", "/home/simon/.kube/config")
 	if err != nil {
 		s.RaiseIssue("Missing kubeconfig", fmt.Sprintf("%v is missing the kube config", s.Registry.Identifier))
+		return &pb.GetResponse{}, nil
 	}
 
 	// create the clientset

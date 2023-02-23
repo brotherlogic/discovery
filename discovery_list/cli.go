@@ -55,6 +55,7 @@ func main() {
 		for server, _ := range servers {
 			// This is the raspberry pi export
 			nodes.Targets = append(nodes.Targets, fmt.Sprintf("%v:9100", server))
+						nodes.Targets = append(nodes.Targets, fmt.Sprintf("%v:9110", server))	
 		}
 		for val := 1; val <= 4; val++ {
 			nodes.Targets = append(nodes.Targets, fmt.Sprintf("kclust%v:9110", val))
