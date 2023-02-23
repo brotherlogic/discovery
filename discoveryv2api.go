@@ -67,6 +67,7 @@ func (s *Server) getFromKube(ctx context.Context, req *pb.GetRequest) (*pb.GetRe
 					services = append(services, &pb.RegistryEntry{
 						Name:       pod.Name,
 						Identifier: "kclust1",
+						Ip:         "192.168.86.26",
 						Port:       port.NodePort,
 						Zone:       "cluster",
 					})
