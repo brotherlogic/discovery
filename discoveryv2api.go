@@ -263,7 +263,7 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 	if s.kube {
 		maybe, err := s.getFromKube(ctx, req)
 		if err != nil {
-			s.CtxLog(ctx, fmt.Sprintf("Unable to get from kube: %v", err))
+			s.CtxLog(ctx, fmt.Sprintf("unable to get from kube: %v", err))
 		} else {
 
 			if len(maybe.Services) > 0 {
