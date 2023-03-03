@@ -249,7 +249,7 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 			}
 		}
 
-		return nil, status.Errorf(codes.Unavailable, "%v has not found on %v (via %v)", req.Job, req.Server, s.Registry.GetIdentifier())
+		return nil, status.Errorf(codes.Unavailable, "%v was not found on %v (via %v)", req.Job, req.Server, s.Registry.GetIdentifier())
 	}
 
 	resp := &pb.GetResponse{Services: []*pb.RegistryEntry{}, State: s.state}
@@ -263,11 +263,12 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 	if s.kube {
 		maybe, err := s.getFromKube(ctx, req)
 		if err != nil {
-			return nil, err
-		}
+			s.CtxLog(ctx, fmt.Sprintf("unable to get from kube: %v", err))
+		} else {
 
-		if len(maybe.Services) > 0 {
-			resp.Services = append(resp.Services, maybe.Services...)
+			if len(maybe.Services) > 0 {
+				resp.Services = append(resp.Services, maybe.Services...)
+			}
 		}
 	}
 
