@@ -9,20 +9,20 @@ require (
 	golang.org/x/net v0.10.0
 	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.30.0
-	k8s.io/apimachinery v0.27.1
-	k8s.io/client-go v0.27.1
+	k8s.io/apimachinery v0.27.2
+	k8s.io/client-go v0.27.2
 )
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/brotherlogic/buildserver v0.0.0-20230510223214-eeb09a37d351 // indirect
+	github.com/brotherlogic/buildserver v0.0.0-20230517231128-d7d8fdf509a8 // indirect
 	github.com/brotherlogic/datastore v0.0.0-20230118231105-ee668be05973 // indirect
-	github.com/brotherlogic/dstore v0.0.0-20230513015831-a358e7830940 // indirect
-	github.com/brotherlogic/githubcard v0.0.0-20230510010140-f66b7b5d7c2c // indirect
-	github.com/brotherlogic/gobuildslave v0.0.0-20230507005414-c41cd856509a // indirect
-	github.com/brotherlogic/keystore v0.0.0-20230508023709-1c9ab85603d3 // indirect
-	github.com/brotherlogic/lock v0.0.0-20230508025011-1c1260f3ddf2 // indirect
-	github.com/brotherlogic/logging v0.0.0-20230509173728-16936133d6e1 // indirect
+	github.com/brotherlogic/dstore v0.0.0-20230520020225-a0ed6f3870e6 // indirect
+	github.com/brotherlogic/githubcard v0.0.0-20230517014537-04a3b80c6146 // indirect
+	github.com/brotherlogic/gobuildslave v0.0.0-20230514010536-8ec329da44e7 // indirect
+	github.com/brotherlogic/keystore v0.0.0-20230515030509-11a916a0c732 // indirect
+	github.com/brotherlogic/lock v0.0.0-20230515030041-370ae15874bd // indirect
+	github.com/brotherlogic/logging v0.0.0-20230516180601-49117694ced6 // indirect
 	github.com/brotherlogic/monitor v0.0.0-20221025152653-c10877c5f9e6 // indirect
 	github.com/brotherlogic/versionserver v0.0.0-20221025154054-c9bcd41be2f2 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -66,9 +66,9 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.27.1 // indirect
+	k8s.io/api v0.27.2 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f // indirect
+	k8s.io/kube-openapi v0.0.0-20230515203736-54b630e78af5 // indirect
 	k8s.io/utils v0.0.0-20230505201702-9f6742963106 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
