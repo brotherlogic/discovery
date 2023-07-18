@@ -1,11 +1,5 @@
 name: Close All Pull Requests
 
-on:
-  push:
-  pull_request:
-  schedule:
-    - cron: '*/5 * * * *'
-
 jobs:
   run:
     runs-on: ubuntu-latest
