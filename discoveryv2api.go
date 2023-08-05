@@ -11,10 +11,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	pb "github.com/brotherlogic/discovery/proto"
 	"github.com/prometheus/client_golang/prometheus"
@@ -40,45 +36,6 @@ var (
 		Help: "The size of the print queue",
 	}, []string{"service", "origin"})
 )
-
-func (s *Server) getFromKube(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, error) {
-	// use the current context in kubeconfig
-	config, err := clientcmd.BuildConfigFromFlags("", "/home/simon/.kube/config")
-	if err != nil {
-		s.RaiseIssue("Missing kubeconfig", fmt.Sprintf("%v is missing the kube config", s.Registry.Identifier))
-		return &pb.GetResponse{}, nil
-	}
-
-	// create the clientset
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	pods, err := clientset.CoreV1().Services("").List(context.TODO(), metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-	var services []*pb.RegistryEntry
-
-	for _, pod := range pods.Items {
-		if pod.Name == req.GetJob() || req.GetJob() == "" {
-			for _, port := range pod.Spec.Ports {
-				if port.Name == "grpc" && port.NodePort > 0 {
-					services = append(services, &pb.RegistryEntry{
-						Name:       pod.Name,
-						Identifier: "kclust1",
-						Ip:         "192.168.86.26",
-						Port:       port.NodePort,
-						Zone:       "cluster",
-					})
-				}
-			}
-		}
-	}
-
-	return &pb.GetResponse{Services: services}, nil
-}
 
 func (s *Server) addIP(ip string) {
 	for _, lip := range s.iplist {
@@ -238,17 +195,6 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 			return &pb.GetResponse{Services: jobs, State: s.state}, nil
 		}
 
-		if s.kube {
-			maybe, err := s.getFromKube(ctx, req)
-			if err != nil {
-				return nil, err
-			}
-
-			if len(maybe.Services) > 0 {
-				return maybe, err
-			}
-		}
-
 		return nil, status.Errorf(codes.Unavailable, "%v was not found on %v (via %v)", req.Job, req.Server, s.Registry.GetIdentifier())
 	}
 
@@ -257,18 +203,6 @@ func (s *Server) Get(ctx context.Context, req *pb.GetRequest) (*pb.GetResponse, 
 	for _, job := range s.portMap {
 		if job != nil {
 			resp.Services = append(resp.Services, job)
-		}
-	}
-
-	if s.kube {
-		maybe, err := s.getFromKube(ctx, req)
-		if err != nil {
-			s.CtxLog(ctx, fmt.Sprintf("unable to get from kube: %v", err))
-		} else {
-
-			if len(maybe.Services) > 0 {
-				resp.Services = append(resp.Services, maybe.Services...)
-			}
 		}
 	}
 
