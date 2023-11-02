@@ -2,7 +2,7 @@ name: Close All Pull Requests
 
 on: 
   pull_request:
-    types: [review_requested]
+    types: [labeled]
 #  schedule:
 #    - cron: '*/5 * * * *'
 
