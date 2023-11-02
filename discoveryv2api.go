@@ -58,7 +58,7 @@ func (s *Server) writeIplist(lis []string) {
 
 	fw, err := os.OpenFile(IP_FILE, os.O_WRONLY, 0777)
 	if err != nil {
-		return
+		returnsss
 	}
 	defer fw.Close()
 
