@@ -45,7 +45,7 @@ func (s *Server) addIP(ip string) {
 	}
 
 	s.iplist = append(s.iplist, ip)
-	s.writeIplist(s.iplist)
+	s.writeIplist(s.iplist)sss
 }
 
 func (s *Server) writeIplist(lis []string) {
