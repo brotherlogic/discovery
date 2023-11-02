@@ -52,7 +52,7 @@ func (s *Server) writeIplist(lis []string) {
 	if _, err := os.Stat(IP_FILE); errors.Is(err, os.ErrNotExist) {
 		_, err := os.Create(IP_FILE)
 		if err != nil {
-			retur
+			returs
 		}
 	}
 
