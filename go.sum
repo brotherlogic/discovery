@@ -1573,8 +1573,11 @@ github.com/brotherlogic/datastore v0.0.0-20231118195413-e465113847b6/go.mod h1:3
 github.com/brotherlogic/datastore v0.0.0-20231118215452-e982eb7b2c91/go.mod h1:b0drtS3TPdhSS+Cmw63njG/oPexGIB4KOSspr1FcOJM=
 github.com/brotherlogic/datastore v0.0.0-20231119002011-29e6a71e256f/go.mod h1:fcMWuFL1xDmpaRIpfFHAkxBknlmCHF91H20Rmoqf6Dk=
 github.com/brotherlogic/datastore v0.0.0-20231119175602-ac156c8ceec9/go.mod h1:RyoDw3XFcVzN1Mc+EV+zx8tdSYlnOhfYCqWu4NzpjxI=
-github.com/brotherlogic/datastore v0.0.0-20231127011738-301c042401f1 h1:CKr2jQLLPrVzc1StPm0ixirEp2ibAFsE/z4drCG0dXA=
+github.com/brotherlogic/datastore v0.0.0-20231127010014-bd24405d6c10/go.mod h1:3HvJbpWnTk8mOGGdDjfX5HJ1m4Q/2VWxLvfkXgvO9uM=
 github.com/brotherlogic/datastore v0.0.0-20231127011738-301c042401f1/go.mod h1:9k1z0AaLlFkIJiLhbjCL8rwGIirYYR5o6CBDGoaHLtI=
+github.com/brotherlogic/datastore v0.0.0-20231127014402-eb6c2e0cb55d/go.mod h1:DftyoMCHfoWdG05e/kjHA8x69oMc3OMg4wIABa1hfP0=
+github.com/brotherlogic/datastore v0.0.0-20231127024940-022f3c51671a h1:oHNG92J4HkeqxjIZgVdtmHoDDoyKENKWLmwvuWsUd7o=
+github.com/brotherlogic/datastore v0.0.0-20231127024940-022f3c51671a/go.mod h1:Fn8KFa9c6I7p6imIzIpDylKseoWRrF4xKq5k9rxSuyQ=
 github.com/brotherlogic/discovery v0.0.0-20200925011539-74a8dc203ba4/go.mod h1:W9XhDhsvBgeIgnOKgcWmtFilO549fuIhRMlVHiXAC9k=
 github.com/brotherlogic/discovery v0.0.0-20210531005423-1d609c4f6278/go.mod h1:W9XhDhsvBgeIgnOKgcWmtFilO549fuIhRMlVHiXAC9k=
 github.com/brotherlogic/discovery v0.0.0-20210603130245-be477d62024e/go.mod h1:W9XhDhsvBgeIgnOKgcWmtFilO549fuIhRMlVHiXAC9k=
@@ -1731,6 +1734,9 @@ github.com/brotherlogic/discovery v0.0.0-20231124094219-90645676cdbc/go.mod h1:9
 github.com/brotherlogic/discovery v0.0.0-20231124134448-9d4e9a397b82/go.mod h1:Ak0fz2NfoupRd3DU+OHKc9ASLxDmj5HEWGr8FaqYNpI=
 github.com/brotherlogic/discovery v0.0.0-20231125073618-24cd2d22db96/go.mod h1:z7qJPU5c9BLVMYcTul4JzVaCy2Gch2UB1/8Zqk515SE=
 github.com/brotherlogic/discovery v0.0.0-20231125164535-fe3b97e74daf/go.mod h1:Al1c6QKHSd6RVf86kYb/ynjx7/GXJd6yfWSSw1rEEMs=
+github.com/brotherlogic/discovery v0.0.0-20231126015046-3f77ffcd2b31/go.mod h1:MrmDTDOOQVjgmpd5YtUyw/diMCiS0dPD7+lwQ6oygr4=
+github.com/brotherlogic/discovery v0.0.0-20231127010849-58282f7f406f/go.mod h1:Ez1uVkYhJasTQRmph8Fdg/txVf/OOyJqdan86UvzRMY=
+github.com/brotherlogic/discovery v0.0.0-20231127012344-5354935d2c3e/go.mod h1:fv8NakN5RWP5tZW8yQ7qA4x7EaL7eM79jTmdxNK1igE=
 github.com/brotherlogic/dstore v0.0.0-20210705011309-803d7db560a6/go.mod h1:SJdI/5dxubp66yy6slmUfen5yCIKXFvAmMs71u9xVrk=
 github.com/brotherlogic/dstore v0.0.0-20210728181450-e87a34c62535/go.mod h1:bwiN0EPWhmDNwue1BWpCQ7DL4hLwfDwDw8JwMMgDzCs=
 github.com/brotherlogic/dstore v0.0.0-20210911232556-7a6844e1f86f/go.mod h1:Wilk+LrYLvE5+fNDXp0dYQNTMxhb6rmkwv5GwZ/K3ok=
@@ -2753,8 +2759,9 @@ github.com/brotherlogic/lock v0.0.0-20231027170017-10035fbac72d/go.mod h1:FQ1H86
 github.com/brotherlogic/lock v0.0.0-20231103191631-742cf7ed04e9/go.mod h1:9TwzJGX7bMKiNk9vKfMhNi0KCr0T30p171df9TiX2Qw=
 github.com/brotherlogic/lock v0.0.0-20231110225330-4a89a432b3a5/go.mod h1:oo8WQRYOTgsbhdVjo6TQhLFW7VGpVlYLe8HWCubjypY=
 github.com/brotherlogic/lock v0.0.0-20231112210433-e8ed15e59773/go.mod h1:y6ifH1eaLEhSOl4BndjgVAd0S21YRn1zhyevdLUp8cg=
-github.com/brotherlogic/lock v0.0.0-20231119212123-fafe0f9db0f2 h1:7rgYYM3wND2Yn2UILNxohXT/TVsU0M4OMXkkXHW+Klc=
 github.com/brotherlogic/lock v0.0.0-20231119212123-fafe0f9db0f2/go.mod h1:GcXpzgHxipGe9cO2PW3NNG8voK1eFEtO/s6+OUzGoO0=
+github.com/brotherlogic/lock v0.0.0-20231127021037-b964c37bc51c h1:qgdcDEC1uj2LXUIiI1vdn0C8RtvEl3GgX6EmhNmpd+E=
+github.com/brotherlogic/lock v0.0.0-20231127021037-b964c37bc51c/go.mod h1:IvfhK/T5h6o+f4XDNA68oW9o/tYcmVH9GpkM4Rz+U9s=
 github.com/brotherlogic/logging v0.0.0-20200903150238-67a07e215efe/go.mod h1:cHEM7v1fl8VwwyN4qcrh8hQHR+XNT+xHI4+yOr4l8Wg=
 github.com/brotherlogic/logging v0.0.0-20210606012857-db059830d1dc/go.mod h1:FOXFywySb2dOOhsEFIwxniCxGJltgA395Dhzp2lFXYI=
 github.com/brotherlogic/logging v0.0.0-20210609015032-e6d0ef792137/go.mod h1:FOXFywySb2dOOhsEFIwxniCxGJltgA395Dhzp2lFXYI=
