@@ -5,7 +5,7 @@ go 1.22.3
 toolchain go1.23.0
 
 require (
-	github.com/brotherlogic/goserver v0.0.0-20240303220030-80da220f0393
+	github.com/brotherlogic/goserver v0.0.0-20240826215223-fccbac46b3d4
 	github.com/golang/protobuf v1.5.4
 	github.com/prometheus/client_golang v1.20.2
 	golang.org/x/net v0.28.0
@@ -18,7 +18,7 @@ require (
 	github.com/brotherlogic/buildserver v0.0.0-20240824025713-362a731e5e21 // indirect
 	github.com/brotherlogic/datastore v0.0.0-20240823184144-553700e7999c // indirect
 	github.com/brotherlogic/dstore v0.0.0-20240823194357-1385009330e9 // indirect
-	github.com/brotherlogic/githubcard v0.0.0-20240819180613-7416f9c79e98 // indirect
+	github.com/brotherlogic/githubcard v0.0.0-20240826183939-ae9439264e14 // indirect
 	github.com/brotherlogic/githubridge v0.2802.0 // indirect
 	github.com/brotherlogic/gobuildslave v0.0.0-20240825223801-970efbec48de // indirect
 	github.com/brotherlogic/keystore v0.0.0-20240508161349-814b3200b126 // indirect
@@ -36,5 +36,5 @@ require (
 	github.com/struCoder/pidusage v0.2.1 // indirect
 	golang.org/x/sys v0.24.0 // indirect
 	golang.org/x/text v0.17.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240823204242-4ba0660f739c // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240826202546-f6391c0de4c7 // indirect
 )
