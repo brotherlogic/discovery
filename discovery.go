@@ -307,7 +307,7 @@ func (s *Server) setPortNumber(in *pb.RegistryEntry) error {
 }
 
 func (s *Server) findFriend(host int) bool {
-	return s.internalFindFriend(fmt.Sprintf("192.168.86.%v", host))
+	return s.internalFindFriend(fmt.Sprintf("192.168.68.%v", host))
 }
 
 func (s *Server) internalFindFriend(host string) bool {
