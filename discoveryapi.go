@@ -100,10 +100,10 @@ func (s *Server) Discover(ctx context.Context, req *pb.DiscoverRequest) (*pb.Dis
 		return nil, fmt.Errorf("Unable to locate %v on server %v", in.GetName(), in.GetIdentifier())
 	}
 
-	return &pb.DiscoverResponse{}, status.Error(codes.Unavailable, fmt.Sprintf("Cannot find master for "+in.GetName()+" on server "+in.GetIdentifier()))
+	return &pb.DiscoverResponse{}, status.Error(codes.Unavailable, fmt.Sprintf("Cannot find master for %v on server %v", in.GetName(), in.GetIdentifier()))
 }
 
-//State gets the state of the server
+// State gets the state of the server
 func (s *Server) State(ctx context.Context, in *pb.StateRequest) (*pb.StateResponse, error) {
 	return &pb.StateResponse{}, nil
 }
